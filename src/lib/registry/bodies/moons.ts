@@ -9,7 +9,7 @@ import type { TrackedObject } from '../types';
  * nodal precession (constant-element approximation).
  */
 
-const EPOCH_JD = 2461235; // JD TDB at 2026-07-13 00:00 UTC
+const EPOCH_JD = 2461242; // JD TDB at 2026-07-20 00:00 UTC
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -115,13 +115,13 @@ const PHOBOS = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 9377.972,
-    e: 0.014735,
-    i_deg: 25.9695,
-    Omega_deg: 81.0830,
-    omega_deg: 242.9270,
-    M_deg: 199.6084,
-    period_days: 0.319127
+    a_km: 9378.744,
+    e: 0.014636,
+    i_deg: 25.9284,
+    Omega_deg: 81.1738,
+    omega_deg: 246.3402,
+    M_deg: 178.0286,
+    period_days: 0.319167
   }
 });
 
@@ -149,13 +149,13 @@ const DEIMOS = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 23459.56,
-    e: 0.000318,
-    i_deg: 24.1253,
-    Omega_deg: 81.3820,
-    omega_deg: 39.7889,
-    M_deg: 38.0722,
-    period_days: 1.262642
+    a_km: 23458.02,
+    e: 0.000261,
+    i_deg: 24.1260,
+    Omega_deg: 81.3919,
+    omega_deg: 19.2458,
+    M_deg: 254.7335,
+    period_days: 1.262518
   }
 });
 
@@ -184,13 +184,13 @@ const IO = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 422046.83,
-    e: 0.004734,
-    i_deg: 2.22213,
-    Omega_deg: 338.4654,
-    omega_deg: 105.5178,
-    M_deg: 22.1984,
-    period_days: 1.771461
+    a_km: 422050.30,
+    e: 0.004777,
+    i_deg: 2.22259,
+    Omega_deg: 338.4605,
+    omega_deg: 99.0583,
+    M_deg: 13.0866,
+    period_days: 1.771483
   }
 });
 
@@ -217,13 +217,13 @@ const EUROPA = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 671305.43,
-    e: 0.009084,
-    i_deg: 2.09787,
-    Omega_deg: 326.0732,
-    omega_deg: 294.5142,
-    M_deg: 193.1246,
-    period_days: 3.553658
+    a_km: 671300.33,
+    e: 0.009073,
+    i_deg: 2.09616,
+    Omega_deg: 326.0865,
+    omega_deg: 289.7001,
+    M_deg: 187.5448,
+    period_days: 3.553618
   }
 });
 
@@ -250,13 +250,13 @@ const GANYMEDE = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 1070534.65,
-    e: 0.002032,
-    i_deg: 2.34251,
-    Omega_deg: 339.1153,
-    omega_deg: 14.4361,
-    M_deg: 4.0921,
-    period_days: 7.156242
+    a_km: 1070574.51,
+    e: 0.002067,
+    i_deg: 2.34258,
+    Omega_deg: 339.1113,
+    omega_deg: 15.7584,
+    M_deg: 355.0049,
+    period_days: 7.156642
   }
 });
 
@@ -283,13 +283,13 @@ const CALLISTO = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 1882972.30,
-    e: 0.007422,
+    a_km: 1883648.60,
+    e: 0.007357,
     i_deg: 1.95240,
-    Omega_deg: 336.7269,
-    omega_deg: 33.2799,
-    M_deg: 292.8781,
-    period_days: 16.693773
+    Omega_deg: 336.7284,
+    omega_deg: 37.3260,
+    M_deg: 79.7997,
+    period_days: 16.702767
   }
 });
 
@@ -317,13 +317,13 @@ const MIMAS = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 186038.87,
-    e: 0.022247,
-    i_deg: 26.51283,
-    Omega_deg: 170.2500,
-    omega_deg: 84.2170,
-    M_deg: 359.4667,
-    period_days: 0.947487
+    a_km: 186003.04,
+    e: 0.017540,
+    i_deg: 26.56582,
+    Omega_deg: 170.6606,
+    omega_deg: 95.4490,
+    M_deg: 141.8448,
+    period_days: 0.947213
   }
 });
 
@@ -349,13 +349,13 @@ const ENCELADUS = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 238411.87,
-    e: 0.005319,
-    i_deg: 28.04468,
-    Omega_deg: 169.5204,
-    omega_deg: 149.7109,
-    M_deg: 304.3390,
-    period_days: 1.374547
+    a_km: 238414.11,
+    e: 0.006006,
+    i_deg: 28.04449,
+    Omega_deg: 169.5210,
+    omega_deg: 159.3984,
+    M_deg: 333.7706,
+    period_days: 1.374566
   }
 });
 
@@ -381,13 +381,13 @@ const TETHYS = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 294973.85,
-    e: 0.001024,
-    i_deg: 27.82854,
-    Omega_deg: 171.8061,
-    omega_deg: 124.6735,
-    M_deg: 6.5614,
-    period_days: 1.891659
+    a_km: 294977.01,
+    e: 0.001104,
+    i_deg: 27.85546,
+    Omega_deg: 171.8146,
+    omega_deg: 25.3160,
+    M_deg: 0.7967,
+    period_days: 1.891689
   }
 });
 
@@ -413,13 +413,13 @@ const DIONE = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 377641.89,
-    e: 0.002666,
-    i_deg: 28.02498,
-    Omega_deg: 169.5431,
-    omega_deg: 275.8007,
-    M_deg: 34.6415,
-    period_days: 2.740234
+    a_km: 377647.30,
+    e: 0.001964,
+    i_deg: 28.02501,
+    Omega_deg: 169.5436,
+    omega_deg: 252.3343,
+    M_deg: 258.8529,
+    period_days: 2.740293
   }
 });
 
@@ -445,13 +445,13 @@ const RHEA = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 527240.62,
-    e: 0.000708,
-    i_deg: 28.26477,
-    Omega_deg: 169.9901,
-    omega_deg: 149.2614,
-    M_deg: 219.0874,
-    period_days: 4.520435
+    a_km: 527244.75,
+    e: 0.001396,
+    i_deg: 28.26556,
+    Omega_deg: 169.9883,
+    omega_deg: 178.1290,
+    M_deg: 28.0493,
+    period_days: 4.520488
   }
 });
 
@@ -480,13 +480,13 @@ const TITAN = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 1221935.31,
-    e: 0.028784,
-    i_deg: 27.70677,
-    Omega_deg: 169.0798,
-    omega_deg: 178.3498,
-    M_deg: 40.5452,
-    period_days: 15.947357
+    a_km: 1221926.22,
+    e: 0.028688,
+    i_deg: 27.70668,
+    Omega_deg: 169.0799,
+    omega_deg: 178.2433,
+    M_deg: 198.6901,
+    period_days: 15.947180
   }
 });
 
@@ -512,13 +512,13 @@ const IAPETUS = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 3559767.87,
-    e: 0.029129,
-    i_deg: 16.98798,
-    Omega_deg: 138.8556,
-    omega_deg: 232.7616,
-    M_deg: 258.5308,
-    period_days: 79.304828
+    a_km: 3560071.70,
+    e: 0.028603,
+    i_deg: 16.97864,
+    Omega_deg: 138.8786,
+    omega_deg: 232.5033,
+    M_deg: 290.4743,
+    period_days: 79.314981
   }
 });
 
@@ -546,13 +546,13 @@ const MIRANDA = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 129872.28,
-    e: 0.001363,
-    i_deg: 98.38201,
-    Omega_deg: 163.2255,
-    omega_deg: 69.1622,
-    M_deg: 46.3225,
-    period_days: 1.414013
+    a_km: 129871.08,
+    e: 0.001645,
+    i_deg: 98.35247,
+    Omega_deg: 163.2211,
+    omega_deg: 67.2324,
+    M_deg: 31.1095,
+    period_days: 1.413993
   }
 });
 
@@ -578,13 +578,13 @@ const ARIEL = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 190944.89,
-    e: 0.000208,
-    i_deg: 97.71714,
+    a_km: 190945.18,
+    e: 0.000564,
+    i_deg: 97.71719,
     Omega_deg: 167.6656,
-    omega_deg: 229.1428,
-    M_deg: 206.3677,
-    period_days: 2.520796
+    omega_deg: 258.5382,
+    M_deg: 96.8207,
+    period_days: 2.520802
   }
 });
 
@@ -610,13 +610,13 @@ const UMBRIEL = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 265995.69,
-    e: 0.003189,
-    i_deg: 97.71347,
+    a_km: 266007.15,
+    e: 0.003320,
+    i_deg: 97.71356,
     Omega_deg: 167.7250,
-    omega_deg: 60.2149,
-    M_deg: 265.3689,
-    period_days: 4.144646
+    omega_deg: 66.0843,
+    M_deg: 147.5905,
+    period_days: 4.144914
   }
 });
 
@@ -642,13 +642,13 @@ const TITANIA = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 436284.66,
-    e: 0.001575,
+    a_km: 436295.06,
+    e: 0.001594,
     i_deg: 97.76249,
     Omega_deg: 167.6433,
-    omega_deg: 228.8224,
-    M_deg: 62.8587,
-    period_days: 8.706133
+    omega_deg: 223.1136,
+    M_deg: 358.0586,
+    period_days: 8.706444
   }
 });
 
@@ -674,13 +674,13 @@ const OBERON = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 583569.59,
-    e: 0.000938,
-    i_deg: 97.90568,
+    a_km: 583430.02,
+    e: 0.000989,
+    i_deg: 97.90567,
     Omega_deg: 167.7087,
-    omega_deg: 226.2282,
-    M_deg: 26.8847,
-    period_days: 13.468204
+    omega_deg: 221.9130,
+    M_deg: 218.3449,
+    period_days: 13.463373
   }
 });
 
@@ -709,13 +709,13 @@ const TRITON = moon({
   ],
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
-    a_km: 354767.45,
-    e: 0.0001313,
-    i_deg: 129.13313,
-    Omega_deg: 222.8017,
-    omega_deg: 99.4782,
-    M_deg: 283.5586,
-    period_days: 5.877112
+    a_km: 354765.26,
+    e: 0.0001438,
+    i_deg: 129.13308,
+    Omega_deg: 222.8069,
+    omega_deg: 107.2333,
+    M_deg: 344.6083,
+    period_days: 5.877058
   }
 });
 
@@ -745,12 +745,12 @@ const CHARON = moon({
   tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
   elements: {
     a_km: 19595.76,
-    e: 0.000161,
+    e: 0.000160,
     i_deg: 112.88778,
     Omega_deg: 227.3931,
-    omega_deg: 172.5024,
-    M_deg: 181.6699,
-    period_days: 6.387219
+    omega_deg: 172.6143,
+    M_deg: 216.0957,
+    period_days: 6.387221
   }
 });
 
