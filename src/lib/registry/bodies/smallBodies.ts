@@ -7,7 +7,7 @@ import type { ObjectType, TrackedObject } from '../types';
  * All render as point-markers (labeled dots) regardless of true size.
  */
 
-const EPOCH_JD = 2461298; // JD TDB at 2026-09-14 00:00 UTC
+const EPOCH_JD = 2461305; // JD TDB at 2026-09-21 00:00 UTC
 
 // ── Helper ──────────────────────────────────────────────────────────────
 
@@ -86,13 +86,13 @@ const CERES = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 413773808.28,
-    e: 0.079748176,
-    i_deg: 10.58753406,
-    Omega_deg: 80.24899261,
-    omega_deg: 73.21143207,
-    M_deg: 295.3985016,
-    period_days: 1680.176103
+    a_km: 413780118.05,
+    e: 0.079755173,
+    i_deg: 10.58746551,
+    Omega_deg: 80.24898726,
+    omega_deg: 73.20212873,
+    M_deg: 296.9078530,
+    period_days: 1680.214536
   }
 });
 
@@ -118,13 +118,13 @@ const PALLAS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 414295038.63,
-    e: 0.230705877,
-    i_deg: 34.93374611,
-    Omega_deg: 172.8869259,
-    omega_deg: 310.9851984,
-    M_deg: 275.0823211,
-    period_days: 1683.351877
+    a_km: 414293153.40,
+    e: 0.230707323,
+    i_deg: 34.93381199,
+    Omega_deg: 172.8869693,
+    omega_deg: 310.9863102,
+    M_deg: 276.5782618,
+    period_days: 1683.340387
   }
 });
 
@@ -151,13 +151,13 @@ const VESTA = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 353239406.84,
-    e: 0.090227792,
-    i_deg: 7.143878690,
-    Omega_deg: 103.6999274,
-    omega_deg: 151.4413899,
-    M_deg: 107.70069467,
-    period_days: 1325.299485
+    a_km: 353237849.75,
+    e: 0.090228938,
+    i_deg: 7.143878611,
+    Omega_deg: 103.6998545,
+    omega_deg: 151.4386688,
+    M_deg: 109.60504417,
+    period_days: 1325.290722
   }
 });
 
@@ -183,13 +183,13 @@ const HYGIEA = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 471357256.23,
-    e: 0.106148759,
-    i_deg: 3.826381301,
-    Omega_deg: 283.1011723,
-    omega_deg: 312.5188166,
-    M_deg: 269.0719443,
-    period_days: 2042.845887
+    a_km: 471348836.62,
+    e: 0.106113258,
+    i_deg: 3.826155074,
+    Omega_deg: 283.0992037,
+    omega_deg: 312.5305204,
+    M_deg: 270.2914173,
+    period_days: 2042.791152
   }
 });
 
@@ -215,13 +215,13 @@ const PSYCHE_16 = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 437743875.78,
-    e: 0.135330817,
-    i_deg: 3.100552357,
-    Omega_deg: 149.9597053,
-    omega_deg: 230.1072939,
-    M_deg: 98.86237460,
-    period_days: 1828.270396
+    a_km: 437743059.86,
+    e: 0.135362765,
+    i_deg: 3.100693304,
+    Omega_deg: 149.9589763,
+    omega_deg: 230.1094373,
+    M_deg: 100.23558002,
+    period_days: 1828.265284
   }
 });
 
@@ -249,13 +249,13 @@ const EROS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 218153178.69,
-    e: 0.222849820,
-    i_deg: 10.82854426,
-    Omega_deg: 304.2680459,
-    omega_deg: 178.9223834,
-    M_deg: 117.08060327,
-    period_days: 643.209762
+    a_km: 218153465.24,
+    e: 0.222848900,
+    i_deg: 10.82854798,
+    Omega_deg: 304.2680277,
+    omega_deg: 178.9226983,
+    M_deg: 120.99814461,
+    period_days: 643.211029
   }
 });
 
@@ -281,13 +281,13 @@ const ITOKAWA = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 198082651.95,
-    e: 0.280138394,
-    i_deg: 1.620913240,
-    Omega_deg: 69.07461793,
-    omega_deg: 162.8357163,
-    M_deg: 233.7328940,
-    period_days: 556.518968
+    a_km: 198083490.83,
+    e: 0.280134396,
+    i_deg: 1.620915845,
+    Omega_deg: 69.07464661,
+    omega_deg: 162.8350270,
+    M_deg: 238.2616459,
+    period_days: 556.522504
   }
 });
 
@@ -314,13 +314,13 @@ const BENNU = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 168434542.64,
-    e: 0.203677862,
-    i_deg: 6.033023256,
-    Omega_deg: 1.966615741,
-    omega_deg: 66.40084583,
-    M_deg: 152.89841030,
-    period_days: 436.372176
+    a_km: 168434527.80,
+    e: 0.203677699,
+    i_deg: 6.033020394,
+    Omega_deg: 1.966583220,
+    omega_deg: 66.40070908,
+    M_deg: 158.67354992,
+    period_days: 436.372118
   }
 });
 
@@ -346,13 +346,13 @@ const RYUGU = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 178157204.06,
-    e: 0.191043187,
-    i_deg: 5.866466211,
-    Omega_deg: 251.2891921,
-    omega_deg: 211.6066896,
-    M_deg: 136.28892119,
-    period_days: 474.695802
+    a_km: 178157342.58,
+    e: 0.191042280,
+    i_deg: 5.866463653,
+    Omega_deg: 251.2891909,
+    omega_deg: 211.6067866,
+    M_deg: 141.59751548,
+    period_days: 474.696356
   }
 });
 
@@ -379,13 +379,13 @@ const APOPHIS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 137979112.30,
-    e: 0.191182640,
-    i_deg: 3.341090137,
-    Omega_deg: 203.8926304,
-    omega_deg: 126.6840585,
-    M_deg: 283.8129683,
-    period_days: 323.541749
+    a_km: 137979116.92,
+    e: 0.191183200,
+    i_deg: 3.341090685,
+    Omega_deg: 203.8926362,
+    omega_deg: 126.6840956,
+    M_deg: 291.6017845,
+    period_days: 323.541765
   }
 });
 
@@ -411,13 +411,13 @@ const DIDYMOS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 245755676.76,
-    e: 0.383109273,
-    i_deg: 3.413791467,
-    Omega_deg: 72.98533632,
-    omega_deg: 319.5752047,
-    M_deg: 306.5077650,
-    period_days: 769.069603
+    a_km: 245755765.96,
+    e: 0.383108987,
+    i_deg: 3.413787749,
+    Omega_deg: 72.98527624,
+    omega_deg: 319.5751793,
+    M_deg: 309.7844914,
+    period_days: 769.070022
   }
 });
 
@@ -447,13 +447,13 @@ const ERIS = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 10159043749.9,
-    e: 0.438690971,
-    i_deg: 43.94907217,
-    Omega_deg: 35.99570406,
-    omega_deg: 150.8306933,
-    M_deg: 211.9087806,
-    period_days: 204404.0774
+    a_km: 10158792566.2,
+    e: 0.438723567,
+    i_deg: 43.95064038,
+    Omega_deg: 35.99509451,
+    omega_deg: 150.8327068,
+    M_deg: 211.9195936,
+    period_days: 204396.4966
   }
 });
 
@@ -481,13 +481,13 @@ const HAUMEA = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 6445145317.1,
-    e: 0.193945962,
-    i_deg: 28.20846440,
-    Omega_deg: 121.7871150,
-    omega_deg: 240.5847106,
-    M_deg: 223.6556440,
-    period_days: 103290.2621
+    a_km: 6445371926.7,
+    e: 0.193911090,
+    i_deg: 28.20846572,
+    Omega_deg: 121.7869931,
+    omega_deg: 240.5784385,
+    M_deg: 223.6860700,
+    period_days: 103295.7096
   }
 });
 
@@ -515,13 +515,13 @@ const MAKEMAKE = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 6820501875.2,
-    e: 0.158332545,
-    i_deg: 29.02536198,
-    Omega_deg: 79.30912058,
-    omega_deg: 297.0642037,
-    M_deg: 170.2817315,
-    period_days: 112443.6172
+    a_km: 6820734032.2,
+    e: 0.158292640,
+    i_deg: 29.02521573,
+    Omega_deg: 79.30995264,
+    omega_deg: 297.0635360,
+    M_deg: 170.3047899,
+    period_days: 112449.3583
   }
 });
 
@@ -548,13 +548,13 @@ const SEDNA = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 80873092762.4,
-    e: 0.859099299,
-    i_deg: 11.92511014,
-    Omega_deg: 144.5129856,
-    omega_deg: 311.1359077,
-    M_deg: 358.5892811,
-    period_days: 4591096.1323
+    a_km: 80846340454.6,
+    e: 0.859054466,
+    i_deg: 11.92509572,
+    Omega_deg: 144.5135717,
+    omega_deg: 311.1384003,
+    M_deg: 358.5890015,
+    period_days: 4588818.2623
   }
 });
 
@@ -581,13 +581,13 @@ const QUAOAR = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 6457625107.4,
-    e: 0.035030944,
-    i_deg: 7.991675440,
-    Omega_deg: 188.9024012,
-    omega_deg: 162.6856790,
-    M_deg: 293.6962095,
-    period_days: 103590.4100
+    a_km: 6457689299.2,
+    e: 0.035016431,
+    i_deg: 7.991682695,
+    Omega_deg: 188.9012764,
+    omega_deg: 162.6588558,
+    M_deg: 293.7462315,
+    period_days: 103591.9546
   }
 });
 
@@ -616,13 +616,13 @@ const HALLEY = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 2671736539.1,
-    e: 0.968023971,
-    i_deg: 162.1888060,
-    Omega_deg: 59.28313603,
-    omega_deg: 112.1835901,
-    M_deg: 193.5943118,
-    period_days: 27567.7140
+    a_km: 2671739200.3,
+    e: 0.968025230,
+    i_deg: 162.1894136,
+    Omega_deg: 59.27847170,
+    omega_deg: 112.1789663,
+    M_deg: 193.6888086,
+    period_days: 27567.7551
   }
 });
 
@@ -648,13 +648,13 @@ const COMET_67P = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 517458565.42,
-    e: 0.649494795,
-    i_deg: 3.866143299,
-    Omega_deg: 36.28887073,
-    omega_deg: 22.23691205,
-    M_deg: 272.2059235,
-    period_days: 2349.760933
+    a_km: 517458801.80,
+    e: 0.649491449,
+    i_deg: 3.866124061,
+    Omega_deg: 36.28850199,
+    omega_deg: 22.23717531,
+    M_deg: 273.2780653,
+    period_days: 2349.762543
   }
 });
 
@@ -680,13 +680,13 @@ const TEMPEL_1 = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 494484582.26,
-    e: 0.464996719,
-    i_deg: 10.47167688,
-    Omega_deg: 66.78420322,
-    omega_deg: 184.6011449,
-    M_deg: 275.4854396,
-    period_days: 2195.024851
+    a_km: 494496631.57,
+    e: 0.464944062,
+    i_deg: 10.47054161,
+    Omega_deg: 66.77644692,
+    omega_deg: 184.6048920,
+    M_deg: 276.6322468,
+    period_days: 2195.105082
   }
 });
 
