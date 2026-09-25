@@ -1,95 +1,52 @@
 <script lang="ts">
-  import { T, useTask, useThrelte } from '@threlte/core';
-  import { useTexture } from '@threlte/extras';
-  import { BackSide, ShaderMaterial, Vector3, type Mesh } from 'three';
+  import { T } from '@threlte/core';
+  import { BackSide, Matrix4, Mesh, ShaderMaterial } from 'three';
+  import { GALACTIC_TO_SCENE } from '$utils/frames';
+  import { loadTexture, UNIT_SPHERE } from './textures';
 
   /**
-   * Starfield sphere covers the entire viewport at radius 500. Because
-   * MeshBasicMaterial caps output at the texture's intrinsic brightness
-   * (it has no exposure / tone-mapping plumbing), we use a tiny custom
-   * shader that multiplies the sampled colour by a brightness factor.
-   * This is the cleanest "lift the whole scene" knob — every pixel that
-   * isn't covered by Earth, Moon, or ISS is starfield, so brightening
-   * here brightens the whole viewport.
+   * Milky Way skybox. The vertex shader drops the view translation, so the sky
+   * is centered on the camera at any distance and can never clip. The texture
+   * is in galactic coordinates (Galactic Center at its middle, the south
+   * galactic pole at its top edge); `orientation` turns it into the scene's
+   * J2000 ecliptic frame.
    */
 
-  const texturePromise = useTexture('/textures/starfield_milkyway_8k.jpg');
-
-  const vertexShader = /* glsl */ `
-    #include <common>
-    #include <logdepthbuf_pars_vertex>
-
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      #include <logdepthbuf_vertex>
-    }
-  `;
-
-  const fragmentShader = /* glsl */ `
-    precision highp float;
-
-    #include <common>
-    #include <logdepthbuf_pars_fragment>
-
-    uniform sampler2D uMap;
-    uniform float uBrightness;
-    uniform vec3 uAmbientCast;
-    varying vec2 vUv;
-    void main() {
-      #include <logdepthbuf_fragment>
-      vec4 c = texture2D(uMap, vUv);
-      // Multiply the texture by brightness, then add a small constant
-      // colour cast so the darkest pixels get a faint cool tint instead
-      // of pure black. Mimics the renderer clear-colour, but applied at
-      // the layer that actually fills the viewport.
-      gl_FragColor = vec4(c.rgb * uBrightness + uAmbientCast, 1.0);
-    }
-  `;
+  const TEXTURE_TO_GALACTIC = new Matrix4().set(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+  const orientation = new Matrix4().multiplyMatrices(GALACTIC_TO_SCENE, TEXTURE_TO_GALACTIC);
 
   const material = new ShaderMaterial({
-    vertexShader,
-    fragmentShader,
+    uniforms: { uMap: { value: null }, uBrightness: { value: 0.75 } },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec3 direction = mat3(viewMatrix) * mat3(modelMatrix) * position;
+        gl_Position = projectionMatrix * vec4(direction, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D uMap;
+      uniform float uBrightness;
+      varying vec2 vUv;
+      void main() {
+        gl_FragColor = vec4(texture2D(uMap, vUv).rgb * uBrightness, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `,
     side: BackSide,
-    uniforms: {
-      uMap: { value: null },
-      uBrightness: { value: 0.9 },
-      // Faint near-white lift with the smallest hint of cool blue.
-      // RGB in [0,1]. Same colour also applied as scene.background in
-      // World.svelte for consistency.
-      uAmbientCast: { value: new Vector3(0.004, 0.006, 0.012) }
-    }
+    depthTest: false,
+    depthWrite: false
+  });
+  void loadTexture('/textures/starfield_milkyway_8k.jpg').then((map) => {
+    material.uniforms.uMap.value = map;
   });
 
-  texturePromise.then((tex) => {
-    material.uniforms.uMap.value = tex;
-    material.uniformsNeedUpdate = true;
-  });
-
-  // Follow the camera each frame so the starfield sphere is always
-  // centered around the viewer. Without this, flying out to Mars puts
-  // the camera ~50,000 scene units outside the sphere — and because the
-  // mesh uses BackSide rendering, you'd see nothing at all.
-  let meshRef: Mesh | undefined = $state();
-  const { camera } = useThrelte();
-  useTask(() => {
-    if (meshRef) {
-      meshRef.position.copy(camera.current.position);
-    }
-  });
+  const sky = new Mesh(UNIT_SPHERE, material);
+  sky.quaternion.setFromRotationMatrix(orientation);
+  sky.renderOrder = -1000;
+  sky.frustumCulled = false;
 </script>
 
-<!--
-  Sphere radius needs to be larger than the maximum body-to-camera
-  distance the user can reach. With camera maxDistance = 60000 from
-  origin (so the user can fly out to Voyager 1 at ~16500 scene units),
-  the worst case is camera at 60000 and a distant body on the opposite
-  side at ~16500: ~76500 from camera. 80000 covers that with margin.
-  Log depth buffer (enabled across all custom shaders) means the
-  larger sphere has no precision cost.
--->
-<T.Mesh bind:ref={meshRef}>
-  <T.SphereGeometry args={[80000, 64, 64]} />
-  <T is={material} />
-</T.Mesh>
+<T is={sky} />

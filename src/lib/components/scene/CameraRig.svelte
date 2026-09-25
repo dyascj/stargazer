@@ -1,0 +1,449 @@
+<script lang="ts">
+  import { T, useTask, useThrelte } from '@threlte/core';
+  import { MathUtils, PerspectiveCamera, Quaternion, Spherical, Vector3 } from 'three';
+  import { get } from 'svelte/store';
+  import { onMount } from 'svelte';
+  import { AU_TO_SCENE } from '$lib/scene-config';
+  import { isPlanetBody } from '$lib/registry/types';
+  import {
+    overviewDistance,
+    resolveOverviewDistance,
+    selection,
+    SOLAR_SYSTEM_VIEW
+  } from '$stores/selection';
+  import { cameraCommand, selectBody } from '$stores/ui';
+  import { hoveredBody } from '$stores/sceneHover';
+  import { reducedMotion } from '$stores/reducedMotion';
+  import { simTime } from '$stores/simTime';
+  import { framingDistance, minimumDistance } from '$utils/bodyMetrics';
+  import {
+    easeInOutCubic,
+    flightDuration,
+    flightLogDistance,
+    framingDirection
+  } from '$utils/flight';
+  import { pickBody } from '$utils/screenSpace';
+  import { BODIES, BODY_COUNT, RADII, indexOf, parentOf, positions, valid } from './bodyState';
+  import { hooks, screen } from './overlay';
+
+  /**
+   * Orbit camera around the selected body. Rotation, zoom, and pan move goals
+   * that the camera eases toward, so input glides and settles with inertia.
+   * Zoom works on log altitude above the focused surface, which feels the same
+   * at the ISS and at Neptune. Zooming far out of a moon or satellite drifts
+   * the orbit center to its parent, and the camera never enters a body.
+   */
+
+  const FOV = 45;
+  const MAX_DISTANCE = 400 * AU_TO_SCENE;
+  const ORIGIN = new Vector3();
+  const UP = new Vector3(0, 1, 0);
+
+  const { size, renderer } = useThrelte();
+  const cam = new PerspectiveCamera(FOV, 1, 1e-6, 1e12);
+
+  let focus = -1;
+  let spherical = new Spherical(1, 1, 0);
+  let azimuthGoal = 0;
+  let polarGoal = 1;
+  let logAltitude = 0;
+  let logAltitudeGoal = 0;
+  let azimuthVelocity = 0;
+  let polarVelocity = 0;
+  const pan = new Vector3();
+  const panGoal = new Vector3();
+  const center = new Vector3();
+  const anchor = new Vector3();
+  const lastAnchor = new Vector3();
+  const direction = new Vector3();
+  const scratch = new Vector3();
+  const ray = new Vector3();
+  const pole = new Vector3();
+  const destination = new Vector3();
+
+  let flight: {
+    start: number;
+    duration: number;
+    fromCenter: Vector3;
+    fromDirection: Quaternion;
+    toDirection: Quaternion;
+    fromDistance: number;
+    toDistance: number;
+    separation: number;
+  } | null = null;
+  const fromCenter = new Vector3();
+  const fromQuat = new Quaternion();
+  const toQuat = new Quaternion();
+  const flightQuat = new Quaternion();
+  let placed = false;
+  let awaitingPosition = false;
+
+  function surfaceRadius(): number {
+    return focus >= 0 ? RADII[focus] : 0;
+  }
+  function minLogAltitude(): number {
+    const body = focus >= 0 ? BODIES[focus] : null;
+    return Math.log(Math.max((body ? minimumDistance(body) : 1) - surfaceRadius(), 1e-9));
+  }
+  function distanceFromLog(log: number): number {
+    return surfaceRadius() + Math.exp(log);
+  }
+  function setDistance(distance: number): void {
+    logAltitude = logAltitudeGoal = Math.log(Math.max(distance - surfaceRadius(), 1e-9));
+  }
+
+  /** Orbit center: the focused body, drifting to its parent as the camera pulls far back. */
+  function resolveAnchor(distance: number, out: Vector3): Vector3 {
+    if (focus < 0) return out.copy(ORIGIN);
+    const parent = parentOf(focus);
+    if (!valid[focus])
+      return parent >= 0 && valid[parent] ? out.copy(positions[parent]) : out.copy(lastAnchor);
+    out.copy(positions[focus]);
+    if (parent >= 0 && valid[parent]) {
+      const separation = positions[focus].distanceTo(positions[parent]);
+      const drift = MathUtils.smoothstep(distance, separation * 1.5, separation * 8);
+      if (drift > 0) out.lerp(positions[parent], drift);
+    }
+    return out;
+  }
+
+  function flyTo(id: string | null, instant = false): void {
+    focus = id === SOLAR_SYSTEM_VIEW ? -1 : indexOf(id);
+    const body = focus >= 0 ? BODIES[focus] : null;
+    const { width, height } = size.current;
+    const aspect = width / Math.max(height, 1);
+    const date = get(simTime);
+    const toDistance = body
+      ? framingDistance(body, date, MathUtils.degToRad(FOV), aspect)
+      : resolveOverviewDistance(get(overviewDistance)) * Math.max(1, 1.4 / aspect);
+    const target = resolveAnchor(toDistance, destination);
+    const parent = focus >= 0 ? parentOf(focus) : -1;
+    const ringed = body && isPlanetBody(body) && body.metadata.hasRings && body.metadata.poleVec;
+    if (ringed) pole.set(...body.metadata.poleVec!);
+    framingDirection(
+      target,
+      parent > 0 && valid[parent] ? positions[parent] : null,
+      !body || (RADII[focus] > 0 && body.rendererKind !== 'satellite-marker'),
+      ringed ? pole : null,
+      direction
+    );
+    // Live satellites may not have a position yet; frame them again once they do.
+    awaitingPosition = !!body && !valid[focus];
+    if (!body) direction.set(0.45, 0.72, 0.9).normalize();
+    panGoal.set(0, 0, 0);
+    azimuthVelocity = polarVelocity = 0;
+    const fromDistance = cam.position.distanceTo(center);
+    const separation = center.distanceTo(target);
+    if (instant || !placed || get(reducedMotion)) {
+      flight = null;
+      pan.set(0, 0, 0);
+      spherical.setFromVector3(direction);
+      azimuthGoal = spherical.theta;
+      polarGoal = spherical.phi;
+      setDistance(toDistance);
+      placed = true;
+      return;
+    }
+    fromCenter.copy(center);
+    fromQuat.setFromUnitVectors(UP, scratch.copy(cam.position).sub(center).normalize());
+    toQuat.setFromUnitVectors(UP, direction);
+    flight = {
+      start: performance.now(),
+      duration: flightDuration(fromDistance, toDistance, separation),
+      fromCenter,
+      fromDirection: fromQuat,
+      toDirection: toQuat,
+      fromDistance,
+      toDistance,
+      separation
+    };
+  }
+
+  function endFlight(): void {
+    if (!flight) return;
+    flight = null;
+    spherical.setFromVector3(scratch.copy(cam.position).sub(center));
+    azimuthGoal = spherical.theta;
+    polarGoal = spherical.phi;
+    pan.copy(center).sub(resolveAnchor(spherical.radius, anchor));
+    panGoal.copy(pan);
+    setDistance(spherical.radius);
+  }
+
+  // ── Input ──────────────────────────────────────────────────────────────
+  const pointers = new Map<number, { x: number; y: number }>();
+  let gesture: 'rotate' | 'pan' | 'touch' | null = null;
+  let downAt = { x: 0, y: 0, time: 0 };
+  let moved = false;
+  let lastTap = { x: 0, y: 0, time: 0 };
+  let pinchDistance = 0;
+  const centroid = { x: 0, y: 0 };
+  let lastMoveTime = 0;
+
+  function localPoint(event: { clientX: number; clientY: number }) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+  function updateCentroid(): void {
+    let x = 0;
+    let y = 0;
+    for (const p of pointers.values()) {
+      x += p.x;
+      y += p.y;
+    }
+    centroid.x = x / pointers.size;
+    centroid.y = y / pointers.size;
+    const [a, b] = pointers.values();
+    pinchDistance = b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  }
+  function rotateBy(dx: number, dy: number, dt: number): void {
+    const height = Math.max(size.current.height, 1);
+    const dAzimuth = (-2 * Math.PI * dx) / height;
+    const dPolar = (-2 * Math.PI * dy) / height;
+    azimuthGoal += dAzimuth;
+    polarGoal = MathUtils.clamp(polarGoal + dPolar, 0.02, Math.PI - 0.02);
+    if (dt > 0) {
+      azimuthVelocity = MathUtils.lerp(azimuthVelocity, dAzimuth / dt, 0.5);
+      polarVelocity = MathUtils.lerp(polarVelocity, dPolar / dt, 0.5);
+    }
+  }
+  function panBy(dx: number, dy: number): void {
+    const distance = cam.position.distanceTo(center);
+    const scale = (2 * distance * Math.tan(MathUtils.degToRad(FOV) / 2)) / size.current.height;
+    scratch.setFromMatrixColumn(cam.matrixWorld, 0).multiplyScalar(-dx * scale);
+    panGoal.add(scratch);
+    scratch.setFromMatrixColumn(cam.matrixWorld, 1).multiplyScalar(dy * scale);
+    panGoal.add(scratch);
+  }
+  /** Zoom by a log factor; with nothing focused, keep the point under the cursor fixed. */
+  function zoomBy(logFactor: number, at?: { x: number; y: number }): void {
+    endFlight();
+    const before = logAltitudeGoal;
+    logAltitudeGoal = MathUtils.clamp(
+      logAltitudeGoal + logFactor,
+      minLogAltitude(),
+      Math.log(MAX_DISTANCE)
+    );
+    if (focus >= 0 || !at) return;
+    const factor = Math.exp(logAltitudeGoal - before);
+    const { width, height } = size.current;
+    scratch
+      .set((at.x / width) * 2 - 1, -(at.y / height) * 2 + 1, 0.5)
+      .unproject(cam)
+      .sub(cam.position);
+    ray.copy(center).sub(cam.position);
+    const along = ray.lengthSq() / Math.max(scratch.dot(ray), 1e-30);
+    scratch.multiplyScalar(along).add(cam.position).sub(center);
+    panGoal.addScaledVector(scratch, 1 - factor);
+  }
+
+  function pick(point: { x: number; y: number }): number {
+    return pickBody(screen, point.x, point.y, 14);
+  }
+  function setHover(index: number): void {
+    if (index === hooks.hovered) return;
+    hooks.hovered = index;
+    hoveredBody.set(index >= 0 ? BODIES[index].name : null);
+    renderer.domElement.style.cursor = index >= 0 ? 'pointer' : '';
+  }
+
+  onMount(() => {
+    const element = renderer.domElement;
+    element.style.touchAction = 'none';
+    const down = (event: PointerEvent) => {
+      element.setPointerCapture(event.pointerId);
+      const point = localPoint(event);
+      pointers.set(event.pointerId, point);
+      updateCentroid();
+      if (pointers.size === 1) {
+        downAt = { ...point, time: performance.now() };
+        moved = false;
+        lastMoveTime = downAt.time;
+        const panButton =
+          event.button === 2 || event.button === 1 || event.shiftKey || event.ctrlKey;
+        gesture = event.pointerType === 'touch' ? 'rotate' : panButton ? 'pan' : 'rotate';
+      } else gesture = 'touch';
+      azimuthVelocity = polarVelocity = 0;
+      endFlight();
+    };
+    const move = (event: PointerEvent) => {
+      const point = localPoint(event);
+      const previous = pointers.get(event.pointerId);
+      if (!previous) {
+        if (event.pointerType !== 'touch') setHover(pick(point));
+        return;
+      }
+      const now = performance.now();
+      if (
+        Math.hypot(point.x - downAt.x, point.y - downAt.y) > (event.pointerType === 'touch' ? 8 : 4)
+      )
+        moved = true;
+      if (gesture === 'touch') {
+        const lastCentroid = { ...centroid };
+        const lastPinch = pinchDistance;
+        pointers.set(event.pointerId, point);
+        updateCentroid();
+        if (lastPinch > 0 && pinchDistance > 0)
+          zoomBy(Math.log(lastPinch / pinchDistance), centroid);
+        panBy(centroid.x - lastCentroid.x, centroid.y - lastCentroid.y);
+      } else {
+        pointers.set(event.pointerId, point);
+        if (!moved) return;
+        if (gesture === 'pan') panBy(point.x - previous.x, point.y - previous.y);
+        else rotateBy(point.x - previous.x, point.y - previous.y, (now - lastMoveTime) / 1000);
+      }
+      lastMoveTime = now;
+      setHover(-1);
+    };
+    const up = (event: PointerEvent) => {
+      if (!pointers.delete(event.pointerId)) return;
+      if (pointers.size > 0) {
+        updateCentroid();
+        gesture = pointers.size === 1 ? 'rotate' : 'touch';
+        return;
+      }
+      if (performance.now() - lastMoveTime > 80) azimuthVelocity = polarVelocity = 0;
+      gesture = null;
+      if (moved || event.type === 'pointercancel') return;
+      const point = localPoint(event);
+      const hit = pick(point);
+      const now = performance.now();
+      const doubleTap =
+        now - lastTap.time < 320 && Math.hypot(point.x - lastTap.x, point.y - lastTap.y) < 24;
+      lastTap = { ...point, time: now };
+      if (hit >= 0 && hit !== focus) selectBody(BODIES[hit].id);
+      else if (doubleTap) panGoal.set(0, 0, 0);
+    };
+    const wheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 400 : 1);
+      zoomBy(pixels * (event.ctrlKey ? 0.01 : 0.0022), localPoint(event));
+    };
+    const leave = () => setHover(-1);
+    const key = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        event.altKey ||
+        event.metaKey ||
+        event.ctrlKey ||
+        target?.closest('input, textarea, select, [contenteditable="true"], dialog[open]')
+      )
+        return;
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        zoomBy(event.key === 'ArrowUp' ? -0.35 : 0.35);
+      }
+    };
+    const menu = (event: Event) => event.preventDefault();
+    element.addEventListener('pointerdown', down);
+    element.addEventListener('pointermove', move);
+    element.addEventListener('pointerup', up);
+    element.addEventListener('pointercancel', up);
+    element.addEventListener('pointerleave', leave);
+    element.addEventListener('wheel', wheel, { passive: false });
+    element.addEventListener('contextmenu', menu);
+    window.addEventListener('keydown', key);
+    return () => {
+      element.removeEventListener('pointerdown', down);
+      element.removeEventListener('pointermove', move);
+      element.removeEventListener('pointerup', up);
+      element.removeEventListener('pointercancel', up);
+      element.removeEventListener('pointerleave', leave);
+      element.removeEventListener('wheel', wheel);
+      element.removeEventListener('contextmenu', menu);
+      window.removeEventListener('keydown', key);
+      setHover(-1);
+    };
+  });
+
+  // ── Commands ───────────────────────────────────────────────────────────
+  let requested: string | null = null;
+  $effect(() => {
+    requested = $selection;
+  });
+  $effect(() => {
+    void $overviewDistance;
+    if (get(selection) === SOLAR_SYSTEM_VIEW) requested = SOLAR_SYSTEM_VIEW;
+  });
+  $effect(() => {
+    const command = $cameraCommand;
+    if (!command) return;
+    if (command === 'reset') requested = get(selection);
+    else if (command === 'top') {
+      endFlight();
+      polarGoal = 0.02;
+    } else zoomBy(command === 'zoom-in' ? -0.6 : 0.6);
+    cameraCommand.set(null);
+  });
+
+  // ── Frame ──────────────────────────────────────────────────────────────
+  useTask(
+    'camera',
+    (delta) => {
+      const dt = Math.min(delta, 0.1);
+      const { width, height } = size.current;
+      if (cam.aspect !== width / height) {
+        cam.aspect = width / Math.max(height, 1);
+        cam.updateProjectionMatrix();
+      }
+      if (awaitingPosition && valid[focus]) requested = BODIES[focus].id;
+      if (requested !== null) {
+        flyTo(requested);
+        requested = null;
+      }
+
+      if (flight) {
+        const t =
+          flight.duration > 0
+            ? Math.min(1, (performance.now() - flight.start) / flight.duration)
+            : 1;
+        const eased = easeInOutCubic(t);
+        const target = focus >= 0 ? resolveAnchor(flight.toDistance, anchor) : ORIGIN;
+        center.lerpVectors(flight.fromCenter, target, eased);
+        flightQuat.slerpQuaternions(flight.fromDirection, flight.toDirection, eased);
+        direction.copy(UP).applyQuaternion(flightQuat);
+        const distance = Math.exp(
+          flightLogDistance(flight.fromDistance, flight.toDistance, flight.separation, t)
+        );
+        cam.position.copy(center).addScaledVector(direction, distance);
+        if (t >= 1) endFlight();
+      } else {
+        if (!gesture) {
+          const friction = Math.exp(-dt * 5);
+          azimuthGoal += azimuthVelocity * dt;
+          polarGoal = MathUtils.clamp(polarGoal + polarVelocity * dt, 0.02, Math.PI - 0.02);
+          azimuthVelocity *= friction;
+          polarVelocity *= friction;
+        }
+        const turn = 1 - Math.exp(-dt * 16);
+        const zoom = 1 - Math.exp(-dt * 11);
+        spherical.theta += (azimuthGoal - spherical.theta) * turn;
+        spherical.phi += (polarGoal - spherical.phi) * turn;
+        logAltitudeGoal = Math.max(logAltitudeGoal, minLogAltitude());
+        logAltitude += (logAltitudeGoal - logAltitude) * zoom;
+        pan.lerp(panGoal, zoom);
+        spherical.radius = distanceFromLog(logAltitude);
+        center.copy(resolveAnchor(spherical.radius, anchor)).add(pan);
+        cam.position.setFromSpherical(spherical).add(center);
+      }
+      lastAnchor.copy(focus >= 0 && valid[focus] ? positions[focus] : ORIGIN);
+
+      // Never let the camera sit inside a body, whatever moved.
+      for (let i = 0; i < BODY_COUNT; i++) {
+        const radius = RADII[i];
+        if (radius <= 0 || !valid[i]) continue;
+        const limit = radius * 1.001;
+        scratch.copy(cam.position).sub(positions[i]);
+        if (scratch.lengthSq() < limit * limit)
+          cam.position.copy(positions[i]).addScaledVector(scratch.normalize(), limit);
+      }
+      cam.up.copy(UP);
+      cam.lookAt(center);
+      hooks.viewDistance = cam.position.distanceTo(center);
+      cam.updateMatrixWorld();
+    },
+    { after: 'bodies' }
+  );
+</script>
+
+<T is={cam} makeDefault />

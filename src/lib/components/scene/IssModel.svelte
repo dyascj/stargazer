@@ -1,88 +1,111 @@
 <script lang="ts">
-  import { T } from '@threlte/core';
+  import { T, useTask, useThrelte } from '@threlte/core';
+  import { DirectionalLight, Matrix4, Vector3, type Group } from 'three';
+  import { get } from 'svelte/store';
+  import { onMount } from 'svelte';
+  import { EARTH_RADIUS, KM_TO_SCENE } from '$lib/scene-config';
+  import { iss } from '$stores/iss';
+  import { simTime } from '$stores/simTime';
+  import { ecfKmToEarthLocal } from '$utils/earth';
+  import { positionOf } from './bodyState';
 
   /**
-   * Parametric ISS model — central truss with eight solar array wings,
-   * a cluster of pressurized modules, and radiator panels. Built from
-   * primitive geometries so we don't have to ship a multi-megabyte GLB.
+   * The ISS at its true 109 m span, mounted in Earth's rotating frame. The
+   * truss lies along the orbit normal, the modules point along the velocity,
+   * and the solar arrays extend toward and away from Earth; the arrays'
+   * sun-tracking rotation is not modeled. Far away, the shared marker stands in.
    *
-   * Scale: the real ISS is ~108 m on its longest axis, which is 1.7×10⁻⁵
-   * scene units at our true scale. The geometry below is at the visible
-   * scale (~0.06 scene units long), so the model is exaggerated by ~3500×.
-   * That exaggeration is necessary to make it readable; the orbital
-   * altitude and ground-track positions remain physically true.
-   *
-   * Local frame:
-   *   +X = direction of travel (truss long axis)
-   *   +Y = "up" relative to Earth (perpendicular to orbital plane → solar array hinge)
-   *   +Z = side
-   *
-   * The parent component is responsible for orienting this frame so the
-   * truss aligns with the velocity vector.
+   * Model units: the truss is 0.062 long.
    */
 
-  // Monochrome palette to match the rest of the app's design language.
-  // White modules and radiators read as the brightest elements; dark
-  // solar arrays provide contrast; mid-gray truss ties them together.
-  const trussColor = '#d4d4d4';
-  const moduleColor = '#ffffff';
-  const arrayColor = '#0a0a0a';
-  const radiatorColor = '#f5f5f5';
+  const SCALE = (0.109 * KM_TO_SCENE) / 0.062;
+  const truss = '#c9c9c9';
+  const module = '#ececec';
+  const array = '#23262b';
+  const radiator = '#f2f2f2';
+  const wings = [-0.026, -0.014, 0.014, 0.026];
 
-  // Solar array wing positions along the truss (X axis)
-  const wingPositions = [-0.026, -0.014, 0.014, 0.026];
+  let group: Group | undefined = $state();
+  const position = new Vector3();
+  const ahead = new Vector3();
+  const up = new Vector3();
+  const normal = new Vector3();
+  const forward = new Vector3();
+  const basis = new Matrix4();
+  const date = new Date();
+  const world = new Vector3();
+  const fromEarth = new Vector3();
+
+  // Sunlight for the model, switched off while the station is in Earth's shadow.
+  const sunlight = new DirectionalLight(0xffffff, 2.4);
+  const { scene } = useThrelte();
+  onMount(() => {
+    scene.add(sunlight, sunlight.target);
+    return () => void scene.remove(sunlight, sunlight.target);
+  });
+
+  useTask(
+    () => {
+      if (!group) return;
+      const now = get(simTime).getTime();
+      date.setTime(now);
+      const state = iss.at(date);
+      date.setTime(now + 1000);
+      const next = state && iss.at(date);
+      group.visible = !!state && !!next;
+      if (!state || !next) return;
+      ecfKmToEarthLocal(next.ecfKm, ahead);
+      ecfKmToEarthLocal(state.ecfKm, position);
+      group.position.copy(position);
+      up.copy(position).normalize();
+      normal.crossVectors(position, ahead).normalize();
+      forward.crossVectors(normal, up);
+      group.quaternion.setFromRotationMatrix(basis.makeBasis(normal, up, forward));
+
+      group.getWorldPosition(world);
+      sunlight.target.position.copy(world);
+      const earth = positionOf('earth');
+      if (!earth) return;
+      fromEarth.copy(world).sub(earth);
+      const along = -fromEarth.dot(world) / world.length();
+      const offAxis = Math.sqrt(Math.max(fromEarth.lengthSq() - along * along, 0));
+      sunlight.intensity = along < 0 && offAxis < EARTH_RADIUS ? 0 : 2.4;
+    },
+    { after: 'bodies' }
+  );
 </script>
 
-<T.Group>
-  <!-- Central truss -->
-  <T.Mesh>
-    <T.BoxGeometry args={[0.062, 0.0035, 0.0035]} />
-    <T.MeshStandardMaterial color={trussColor} metalness={0.7} roughness={0.35} />
-  </T.Mesh>
-
-  <!-- Solar array wings: 4 pairs (8 total) -->
-  {#each wingPositions as posX (posX)}
-    <!-- Top wing -->
-    <T.Mesh position={[posX, 0.014, 0]}>
-      <T.BoxGeometry args={[0.0025, 0.022, 0.014]} />
-      <T.MeshStandardMaterial color={arrayColor} metalness={0.5} roughness={0.6} />
+<T.Group bind:ref={group} visible={false}>
+  <T.Group scale={SCALE}>
+    <T.Mesh>
+      <T.BoxGeometry args={[0.062, 0.0035, 0.0035]} />
+      <T.MeshStandardMaterial color={truss} metalness={0.6} roughness={0.4} />
     </T.Mesh>
-    <!-- Bottom wing -->
-    <T.Mesh position={[posX, -0.014, 0]}>
-      <T.BoxGeometry args={[0.0025, 0.022, 0.014]} />
-      <T.MeshStandardMaterial color={arrayColor} metalness={0.5} roughness={0.6} />
+    {#each wings as x (x)}
+      {#each [0.014, -0.014] as y (y)}
+        <T.Mesh position={[x, y, 0]}>
+          <T.BoxGeometry args={[0.0025, 0.022, 0.014]} />
+          <T.MeshStandardMaterial color={array} metalness={0.3} roughness={0.35} />
+        </T.Mesh>
+      {/each}
+    {/each}
+    {#each [0.012, -0.012] as z (z)}
+      <T.Mesh position={[0, 0, z]}>
+        <T.BoxGeometry args={[0.012, 0.001, 0.011]} />
+        <T.MeshStandardMaterial color={radiator} metalness={0.1} roughness={0.7} />
+      </T.Mesh>
+    {/each}
+    <T.Mesh rotation.x={Math.PI / 2}>
+      <T.CylinderGeometry args={[0.0042, 0.0042, 0.022, 16]} />
+      <T.MeshStandardMaterial color={module} metalness={0.3} roughness={0.5} />
     </T.Mesh>
-  {/each}
-
-  <!-- Radiator panels (perpendicular to truss, mid-span) -->
-  <T.Mesh position={[0, 0, 0.012]}>
-    <T.BoxGeometry args={[0.012, 0.001, 0.011]} />
-    <T.MeshStandardMaterial color={radiatorColor} metalness={0.4} roughness={0.6} />
-  </T.Mesh>
-  <T.Mesh position={[0, 0, -0.012]}>
-    <T.BoxGeometry args={[0.012, 0.001, 0.011]} />
-    <T.MeshStandardMaterial color={radiatorColor} metalness={0.4} roughness={0.6} />
-  </T.Mesh>
-
-  <!-- Pressurized module cluster (cylinders along the perpendicular Z axis) -->
-  <T.Mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-    <T.CylinderGeometry args={[0.0042, 0.0042, 0.022, 12]} />
-    <T.MeshStandardMaterial color={moduleColor} metalness={0.6} roughness={0.4} />
-  </T.Mesh>
-  <T.Mesh position={[-0.006, -0.0006, 0.004]} rotation={[Math.PI / 2, 0, 0]}>
-    <T.CylinderGeometry args={[0.0034, 0.0034, 0.014, 10]} />
-    <T.MeshStandardMaterial color={moduleColor} metalness={0.55} roughness={0.45} />
-  </T.Mesh>
-  <T.Mesh position={[0.006, -0.0006, 0.004]} rotation={[Math.PI / 2, 0, 0]}>
-    <T.CylinderGeometry args={[0.0034, 0.0034, 0.014, 10]} />
-    <T.MeshStandardMaterial color={moduleColor} metalness={0.55} roughness={0.45} />
-  </T.Mesh>
-  <T.Mesh position={[-0.006, -0.0006, -0.004]} rotation={[Math.PI / 2, 0, 0]}>
-    <T.CylinderGeometry args={[0.0034, 0.0034, 0.014, 10]} />
-    <T.MeshStandardMaterial color={moduleColor} metalness={0.55} roughness={0.45} />
-  </T.Mesh>
-  <T.Mesh position={[0.006, -0.0006, -0.004]} rotation={[Math.PI / 2, 0, 0]}>
-    <T.CylinderGeometry args={[0.0034, 0.0034, 0.014, 10]} />
-    <T.MeshStandardMaterial color={moduleColor} metalness={0.55} roughness={0.45} />
-  </T.Mesh>
+    {#each [-0.006, 0.006] as x (x)}
+      {#each [0.004, -0.004] as z (z)}
+        <T.Mesh position={[x, -0.0006, z]} rotation.x={Math.PI / 2}>
+          <T.CylinderGeometry args={[0.0034, 0.0034, 0.014, 16]} />
+          <T.MeshStandardMaterial color={module} metalness={0.3} roughness={0.5} />
+        </T.Mesh>
+      {/each}
+    {/each}
+  </T.Group>
 </T.Group>

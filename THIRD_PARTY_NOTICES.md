@@ -16,6 +16,7 @@ The files below are in `static/textures/`. Source names refer to the library's `
 | `2k_venus_atmosphere.jpg`   | `2k_venus_atmosphere.jpg`  | None                          |
 | `earth_albedo_2k.webp`      | `2k_earth_daymap.jpg`      | Renamed and converted to WebP |
 | `earth_clouds_2k.webp`      | `2k_earth_clouds.jpg`      | Renamed and converted to WebP |
+| `earth_night_2k.webp`       | `2k_earth_nightmap.jpg`    | Renamed and converted to WebP |
 | `moon_albedo_2k.webp`       | `2k_moon.jpg`              | Renamed and converted to WebP |
 | `mars_albedo_2k.jpg`        | `2k_mars.jpg`              | Renamed                       |
 | `2k_jupiter.jpg`            | `2k_jupiter.jpg`           | None                          |

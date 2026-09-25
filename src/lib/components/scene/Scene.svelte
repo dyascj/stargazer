@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { hoveredBody } from '$stores/sceneHover';
-  import { resetBodyCursor } from '$utils/sceneCursor';
-  onDestroy(resetBodyCursor);
   import { Canvas } from '@threlte/core';
-  import { WebGLRenderer } from 'three';
-  let failed = $state(false);
-  const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, 1.5);
+  import { ACESFilmicToneMapping, WebGLRenderer } from 'three';
+  import { showLabels } from '$stores/ui';
   import World from './World.svelte';
+  import BodyLabels from './BodyLabels.svelte';
 
-  /** Logarithmic depth accommodates local satellites and distant spacecraft in one scene. */
+  let failed = $state(false);
+  // Sharp on high-density screens without paying for 3x fill rate on phones.
+  const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, 2);
+
+  /** A logarithmic depth buffer resolves metres at the ISS and AU at Neptune in one frame. */
   function createRenderer(canvas: HTMLCanvasElement): WebGLRenderer {
     canvas.addEventListener('webglcontextlost', () => (failed = true), { once: true });
     return new WebGLRenderer({
@@ -21,12 +21,9 @@
   }
 </script>
 
-<div
-  class="absolute inset-0 active:cursor-grabbing"
-  style:cursor={$hoveredBody ? 'pointer' : 'grab'}
->
+<div class="scene">
   <svelte:boundary>
-    <Canvas {createRenderer} {dpr}><World /></Canvas>
+    <Canvas {createRenderer} {dpr} toneMapping={ACESFilmicToneMapping}><World /></Canvas>
     {#snippet failed()}
       <div class="scene-error">
         <h2>The 3D view could not start.</h2>
@@ -35,6 +32,7 @@
       </div>
     {/snippet}
   </svelte:boundary>
+  {#if $showLabels}<BodyLabels />{/if}
   {#if failed}<div class="scene-error" role="alert">
       <p>The graphics connection was interrupted.</p>
       <button type="button" onclick={() => window.location.reload()}>Reload scene</button>
@@ -42,22 +40,36 @@
 </div>
 
 <style>
+  .scene {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+    background: var(--bg);
+  }
+  .scene:active {
+    cursor: grabbing;
+  }
   .scene-error {
     position: absolute;
     top: 40%;
-    left: 25%;
-    right: 15%;
-    color: var(--space-text);
+    left: 50%;
+    width: min(420px, calc(100% - 32px));
+    transform: translate(-50%, -50%);
     padding: 24px;
-    background: var(--space-surface);
-    border: 1px solid var(--space-line);
-    font: 14px system-ui;
-    line-height: 1.7;
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    color: var(--text-1);
+    font: 14px/1.6 var(--font-sans);
+  }
+  .scene-error p {
+    color: var(--text-2);
   }
   .scene-error button {
     margin-top: 16px;
-    padding: 12px;
-    background: var(--space-accent);
-    color: white;
+    padding: 10px 16px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--text-inverse);
+    font-weight: 550;
   }
 </style>

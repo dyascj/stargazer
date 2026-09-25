@@ -1,81 +1,55 @@
 <script lang="ts">
   import { T, useTask, useThrelte } from '@threlte/core';
-  import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-  import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
   import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
   import { get } from 'svelte/store';
   import { simTime } from '$stores/simTime';
   import type { SatelliteStore } from '$stores/satelliteFactory';
   import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
+  import { createPolyline, writeVertex } from './polyline';
 
   /**
-   * Generic visibility footprint — draws the great-circle ring on Earth's
-   * surface at the satellite's horizon. Source-agnostic, works with any
-   * SatelliteStore.
-   *
-   * The store's `footprintKm` is the surface arc DIAMETER (matching the
-   * wheretheiss convention), so we divide by two to get the radius.
+   * The satellite's horizon circle on Earth's surface, drawn in Earth's
+   * rotating frame around the geocentric sub-satellite point.
    */
 
   let { store }: { store: SatelliteStore } = $props();
 
   const { size } = useThrelte();
-  const SAMPLES = 96;
-  const SURFACE_OFFSET = 1.001;
-
-  const geometry = new LineGeometry();
-  geometry.setPositions(new Float32Array(SAMPLES * 3));
-
+  const SAMPLES = 128;
+  const RADIUS = EARTH_RADIUS * 1.0008;
   const material = new LineMaterial({
-    color: 0xffffff,
-    linewidth: 1.5,
+    color: 0xd6e4ee,
+    linewidth: 1,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.25,
     depthWrite: false
   });
+  const { line, positions } = createPolyline(SAMPLES, material);
 
-  const line = new Line2(geometry, material);
-  line.frustumCulled = false;
-
-  const positions = new Float32Array(SAMPLES * 3);
-
-  function rebuild(latDeg: number, lonDeg: number, footprintKm: number) {
-    const radiusKm = footprintKm / 2;
-    const angularRadius = radiusKm / EARTH_RADIUS_KM;
-    const lat1 = (latDeg * Math.PI) / 180;
-    const lon1 = (lonDeg * Math.PI) / 180;
-
-    const cosD = Math.cos(angularRadius);
-    const sinD = Math.sin(angularRadius);
-    const cosLat1 = Math.cos(lat1);
-    const sinLat1 = Math.sin(lat1);
-
+  function rebuild(ecf: { x: number; y: number; z: number }, footprintKm: number): void {
+    const lat = Math.atan2(ecf.z, Math.hypot(ecf.x, ecf.y));
+    const lon = Math.atan2(ecf.y, ecf.x);
+    const angle = footprintKm / 2 / EARTH_RADIUS_KM;
+    const cosD = Math.cos(angle);
+    const sinD = Math.sin(angle);
     for (let i = 0; i < SAMPLES; i++) {
       const theta = (i / (SAMPLES - 1)) * 2 * Math.PI;
-      const lat2 = Math.asin(sinLat1 * cosD + cosLat1 * sinD * Math.cos(theta));
+      const lat2 = Math.asin(Math.sin(lat) * cosD + Math.cos(lat) * sinD * Math.cos(theta));
       const lon2 =
-        lon1 + Math.atan2(Math.sin(theta) * sinD * cosLat1, cosD - sinLat1 * Math.sin(lat2));
-      const r = EARTH_RADIUS * SURFACE_OFFSET;
-      const cosLat2 = Math.cos(lat2);
-      positions[i * 3] = r * cosLat2 * Math.cos(lon2);
-      positions[i * 3 + 1] = r * Math.sin(lat2);
-      positions[i * 3 + 2] = -r * cosLat2 * Math.sin(lon2);
+        lon +
+        Math.atan2(Math.sin(theta) * sinD * Math.cos(lat), cosD - Math.sin(lat) * Math.sin(lat2));
+      const x = RADIUS * Math.cos(lat2) * Math.cos(lon2);
+      const z = -RADIUS * Math.cos(lat2) * Math.sin(lon2);
+      writeVertex(positions, i, SAMPLES, x, RADIUS * Math.sin(lat2), z);
     }
-    geometry.setPositions(positions);
-    line.computeLineDistances();
-    geometry.computeBoundingSphere();
+    positions.needsUpdate = true;
   }
 
-  let lastTime = NaN;
   useTask(() => {
-    const date = get(simTime);
-    const data = store.at(date);
-    line.visible = !!data;
-    if (data && (!Number.isFinite(lastTime) || Math.abs(date.getTime() - lastTime) > 100)) {
-      rebuild(data.latitude, data.longitude, data.footprintKm);
-      lastTime = date.getTime();
-    }
-    material.resolution.set($size.width, $size.height);
+    const state = store.at(get(simTime));
+    line.visible = !!state;
+    if (state) rebuild(state.ecfKm, state.footprintKm);
+    material.resolution.set(size.current.width, size.current.height);
   });
 </script>
 
