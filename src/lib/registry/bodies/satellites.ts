@@ -1,12 +1,9 @@
-import { Vector3 } from 'three';
 import {
   createTleBackedStore,
   createTleStore,
   type SatelliteStore
 } from '$stores/satelliteFactory';
-import { latLonAltToVec3 } from '$utils/coords';
-import { earthLocalToInertialOffset } from '$utils/earth';
-import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
+import { ecfKmToInertialOffset } from '$utils/earth';
 import type { SatelliteCategory, TrackedObject } from '../types';
 
 /**
@@ -45,12 +42,8 @@ interface CuratedSatelliteOpts {
   noradId: number;
   name: string;
   subtitle: string;
-  /** Hex color for the point marker dot + label accent. */
-  color: string;
   /** Sub-category used by the LeftPanel tree to group satellites. */
   category: SatelliteCategory;
-  /** How far the camera should sit when flying to this body. */
-  cameraDistance?: number;
   /** Label visibility tier. Defaults to 5 (close zoom only). */
   labelTier?: number;
   /** Short prose description for the info panel. */
@@ -62,8 +55,6 @@ interface CuratedSatelliteOpts {
   /** Position tracking metadata. */
   tracking?: { mode: string; source: string; epoch?: string };
 }
-
-const _localTmp = new Vector3();
 
 function curatedSatellite(opts: CuratedSatelliteOpts): TrackedObject {
   const tleStore = createTleStore(opts.noradId);
@@ -84,25 +75,13 @@ function curatedSatellite(opts: CuratedSatelliteOpts): TrackedObject {
     parent: 'earth',
     offsetFn: (date, target) => {
       const data = dataStore.at(date);
-      if (!data) return null;
-      const [x, y, z] = latLonAltToVec3(
-        data.latitude,
-        data.longitude,
-        data.altitudeKm,
-        EARTH_RADIUS,
-        EARTH_RADIUS_KM
-      );
-      _localTmp.set(x, y, z);
-      return earthLocalToInertialOffset(_localTmp, target, date);
+      return data ? ecfKmToInertialOffset(data.ecfKm, target, date) : null;
     },
     rendererKind: 'point-marker',
-    cameraDistance: opts.cameraDistance ?? 2,
     labelTier: opts.labelTier ?? 5,
     metadata: {
       subtitle: opts.subtitle,
       externalId: opts.noradId.toString(),
-      color: opts.color,
-      pixelSize: 11,
       satelliteCategory: opts.category,
       description: opts.description,
       facts: opts.facts,
@@ -119,7 +98,6 @@ const HUBBLE = curatedSatellite({
   noradId: 20580,
   name: 'Hubble Space Telescope',
   subtitle: 'NASA · Optical / UV / IR observatory, in orbit since 1990',
-  color: '#8A8A85',
   category: 'science',
   labelTier: 4,
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
@@ -139,7 +117,6 @@ const CHANDRA = curatedSatellite({
   noradId: 25867,
   name: 'Chandra X-ray Observatory',
   subtitle: 'NASA · X-ray observatory, since 1999',
-  color: '#787878',
   category: 'science',
   labelTier: 4,
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
@@ -159,7 +136,6 @@ const FERMI = curatedSatellite({
   noradId: 33053,
   name: 'Fermi Gamma-ray Space Telescope',
   subtitle: 'NASA / DOE · Gamma-ray sky survey, since 2008',
-  color: '#787878',
   category: 'science',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -180,7 +156,6 @@ const NOAA_20 = curatedSatellite({
   noradId: 43013,
   name: 'NOAA-20 (JPSS-1)',
   subtitle: 'NOAA · Polar-orbiting weather satellite, since 2017',
-  color: '#E8441E',
   category: 'weather',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -199,7 +174,6 @@ const GOES_18 = curatedSatellite({
   noradId: 51850,
   name: 'GOES-18',
   subtitle: 'NOAA · Geostationary weather satellite over the Pacific',
-  color: '#A09A90',
   category: 'weather',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -220,7 +194,6 @@ const SENTINEL_1A = curatedSatellite({
   noradId: 39634,
   name: 'Sentinel-1A',
   subtitle: 'ESA · C-band synthetic aperture radar, since 2014',
-  color: '#8A8A85',
   category: 'earth-observation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -239,7 +212,6 @@ const LANDSAT_9 = curatedSatellite({
   noradId: 49260,
   name: 'Landsat 9',
   subtitle: 'NASA / USGS · Land imaging satellite, since 2021',
-  color: '#8A8A85',
   category: 'earth-observation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -258,7 +230,6 @@ const AQUA = curatedSatellite({
   noradId: 27424,
   name: 'Aqua',
   subtitle: 'NASA · EOS Earth observing satellite, since 2002',
-  color: '#787878',
   category: 'earth-observation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -279,7 +250,6 @@ const GPS_NAVSTAR_66 = curatedSatellite({
   noradId: 37753,
   name: 'GPS BIIF-2 (NAVSTAR 66)',
   subtitle: 'U.S. Space Force · GPS Block IIF navigation satellite',
-  color: '#787878',
   category: 'navigation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -300,7 +270,6 @@ const IRIDIUM_158 = curatedSatellite({
   noradId: 43571,
   name: 'Iridium 158',
   subtitle: 'Iridium · Voice/data relay (sample of 66 in the constellation)',
-  color: '#787878',
   category: 'communication',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -321,7 +290,6 @@ const STARLINK_5447 = curatedSatellite({
   noradId: 54779,
   name: 'Starlink 5447',
   subtitle: 'SpaceX · A satellite in the Starlink broadband constellation',
-  color: '#A09A90',
   category: 'internet',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -340,7 +308,6 @@ const ONEWEB_0011 = curatedSatellite({
   noradId: 44062,
   name: 'OneWeb 0011',
   subtitle: 'OneWeb · Sample broadband internet satellite',
-  color: '#8A8A85',
   category: 'internet',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:

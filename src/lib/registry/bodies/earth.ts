@@ -18,7 +18,6 @@ export const EARTH: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getEarthScenePosition(target, date),
   rendererKind: 'planet-body',
-  cameraDistance: 3,
   labelTier: 1,
   metadata: {
     subtitle: 'Sol III',
@@ -27,10 +26,9 @@ export const EARTH: TrackedObject = {
     textureUrl: '/textures/earth_albedo_2k.webp',
     obliquityRad: EARTH_OBLIQUITY_RAD,
     rotationModel: 'gmst',
-    hasAtmosphere: true,
+    atmosphere: { color: [0.26, 0.5, 1.0], heightKm: 110, density: 0.7 },
     dayLength: '23h 56m 04s',
     yearLength: '365.25 days',
-    orbitColor: 0xe8441e,
     description:
       'Third planet from the Sun. The only known world with liquid surface water, a nitrogen-oxygen atmosphere, and confirmed life. Orbits at 1 AU — the baseline distance used to measure the rest of the solar system.',
     facts: [

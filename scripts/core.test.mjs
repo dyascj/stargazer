@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'vite';
-import { Vector3 } from 'three';
+import { Quaternion, Vector3 } from 'three';
 import { get } from 'svelte/store';
 import * as satellite from 'satellite.js';
 import { replaceBody, replaceNumber, parseResult } from './refresh-ephemeris.mjs';
@@ -21,10 +21,14 @@ const lunar = await load('utils/moon');
 const time = await load('stores/simTime');
 const registry = await load('registry/registry');
 const tle = await load('utils/tle');
-const orbit = await load('utils/issOrbit');
+const earthFrame = await load('utils/earth');
+const orbits = await load('utils/orbit');
+const rotation = await load('utils/rotation');
+const frames = await load('utils/frames');
 const passes = await load('utils/passes');
 const poles = await load('utils/pole');
 const { AU_KM, AU_TO_SCENE, EARTH_RADIUS_KM } = await load('scene-config');
+const date = (record) => new Date((record.jd - 2440587.5) * 86400000);
 const fixture = JSON.parse(
   await readFile(new URL('./fixtures/horizons.json', import.meta.url), 'utf8')
 );
@@ -50,9 +54,9 @@ test('Kepler converges across circular and near-parabolic elliptic orbits', () =
   assert.throws(() => kepler.solveKepler(NaN, 0.1));
 });
 
-test('Solar small bodies use AU scale; local orbits use Earth radii', () => {
+test('One true scale: scene units are Earth radii everywhere, including AU distances', () => {
+  assert.ok(Math.abs(AU_TO_SCENE - AU_KM / EARTH_RADIUS_KM) < 1e-9);
   const elements = {
-    parentId: 'sun',
     a_km: AU_KM,
     e: 0,
     i_deg: 0,
@@ -69,11 +73,7 @@ test('Solar small bodies use AU scale; local orbits use Earth radii', () => {
   assert.ok(
     Math.abs(
       moons
-        .computeMoonOffset(
-          { ...elements, parentId: 'earth', a_km: EARTH_RADIUS_KM * 2 },
-          date,
-          new Vector3()
-        )
+        .computeMoonOffset({ ...elements, a_km: EARTH_RADIUS_KM * 2 }, date, new Vector3())
         .length() - 2
     ) < 1e-9
   );
@@ -90,10 +90,12 @@ test('Planet positions stay within educational tolerances of independent JPL vec
   assert.equal(fixture.records.length, 30);
   const errors = {};
   for (const record of fixture.records.filter((r) => r.id !== 'moon')) {
-    const date = new Date((record.jd - 2440587.5) * 86400000);
-    const actual = helio
-      .getPlanetScenePosition(new Vector3(), record.id, date)
-      .divideScalar(AU_TO_SCENE);
+    const when = date(record);
+    const actual = (
+      record.id === 'earth'
+        ? earthFrame.getEarthScenePosition(new Vector3(), when)
+        : helio.getPlanetScenePosition(new Vector3(), record.id, when)
+    ).divideScalar(AU_TO_SCENE);
     const expected = new Vector3(record.x, record.z, -record.y);
     const angleDeg = (actual.angleTo(expected) * 180) / Math.PI;
     const distanceFraction = Math.abs(actual.length() / expected.length() - 1);
@@ -107,9 +109,11 @@ test('Planet positions stay within educational tolerances of independent JPL vec
   console.log('Maximum sampled planetary angular errors (degrees):', errors);
 });
 
-test('Truncated Moon model has bounded sampled errors, without precision claims', () => {
+test('Lunar model tracks Horizons in the J2000 frame to within a tenth of a degree', () => {
+  let worstAngle = 0;
+  let worstDistance = 0;
   for (const record of fixture.records.filter((r) => r.id === 'moon')) {
-    const state = lunar.getLunarState(new Date((record.jd - 2440587.5) * 86400000));
+    const state = lunar.getLunarState(date(record));
     const expected = new Vector3(record.x, record.y, record.z);
     const lon = (state.eclipticLon * Math.PI) / 180,
       lat = (state.eclipticLat * Math.PI) / 180;
@@ -118,10 +122,33 @@ test('Truncated Moon model has bounded sampled errors, without precision claims'
       Math.cos(lat) * Math.sin(lon),
       Math.sin(lat)
     );
-    assert.ok((actual.angleTo(expected) * 180) / Math.PI < 3);
-    assert.ok(Math.abs(state.distanceKm / (expected.length() * AU_KM) - 1) < 0.025);
+    worstAngle = Math.max(worstAngle, (actual.angleTo(expected) * 180) / Math.PI);
+    worstDistance = Math.max(
+      worstDistance,
+      Math.abs(state.distanceKm / (expected.length() * AU_KM) - 1)
+    );
     assert.ok(state.illumination >= 0 && state.illumination <= 1);
+    // The scene offset is the same vector at true scale, relative to Earth's center.
+    const offset = lunar.getMoonInertialOffset(new Vector3(), date(record));
+    assert.ok(
+      Math.abs((offset.length() * EARTH_RADIUS_KM) / state.distanceKm - 1) < 1e-12,
+      'Moon distance is not compressed'
+    );
   }
+  console.log('Lunar model worst errors:', { worstAngle, worstDistance });
+  assert.ok(worstAngle < 0.1, `Moon direction error ${worstAngle}°`);
+  assert.ok(worstDistance < 0.001, `Moon distance error ${worstDistance}`);
+});
+
+test('Earth sits at the geocenter, offset from the JPL Earth–Moon barycenter', () => {
+  const when = new Date('2026-09-06T00:00:00Z');
+  const barycenter = helio.getPlanetScenePosition(new Vector3(), 'earth', when);
+  const earth = earthFrame.getEarthScenePosition(new Vector3(), when);
+  const moon = lunar.getMoonInertialOffset(new Vector3(), when);
+  const offsetKm = earth.distanceTo(barycenter) * EARTH_RADIUS_KM;
+  assert.ok(offsetKm > 4000 && offsetKm < 5000, `barycenter offset ${offsetKm} km`);
+  // The barycenter lies on the Earth–Moon line, on the Moon's side.
+  assert.ok(barycenter.clone().sub(earth).angleTo(moon) < 1e-9);
 });
 
 test('Registry identities, parent chains, finite positions, and physical radii', () => {
@@ -179,20 +206,11 @@ test('TLE validation rejects corrupted, mismatched and non-orbital responses', (
   assert.throws(() => tle.parseTle('<html>Rate limited</html>', 5));
 });
 
-test('SGP4 verification vector and orbit validity window', () => {
+test('SGP4 verification vector and pass prediction', () => {
   const result = satellite.sgp4(satrec, 0);
   assert.ok(Math.abs(result.position.x - 7022.46529266) < 0.001);
   assert.ok(Math.abs(result.position.y + 1400.08296755) < 0.001);
   assert.ok(Math.abs(result.position.z - 0.03995155) < 0.001);
-  const points = orbit.computeIssOrbit({ line1, line2 }, { start: epoch, samples: 120 });
-  assert.equal(points.length, 360);
-  assert.ok(points.every(Number.isFinite));
-  assert.equal(
-    orbit.computeIssOrbit({ line1, line2 }, { start: new Date(epoch.getTime() + 8 * 86400000) })
-      .length,
-    0
-  );
-  assert.throws(() => orbit.computeIssOrbit({ line1, line2 }, { samples: 1 }));
   assert.throws(() =>
     passes.computePasses(
       { line1, line2 },
@@ -342,4 +360,97 @@ test('Explorer search ranks names, aliases, catalog numbers, and near-miss typos
   );
   for (const group of SHORTCUT_GROUPS)
     assert.equal(SHORTCUTS[group.start], group.bodies[0], `${group.label} offset`);
+});
+
+test('SGP4 positions reach the scene through the Earth-fixed frame without distortion', () => {
+  // Treating geodetic latitude and ellipsoid height as spherical coordinates
+  // displaced satellites by up to ~20 km; the Earth-fixed path is exact.
+  for (const minutes of [0, 40, 80, 120, 160]) {
+    const when = new Date(epoch.getTime() + minutes * 60000);
+    const { position } = satellite.propagate(satrec, when);
+    const ecf = satellite.eciToEcf(position, satellite.gstime(when));
+    const offset = earthFrame.ecfKmToInertialOffset(ecf, new Vector3(), when);
+    const radiusKm = Math.hypot(position.x, position.y, position.z);
+    assert.ok(Math.abs(offset.length() * EARTH_RADIUS_KM - radiusKm) < 1e-6);
+  }
+  // Earth-fixed x/y/z land on the mesh axes: 0° longitude +X, north +Y, east -Z.
+  const local = earthFrame.ecfKmToEarthLocal({ x: 1, y: 2, z: 3 }, new Vector3());
+  assert.ok(local.multiplyScalar(EARTH_RADIUS_KM).distanceTo(new Vector3(1, 3, -2)) < 1e-12);
+});
+
+test('Orbit periods come from catalogued values or vis-viva; static snapshots have none', () => {
+  const when = new Date('2026-09-06T00:00:00Z');
+  const days = (id) => orbits.orbitalPeriodMs(registry.getById(id), when) / 86400000;
+  assert.ok(Math.abs(days('earth') - 365.256) < 0.5, `Earth ${days('earth')}`);
+  assert.ok(Math.abs(days('mars') - 686.98) < 3, `Mars ${days('mars')}`);
+  assert.ok(Math.abs(days('moon') - 27.32166) < 1e-9);
+  assert.ok(Math.abs(days('ceres') - 1680.2) < 5, `Ceres ${days('ceres')}`);
+  assert.equal(orbits.orbitalPeriodMs(registry.getById('voyager-1'), when), null);
+  // Samples start at the body and end one period earlier, densest at both ends.
+  assert.equal(orbits.orbitSampleOffsetMs(0, 64, 1000), 0);
+  assert.ok(Math.abs(orbits.orbitSampleOffsetMs(63, 64, 1000) - 1000) < 1e-9);
+  assert.ok(orbits.orbitSampleOffsetMs(1, 64, 1000) < 1000 / 63 / 5);
+});
+
+test('True-scale placements: Moon, Webb at L2, Mars landers, and physical radii', () => {
+  const when = new Date('2026-09-06T00:00:00Z');
+  const km = (id, parent) => {
+    const a = registry.getWorldPosition(id, when, new Vector3(), new Vector3());
+    const b = registry.getWorldPosition(parent, when, new Vector3(), new Vector3());
+    return a.distanceTo(b) * EARTH_RADIUS_KM;
+  };
+  assert.ok(km('moon', 'earth') > 356000 && km('moon', 'earth') < 407000);
+  assert.ok(Math.abs(km('jwst', 'earth') / 1.5e6 - 1) < 0.02, `L2 ${km('jwst', 'earth')}`);
+  assert.ok(Math.abs(km('curiosity', 'mars') - 3389.5) < 1e-6);
+  const phobos = km('phobos', 'mars');
+  assert.ok(phobos > 9200 && phobos < 9550, `Phobos ${phobos}`);
+  for (const body of registry.TRACKED_OBJECTS)
+    if (body.rendererKind === 'planet-body')
+      assert.ok(
+        Math.abs(body.metadata.radius * EARTH_RADIUS_KM - body.metadata.radiusKm) < 1e-9,
+        `${body.id} is drawn at its physical radius`
+      );
+});
+
+test('IAU rotation elements match the WGCCRE reports', () => {
+  // [RA, Dec, W0, W rate] for the J2000 epoch (Archinal et al. 2011 and 2018).
+  const iau = {
+    mercury: [281.0103, 61.4155, 329.5469, 6.1385025],
+    venus: [272.76, 67.16, 160.2, -1.4813688],
+    mars: [317.68143, 52.8865, 176.63, 350.89198226],
+    jupiter: [268.056595, 64.495303, 284.95, 870.536],
+    saturn: [40.589, 83.537, 38.9, 810.7939024],
+    uranus: [257.311, -15.175, 203.81, -501.1600928],
+    neptune: [299.36, 43.46, 253.18, 536.3128492],
+    pluto: [132.993, -6.163, 302.695, 56.3625225]
+  };
+  for (const [id, [ra, dec, w0, rate]] of Object.entries(iau)) {
+    const meta = registry.getById(id).metadata;
+    const pole = new Vector3(...frames.equatorialToScene(ra, dec));
+    assert.ok(new Vector3(...meta.poleVec).angleTo(pole) < 1e-9, `${id} pole`);
+    assert.equal(meta.rotationW0Deg, w0, `${id} W0`);
+    assert.equal(meta.rotationRateDegPerDay, rate, `${id} rotation rate`);
+  }
+  // The ecliptic north pole is at RA 18h, Dec 66.56° in J2000 equatorial coordinates.
+  const eclipticPole = frames.equatorialToScene(270, 90 - 23.4393);
+  assert.ok(new Vector3(...eclipticPole).angleTo(new Vector3(0, 1, 0)) < 1e-9);
+  // The Galactic Center (RA 266.405°, Dec -28.936°) is the galactic +X axis.
+  const center = new Vector3(1, 0, 0).applyMatrix4(frames.GALACTIC_TO_SCENE);
+  assert.ok(center.angleTo(new Vector3(...frames.equatorialToScene(266.405, -28.936))) < 1e-4);
+});
+
+test('Tidally locked moons face their planet and spin about its pole', () => {
+  const when = new Date('2026-09-06T00:00:00Z');
+  const miranda = registry.getById('miranda');
+  const uranusPole = new Vector3(...registry.getById('uranus').metadata.poleVec);
+  const offset = miranda.offsetFn(when, new Vector3());
+  const q = rotation.tidalLockQuaternion(
+    offset,
+    registry.getById('uranus').metadata.poleVec,
+    new Quaternion()
+  );
+  const facing = new Vector3(1, 0, 0).applyQuaternion(q);
+  assert.ok(facing.angleTo(offset.clone().negate()) < 1e-6);
+  // Miranda orbits 4.3° from Uranus's equator; ecliptic north would be ~82° off.
+  assert.ok((new Vector3(0, 1, 0).applyQuaternion(q).angleTo(uranusPole) * 180) / Math.PI < 5);
 });

@@ -1,5 +1,6 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
@@ -24,7 +25,6 @@ export const MERCURY: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'mercury', date),
   rendererKind: 'planet-body',
-  cameraDistance: 1.5,
   labelTier: 1,
   metadata: {
     subtitle: 'Sol I · The Swift Planet',
@@ -32,13 +32,12 @@ export const MERCURY: TrackedObject = {
     radius: MERCURY_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: MERCURY_RADIUS_KM,
     textureUrl: '/textures/2k_mercury.jpg',
-    poleVec: [0.0913, 0.9925, 0.0816],
+    poleVec: equatorialToScene(281.0103, 61.4155),
     rotationModel: 'iau-w',
     rotationW0Deg: 329.5469,
     rotationRateDegPerDay: 6.1385025,
     dayLength: '58.65 Earth days',
     yearLength: '87.97 Earth days',
-    orbitColor: 0x8a8a85,
     description:
       'Mercury is the smallest and innermost planet in the solar system, with virtually no atmosphere and extreme temperature swings between day and night. Its surface is heavily cratered and resembles the Moon.',
     facts: [

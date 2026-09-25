@@ -4,27 +4,12 @@ import { solveKepler } from './kepler';
 
 /**
  * Heliocentric position helpers using the Standish/Meeus orbital element approach.
- * JPL Table 1 fit, valid 1800–2050. Earth uses the Earth–Moon barycenter
- * approximation. Accuracy varies by planet; these are not navigation ephemerides.
+ * JPL Table 1 fit, valid 1800–2050. The 'earth' elements describe the Earth–Moon
+ * barycenter (see getEarthScenePosition). These are not navigation ephemerides.
  */
 
 const DEG = Math.PI / 180;
 const J2000_MS = Date.UTC(2000, 0, 1, 12);
-
-export interface OrbitalElements {
-  /** Semi-major axis (AU) */
-  a: number;
-  /** Eccentricity */
-  e: number;
-  /** Inclination to ecliptic (deg) */
-  i: number;
-  /** Mean longitude (deg) */
-  L: number;
-  /** Longitude of perihelion (deg) */
-  longPeri: number;
-  /** Longitude of ascending node (deg) */
-  longNode: number;
-}
 
 export interface OrbitalElementsWithRates {
   /** Semi-major axis at J2000 (AU), and rate per Julian century */
@@ -117,41 +102,8 @@ function mod(value: number, modulus: number): number {
   return ((value % modulus) + modulus) % modulus;
 }
 
-/** Evaluate orbital elements at a given Julian-century offset T. */
-export function evaluateElements(els: OrbitalElementsWithRates, T: number): OrbitalElements {
-  return {
-    a: els.a[0] + els.a[1] * T,
-    e: els.e[0] + els.e[1] * T,
-    i: els.i[0] + els.i[1] * T,
-    L: els.L[0] + els.L[1] * T,
-    longPeri: els.longPeri[0] + els.longPeri[1] * T,
-    longNode: els.longNode[0] + els.longNode[1] * T
-  };
-}
-
-/** Heliocentric ecliptic position of a planet (AU, ecliptic Cartesian). */
-export function heliocentricEclipticAU(els: OrbitalElements): { x: number; y: number; z: number } {
-  const M = mod(els.L - els.longPeri, 360) * DEG;
-  const omega = (els.longPeri - els.longNode) * DEG;
-  const i = els.i * DEG;
-  const Omega = els.longNode * DEG;
-
-  const E = solveKepler(M, els.e);
-  const xOrb = els.a * (Math.cos(E) - els.e);
-  const yOrb = els.a * Math.sqrt(1 - els.e * els.e) * Math.sin(E);
-
-  const cosO = Math.cos(Omega);
-  const sinO = Math.sin(Omega);
-  const cosw = Math.cos(omega);
-  const sinw = Math.sin(omega);
-  const cosi = Math.cos(i);
-  const sini = Math.sin(i);
-
-  const x = (cosO * cosw - sinO * sinw * cosi) * xOrb + (-cosO * sinw - sinO * cosw * cosi) * yOrb;
-  const y = (sinO * cosw + cosO * sinw * cosi) * xOrb + (-sinO * sinw + cosO * cosw * cosi) * yOrb;
-  const z = sinw * sini * xOrb + cosw * sini * yOrb;
-
-  return { x, y, z };
+function at(element: [number, number], T: number): number {
+  return element[0] + element[1] * T;
 }
 
 /** Heliocentric scene-space position of a planet (scene Y = ecliptic north). */
@@ -161,48 +113,26 @@ export function getPlanetScenePosition(
   date: Date = new Date()
 ): Vector3 {
   const T = (date.getTime() - J2000_MS) / (86400000 * 36525);
-  const els = evaluateElements(PLANETS[planetKey], T);
-  const { x, y, z } = heliocentricEclipticAU(els);
-  // Map ecliptic frame to three.js (Y up). The ecliptic Z becomes scene Y;
-  // ecliptic X stays as scene X; ecliptic Y maps to -scene Z so we get a
-  // right-handed scene with the orbits viewed from "north".
-  return target.set(x * AU_TO_SCENE, z * AU_TO_SCENE, -y * AU_TO_SCENE);
-}
+  const els = PLANETS[planetKey];
+  const a = at(els.a, T);
+  const e = at(els.e, T);
+  const i = at(els.i, T) * DEG;
+  const longPeri = at(els.longPeri, T);
+  const longNode = at(els.longNode, T);
+  const E = solveKepler(mod(at(els.L, T) - longPeri, 360) * DEG, e);
+  const xOrb = a * (Math.cos(E) - e);
+  const yOrb = a * Math.sqrt(1 - e * e) * Math.sin(E);
 
-/** Closed orbit ellipse sampled at evenly-spaced eccentric anomalies, as a Float32Array of XYZ. */
-export function getOrbitEllipsePoints(
-  planetKey: keyof typeof PLANETS,
-  samples = 256,
-  date: Date = new Date()
-): Float32Array {
-  const T = (date.getTime() - J2000_MS) / (86400000 * 36525);
-  const els = evaluateElements(PLANETS[planetKey], T);
-
-  const positions = new Float32Array((samples + 1) * 3);
-  const omega = (els.longPeri - els.longNode) * DEG;
-  const i = els.i * DEG;
-  const Omega = els.longNode * DEG;
-  const cosO = Math.cos(Omega);
-  const sinO = Math.sin(Omega);
-  const cosw = Math.cos(omega);
-  const sinw = Math.sin(omega);
+  const cosO = Math.cos(longNode * DEG);
+  const sinO = Math.sin(longNode * DEG);
+  const cosw = Math.cos((longPeri - longNode) * DEG);
+  const sinw = Math.sin((longPeri - longNode) * DEG);
   const cosi = Math.cos(i);
   const sini = Math.sin(i);
 
-  for (let s = 0; s <= samples; s++) {
-    const E = (s / samples) * 2 * Math.PI;
-    const xOrb = els.a * (Math.cos(E) - els.e);
-    const yOrb = els.a * Math.sqrt(1 - els.e * els.e) * Math.sin(E);
-
-    const x =
-      (cosO * cosw - sinO * sinw * cosi) * xOrb + (-cosO * sinw - sinO * cosw * cosi) * yOrb;
-    const y =
-      (sinO * cosw + cosO * sinw * cosi) * xOrb + (-sinO * sinw + cosO * cosw * cosi) * yOrb;
-    const z = sinw * sini * xOrb + cosw * sini * yOrb;
-
-    positions[s * 3] = x * AU_TO_SCENE;
-    positions[s * 3 + 1] = z * AU_TO_SCENE;
-    positions[s * 3 + 2] = -y * AU_TO_SCENE;
-  }
-  return positions;
+  const x = (cosO * cosw - sinO * sinw * cosi) * xOrb + (-cosO * sinw - sinO * cosw * cosi) * yOrb;
+  const y = (sinO * cosw + cosO * sinw * cosi) * xOrb + (-sinO * sinw + cosO * cosw * cosi) * yOrb;
+  const z = sinw * sini * xOrb + cosw * sini * yOrb;
+  // Ecliptic (x, y, z) maps to scene (x, z, -y): scene Y is ecliptic north.
+  return target.set(x * AU_TO_SCENE, z * AU_TO_SCENE, -y * AU_TO_SCENE);
 }

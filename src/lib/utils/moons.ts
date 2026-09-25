@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { EARTH_RADIUS_KM, AU_KM, AU_TO_SCENE } from '../scene-config';
+import { KM_TO_SCENE } from '../scene-config';
 import { solveKepler } from './kepler';
 
 /**
@@ -7,15 +7,13 @@ import { solveKepler } from './kepler';
  *
  * Propagates mean Keplerian elements (J2000 ecliptic frame, parent body at origin)
  * forward in time via mean motion, solves Kepler's equation, and outputs the body's
- * offset from its parent CENTER in scene units. Supports elliptic orbits (0 ≤ e < 1).
+ * offset from its parent's center in scene units. Supports elliptic orbits (0 ≤ e < 1).
  *
  * Elements sourced from JPL HORIZONS (EPHEM_TYPE=ELEMENTS, REF_PLANE=ECLIPTIC,
  * OUT_UNITS=KM-D) at each record’s epoch. UTC is used as an approximation to TDB (minute-scale offset).
  */
 
 export interface MoonOrbitalElements {
-  /** Parent body id: selects AU scaling for Sun-centered orbits. */
-  parentId: string;
   /** Semi-major axis in km (J2000 ecliptic). */
   a_km: number;
   /** Eccentricity. Highly elliptical orbits OK (Juno e ≈ 0.97). */
@@ -86,10 +84,6 @@ export function computeMoonOffset(
     (sinO * cosw + cosO * sinw * cosi) * x_orb + (-sinO * sinw + cosO * cosw * cosi) * y_orb;
   const z_ecl_km = sinw * sini * x_orb + cosw * sini * y_orb;
 
-  // km → scene units, then map ecliptic axes to the unified scene frame:
-  //   scene.x = ecl.x
-  //   scene.y = ecl.z   (scene Y = ecliptic north)
-  //   scene.z = -ecl.y
-  const scale = elements.parentId === 'sun' ? AU_TO_SCENE / AU_KM : 1 / EARTH_RADIUS_KM;
-  return target.set(x_ecl_km * scale, z_ecl_km * scale, -y_ecl_km * scale);
+  // km to scene units; ecliptic (x, y, z) maps to scene (x, z, -y).
+  return target.set(x_ecl_km * KM_TO_SCENE, z_ecl_km * KM_TO_SCENE, -y_ecl_km * KM_TO_SCENE);
 }

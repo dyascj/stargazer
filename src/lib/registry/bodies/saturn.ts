@@ -1,12 +1,12 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
  * Saturn — second largest planet, volumetric mean radius (9.15 × Earth, ~58,232 km
  * per NASA Planetary Fact Sheet).
- * True heliocentric position from the Standish ephemeris (~9.54 AU = ~954
- * scene units from the Sun).
+ * True heliocentric position from the Standish ephemeris (~9.54 AU from the Sun).
  *
  * Pole orientation from IAU 2018: RA = 40.589°, Dec = 83.537°. Saturn's
  * obliquity is 26.73° (similar to Earth's), giving the planet recognizable
@@ -24,7 +24,6 @@ export const SATURN: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'saturn', date),
   rendererKind: 'planet-body',
-  cameraDistance: 60,
   labelTier: 1,
   metadata: {
     subtitle: 'Sol VI · The Ringed Planet',
@@ -32,7 +31,7 @@ export const SATURN: TrackedObject = {
     radius: SATURN_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: SATURN_RADIUS_KM,
     textureUrl: '/textures/2k_saturn.jpg',
-    poleVec: [0.0855, 0.8825, -0.4624],
+    poleVec: equatorialToScene(40.589, 83.537),
     rotationModel: 'iau-w',
     rotationW0Deg: 38.9,
     rotationRateDegPerDay: 810.7939024,
@@ -46,9 +45,8 @@ export const SATURN: TrackedObject = {
       textureUrl: '/textures/2k_saturn_ring_alpha.png',
       color: '#ffffff'
     },
-    dayLength: '10h 33m',
+    dayLength: '10h 39m',
     yearLength: '29.46 Earth years',
-    orbitColor: 0x8a8a85,
     description:
       'Saturn is best known for its extensive ring system, made primarily of ice particles with some rocky debris and dust. It is the least dense planet in the solar system and would float in water if a basin large enough existed.',
     facts: [

@@ -1,12 +1,12 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
  * Neptune — outermost classical planet, volumetric mean radius (3.86 × Earth,
  * ~24,622 km per NASA Planetary Fact Sheet). True heliocentric position from the
- * Standish ephemeris
- * (~30.07 AU = ~3007 scene units from the Sun).
+ * Standish ephemeris (~30.07 AU from the Sun).
  *
  * Pole orientation from IAU 2018: RA = 299.36°, Dec = 43.46°. Neptune's
  * obliquity is 28.32° (similar to Earth's), giving it pronounced seasons
@@ -24,7 +24,6 @@ export const NEPTUNE: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'neptune', date),
   rendererKind: 'planet-body',
-  cameraDistance: 25,
   labelTier: 1,
   metadata: {
     subtitle: 'Sol VIII · The Distant Ice Giant',
@@ -32,13 +31,12 @@ export const NEPTUNE: TrackedObject = {
     radius: NEPTUNE_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: NEPTUNE_RADIUS_KM,
     textureUrl: '/textures/2k_neptune.jpg',
-    poleVec: [0.3558, 0.8828, 0.3067],
+    poleVec: equatorialToScene(299.36, 43.46),
     rotationModel: 'iau-w',
     rotationW0Deg: 253.18,
     rotationRateDegPerDay: 536.3128492,
     dayLength: '16h 6m',
     yearLength: '164.79 Earth years',
-    orbitColor: 0x686868,
     description:
       'Neptune is the most distant planet from the Sun and has the strongest sustained winds in the solar system, reaching over 2,000 km/h. It was the first planet discovered through mathematical prediction rather than direct observation.',
     facts: [

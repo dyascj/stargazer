@@ -1,27 +1,22 @@
 import { Matrix4, Vector3 } from 'three';
 import { getPlanetScenePosition } from './helio';
-import { EARTH_OBLIQUITY_RAD } from '../scene-config';
+import { getMoonInertialOffset } from './moon';
+import { EARTH_OBLIQUITY_RAD, KM_TO_SCENE } from '../scene-config';
 
 /**
- * Earth-specific helpers for the unified heliocentric scene.
- *
- * Earth sits at its true heliocentric position. Its orientation is the
- * combined transform R_x(-obliquity) · R_y(GMST): the GMST rotation spins
- * Earth around its own geographic axis, and the obliquity tilt orients
- * that axis 23.44° from ecliptic north. This module exposes the math used
- * by both Earth.svelte and the camera-tracking code in World.svelte so
- * the two stay aligned.
+ * Earth's orientation is R_x(-obliquity) · R_y(GMST): GMST spins Earth about
+ * its geographic axis and the obliquity tilts that axis from ecliptic north.
+ * PlanetBody applies the same composition to the Earth mesh, so bodies placed
+ * with these helpers stay attached to the rendered surface.
  */
 
 const J2000_MS = Date.UTC(2000, 0, 1, 12);
 const DEG_PER_HOUR = 15;
 const DEG_TO_RAD = Math.PI / 180;
+/** Moon mass over Earth–Moon mass (DE440 mass ratio 81.3006). */
+const MOON_MASS_FRACTION = 1 / 82.3006;
 
-/**
- * Greenwich Mean Sidereal Time at the given instant, expressed as a
- * rotation angle in radians around the Y axis. This is the angle that
- * Earth has rotated from the vernal-equinox-aligned starting position.
- */
+/** Greenwich Mean Sidereal Time as a rotation angle in radians. */
 export function getGmstRadians(date: Date = new Date()): number {
   const d = (date.getTime() - J2000_MS) / 86400000;
   let hours = (18.697374558 + 24.06570982441908 * d) % 24;
@@ -29,62 +24,56 @@ export function getGmstRadians(date: Date = new Date()): number {
   return hours * DEG_PER_HOUR * DEG_TO_RAD;
 }
 
-/** Earth's heliocentric scene position (1 AU = 100 units). */
+/**
+ * Earth's heliocentric scene position. JPL's approximate elements describe the
+ * Earth–Moon barycenter, which sits about 4,700 km from Earth's center; that
+ * offset is visible at true scale, so it is removed using the lunar model.
+ */
 export function getEarthScenePosition(target: Vector3, date: Date = new Date()): Vector3 {
-  return getPlanetScenePosition(target, 'earth', date);
+  getPlanetScenePosition(target, 'earth', date);
+  return target.addScaledVector(getMoonInertialOffset(_moon, date), -MOON_MASS_FRACTION);
 }
 
 /**
- * Take an Earth-fixed (local) offset and apply ONLY Earth's combined
- * orientation transform — GMST rotation around the geographic axis,
- * then obliquity tilt around scene +X — without the heliocentric
- * translation. The result is the body's inertial offset from Earth's
- * CENTER in scene coordinates.
- *
- * Used by the registry's `offsetFn` for Earth-orbiting bodies (ISS,
- * Tiangong, future Hubble, etc.), since the registry's position model
- * is "offset from parent". The world position is then composed by
- * adding Earth's heliocentric position via the parent walk in
- * `registry.ts`.
- *
- * This MUST exactly match Earth.svelte's transform — its useTask sets
- * `rotation.x = -EARTH_OBLIQUITY_RAD; rotation.y = GMST` which produces
- * the matrix R_x(-obliquity) · R_y(GMST).
+ * Apply Earth's orientation (without translation) to an Earth-fixed offset,
+ * giving the inertial offset from Earth's center in scene coordinates.
  */
 export function earthLocalToInertialOffset(
   local: { x: number; y: number; z: number },
   target: Vector3,
   date: Date = new Date()
 ): Vector3 {
-  const gmst = getGmstRadians(date);
-
-  // Build R_x(-obliquity) · R_y(GMST) — same composition order as the
-  // Three.js Euler XYZ on Earth's group.
   _earthRot.makeRotationX(-EARTH_OBLIQUITY_RAD);
-  _gmstRot.makeRotationY(gmst);
+  _gmstRot.makeRotationY(getGmstRadians(date));
   _earthRot.multiply(_gmstRot);
-
   return target.set(local.x, local.y, local.z).applyMatrix4(_earthRot);
 }
 
 /**
- * Take an Earth-fixed (local) offset and return its inertial WORLD
- * position by applying Earth's orientation transform AND its
- * heliocentric translation. Convenience wrapper around
- * `earthLocalToInertialOffset` for the camera-tracking code in
- * World.svelte, which works in world coordinates rather than
- * parent-relative offsets.
+ * Earth-centered, Earth-fixed kilometres (x to 0° longitude, z to the north
+ * pole) in the Earth mesh's local frame, where +Y is north and east is -Z.
  */
-export function earthLocalToWorld(
-  local: { x: number; y: number; z: number },
-  target: Vector3,
-  date: Date = new Date()
+export function ecfKmToEarthLocal(
+  ecf: { x: number; y: number; z: number },
+  target: Vector3
 ): Vector3 {
-  earthLocalToInertialOffset(local, target, date);
-  const earth = getEarthScenePosition(_helioTmp, date);
-  return target.set(target.x + earth.x, target.y + earth.y, target.z + earth.z);
+  return target.set(ecf.x * KM_TO_SCENE, ecf.z * KM_TO_SCENE, -ecf.y * KM_TO_SCENE);
 }
 
-const _helioTmp = new Vector3();
+/**
+ * Earth-fixed satellite position (from SGP4's TEME output rotated by GMST) as
+ * an inertial scene offset. Going through the Earth-fixed frame keeps the
+ * satellite above the correct point of the rendered, GMST-rotated globe.
+ */
+export function ecfKmToInertialOffset(
+  ecf: { x: number; y: number; z: number },
+  target: Vector3,
+  date: Date
+): Vector3 {
+  return earthLocalToInertialOffset(ecfKmToEarthLocal(ecf, _local), target, date);
+}
+
+const _moon = new Vector3();
+const _local = new Vector3();
 const _earthRot = new Matrix4();
 const _gmstRot = new Matrix4();

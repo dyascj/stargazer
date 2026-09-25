@@ -1,12 +1,13 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
  * Pluto — dwarf planet, true body radius (0.186 × Earth, ~1188.3 km per NASA
  * Planetary Fact Sheet, smaller
  * than the Moon). True heliocentric position from the JPL simplified
- * Keplerian fit (~39.48 AU mean = ~3948 scene units from the Sun, but
+ * Keplerian fit (~39.48 AU mean from the Sun, but
  * Pluto's eccentric orbit takes it between ~30 and ~49 AU).
  *
  * Pluto was reclassified as a dwarf planet in 2006. Charon is tracked separately.
@@ -26,7 +27,6 @@ export const PLUTO: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'pluto', date),
   rendererKind: 'planet-body',
-  cameraDistance: 1,
   labelTier: 1,
   metadata: {
     subtitle: 'Dwarf planet · 134340 Pluto',
@@ -34,13 +34,12 @@ export const PLUTO: TrackedObject = {
     radius: PLUTO_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: PLUTO_RADIUS_KM,
     solidColor: '#b89b7a',
-    poleVec: [-0.678, -0.3878, -0.6245],
+    poleVec: equatorialToScene(132.993, -6.163),
     rotationModel: 'iau-w',
     rotationW0Deg: 302.695,
-    rotationRateDegPerDay: -56.3625225,
+    rotationRateDegPerDay: 56.3625225,
     dayLength: '6.39 Earth days (retrograde)',
     yearLength: '248.0 Earth years',
-    orbitColor: 0x585858,
     description:
       "Pluto is a dwarf planet in the Kuiper Belt, reclassified from full planet status in 2006. NASA's New Horizons flyby in 2015 revealed a complex surface with nitrogen ice glaciers, mountains of water ice, and a thin atmosphere.",
     facts: [

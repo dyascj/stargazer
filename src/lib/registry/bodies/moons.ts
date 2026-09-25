@@ -1,10 +1,9 @@
-import { EARTH_RADIUS_KM, MOON_COMPRESSION } from '$lib/scene-config';
+import { KM_TO_SCENE } from '$lib/scene-config';
 import { computeMoonOffset, type MoonOrbitalElements } from '$utils/moons';
 import type { TrackedObject } from '../types';
 
 /**
  * Notable moons with dated Keplerian elements from JPL Horizons.
- * Phobos and Deimos use exaggerated display radii for visibility; honest radiusKm is preserved.
  * Constant elements omit perturbations and precession; error grows away from each epoch.
  */
 
@@ -16,15 +15,12 @@ function moon(opts: {
   parentId: string;
   /** Body radius in km (true). */
   radiusKm: number;
-  /** Override radius in scene units when true scale is invisible. */
-  displayRadius?: number;
   color: string;
-  cameraDistance: number;
   subtitle?: string;
   /** Label visibility tier — defaults to 4 for ordinary moons. */
   labelTier?: number;
   /** Full Keplerian elements (parent's ecliptic J2000 frame, km, deg). */
-  elements: Omit<MoonOrbitalElements, 'parentId'>;
+  elements: MoonOrbitalElements;
   /** 1-2 sentence prose description for the info panel. */
   description?: string;
   /** Key-value fact pairs displayed in the info panel grid. */
@@ -33,14 +29,9 @@ function moon(opts: {
   sources?: { name: string; url: string }[];
   /** Position tracking metadata. */
   tracking?: { mode: string; source: string; epoch?: string };
-  /** Render a fresnel atmosphere shell (Titan). */
-  hasAtmosphere?: boolean;
-  atmosphereColor?: readonly [number, number, number];
+  /** Render an atmosphere shell (Titan). */
+  atmosphere?: { color: readonly [number, number, number]; heightKm: number; density: number };
 }): TrackedObject {
-  const fullElements: MoonOrbitalElements = {
-    ...opts.elements,
-    parentId: opts.parentId
-  };
   const periodDays = opts.elements.period_days;
   const periodStr =
     periodDays < 1
@@ -51,17 +42,8 @@ function moon(opts: {
     name: opts.name,
     type: 'moon',
     parent: opts.parentId,
-    offsetFn: (date, target) => {
-      const result = computeMoonOffset(fullElements, date, target);
-      // Apply per-parent distance compression so all moon systems
-      // have visually consistent proportions (see scene-config.ts
-      // MOON_COMPRESSION for the rationale and per-system values).
-      const scale = MOON_COMPRESSION[opts.parentId];
-      if (result && scale !== undefined) result.multiplyScalar(scale);
-      return result;
-    },
+    offsetFn: (date, target) => computeMoonOffset(opts.elements, date, target),
     rendererKind: 'planet-body',
-    cameraDistance: opts.cameraDistance,
     labelTier: opts.labelTier ?? 4,
     metadata: {
       subtitle: opts.subtitle,
@@ -75,11 +57,10 @@ function moon(opts: {
           .toISOString()
           .replace('Z', ' TDB')
       },
-      radius: opts.displayRadius ?? opts.radiusKm / EARTH_RADIUS_KM,
+      radius: opts.radiusKm * KM_TO_SCENE,
       radiusKm: opts.radiusKm,
       solidColor: opts.color,
-      hasAtmosphere: opts.hasAtmosphere,
-      atmosphereColor: opts.atmosphereColor,
+      atmosphere: opts.atmosphere,
       rotationModel: 'tidal-lock',
       dayLength: `${periodStr} (tidal lock)`,
       yearLength: periodStr,
@@ -95,9 +76,7 @@ const PHOBOS = moon({
   name: 'Phobos',
   parentId: 'mars',
   radiusKm: 11.2,
-  displayRadius: 0.04,
   color: '#7a6e63',
-  cameraDistance: 0.3,
   labelTier: 5,
   subtitle: 'Mars I · Captured asteroid',
   description:
@@ -133,9 +112,7 @@ const DEIMOS = moon({
   name: 'Deimos',
   parentId: 'mars',
   radiusKm: 6.2,
-  displayRadius: 0.03,
   color: '#827368',
-  cameraDistance: 0.3,
   labelTier: 5,
   subtitle: 'Mars II · Smaller of Mars\u2019s two moons',
   description:
@@ -177,7 +154,6 @@ const IO = moon({
   parentId: 'jupiter',
   radiusKm: 1821.6,
   color: '#e6c878',
-  cameraDistance: 1.5,
   labelTier: 3,
   subtitle: 'Jupiter I · The most volcanically active world',
   description:
@@ -217,7 +193,6 @@ const EUROPA = moon({
   parentId: 'jupiter',
   radiusKm: 1560.8,
   color: '#d8c8a8',
-  cameraDistance: 1.5,
   labelTier: 3,
   subtitle: 'Jupiter II · Subsurface ocean candidate',
   description:
@@ -257,7 +232,6 @@ const GANYMEDE = moon({
   parentId: 'jupiter',
   radiusKm: 2634.1,
   color: '#9c8c78',
-  cameraDistance: 2.5,
   labelTier: 3,
   subtitle: 'Jupiter III · Largest moon in the solar system',
   description:
@@ -294,7 +268,6 @@ const CALLISTO = moon({
   parentId: 'jupiter',
   radiusKm: 2410.3,
   color: '#5c4f44',
-  cameraDistance: 2.5,
   labelTier: 3,
   subtitle: 'Jupiter IV · Most heavily cratered body in the solar system',
   description:
@@ -333,7 +306,6 @@ const MIMAS = moon({
   parentId: 'saturn',
   radiusKm: 198.2,
   color: '#cfc8c0',
-  cameraDistance: 0.5,
   subtitle: 'Saturn I · The "Death Star" moon',
   description:
     "Mimas is dominated by the giant Herschel crater, which spans nearly a third of the moon's diameter and gives it a resemblance to the Death Star. Recent Cassini data suggest Mimas may hide a young internal ocean beneath its icy crust.",
@@ -372,7 +344,6 @@ const ENCELADUS = moon({
   parentId: 'saturn',
   radiusKm: 252.1,
   color: '#f4f4f0',
-  cameraDistance: 0.6,
   subtitle: 'Saturn II · Cryovolcanic ocean world',
   description:
     'Enceladus shoots towering geysers of water vapor and ice particles from fractures near its south pole, fed by a global subsurface ocean. Cassini detected molecular hydrogen and organic molecules in the plumes, making it a top astrobiology target.',
@@ -408,7 +379,6 @@ const TETHYS = moon({
   parentId: 'saturn',
   radiusKm: 531.1,
   color: '#dcd6c8',
-  cameraDistance: 1.2,
   subtitle: 'Saturn III · Heavily cratered icy moon',
   description:
     'Tethys is composed almost entirely of water ice and features Odysseus, one of the largest impact craters in the solar system relative to its host body. A massive canyon called Ithaca Chasma stretches nearly three-quarters of the way around the moon.',
@@ -444,7 +414,6 @@ const DIONE = moon({
   parentId: 'saturn',
   radiusKm: 561.4,
   color: '#d4cec0',
-  cameraDistance: 1.2,
   subtitle: 'Saturn IV · Wispy ice cliffs of the trailing hemisphere',
   description:
     'Dione is an icy Saturnian moon known for bright wispy features on its trailing hemisphere, which Cassini revealed to be networks of ice cliffs created by tectonic fractures. Evidence from Cassini gravity data hints at a thin subsurface ocean.',
@@ -480,7 +449,6 @@ const RHEA = moon({
   parentId: 'saturn',
   radiusKm: 763.8,
   color: '#c8c2b4',
-  cameraDistance: 1.6,
   subtitle: 'Saturn V · Second-largest Saturnian moon',
   description:
     "Rhea is Saturn's second-largest moon and is composed mostly of water ice with a small rocky core. It was briefly hypothesized to have a tenuous ring system of its own, which would have made it the only moon known to possess rings.",
@@ -516,10 +484,8 @@ const TITAN = moon({
   parentId: 'saturn',
   radiusKm: 2574.7,
   color: '#d99c4a',
-  cameraDistance: 2.5,
   labelTier: 3,
-  hasAtmosphere: true,
-  atmosphereColor: [0.85, 0.55, 0.25],
+  atmosphere: { color: [0.95, 0.62, 0.28], heightKm: 600, density: 1.4 },
   subtitle: 'Saturn VI · Thick nitrogen atmosphere, methane lakes',
   description:
     'Titan is the only moon in the solar system with a dense atmosphere, primarily nitrogen with methane and ethane clouds. Its surface hosts lakes and seas of liquid methane, making it the only world besides Earth known to have stable surface liquids.',
@@ -558,7 +524,6 @@ const IAPETUS = moon({
   parentId: 'saturn',
   radiusKm: 734.5,
   color: '#9c8c70',
-  cameraDistance: 1.5,
   subtitle: 'Saturn VIII · Two-toned hemisphere, equatorial ridge',
   description:
     'Iapetus has a striking two-toned appearance: one hemisphere is dark as coal, the other bright as snow, caused by thermal migration of dark material swept up in its orbit. A mysterious equatorial ridge up to 20 km high runs along much of its circumference.',
@@ -596,7 +561,6 @@ const MIRANDA = moon({
   parentId: 'uranus',
   radiusKm: 235.8,
   color: '#bcb8b4',
-  cameraDistance: 0.6,
   subtitle: 'Uranus V · Patchwork terrain, 20 km cliffs',
   description:
     'Miranda has one of the most bizarre and jumbled landscapes in the solar system, with giant fault canyons, terraced layers, and Verona Rupes, a cliff face roughly 20 km high. Its patchwork geology may result from tidal heating during a past orbital resonance.',
@@ -635,7 +599,6 @@ const ARIEL = moon({
   parentId: 'uranus',
   radiusKm: 578.9,
   color: '#c4c0bc',
-  cameraDistance: 1.3,
   subtitle: 'Uranus I · Brightest of the Uranian moons',
   description:
     'Ariel is the brightest and possibly the most geologically active of the Uranian moons, with extensive systems of fault canyons and smooth plains that suggest relatively recent resurfacing. Its high reflectivity comes from a fresh water-ice surface.',
@@ -674,7 +637,6 @@ const UMBRIEL = moon({
   parentId: 'uranus',
   radiusKm: 584.7,
   color: '#5e5854',
-  cameraDistance: 1.3,
   subtitle: 'Uranus II · Darkest large Uranian moon',
   description:
     'Umbriel is the darkest of the large Uranian moons, with a uniformly dark surface broken by a single bright ring-shaped feature called Wunda crater near its equator. Its ancient, heavily cratered terrain suggests little geological activity.',
@@ -710,7 +672,6 @@ const TITANIA = moon({
   parentId: 'uranus',
   radiusKm: 788.4,
   color: '#a89c8c',
-  cameraDistance: 1.6,
   subtitle: 'Uranus III · Largest Uranian moon',
   description:
     'Titania is the largest moon of Uranus and the eighth-largest moon in the solar system. Its surface shows huge fault systems and canyons, indicating past tectonic activity, possibly driven by the freezing and expansion of an interior water layer.',
@@ -746,7 +707,6 @@ const OBERON = moon({
   parentId: 'uranus',
   radiusKm: 761.4,
   color: '#9c8c80',
-  cameraDistance: 1.5,
   subtitle: 'Uranus IV · Outermost large Uranian moon',
   description:
     'Oberon is the outermost of the five major Uranian moons and the second largest. Its heavily cratered surface includes several large impact basins with dark material on their floors, likely a mixture of ice and carbonaceous compounds.',
@@ -784,7 +744,6 @@ const TRITON = moon({
   parentId: 'neptune',
   radiusKm: 1353.4,
   color: '#d0a890',
-  cameraDistance: 2.0,
   labelTier: 3,
   subtitle: 'Neptune I · Largest Neptunian moon, retrograde, captured KBO',
   description:
@@ -823,7 +782,6 @@ const CHARON = moon({
   parentId: 'pluto',
   radiusKm: 606,
   color: '#9c8e7e',
-  cameraDistance: 1.3,
   labelTier: 3,
   subtitle: 'Pluto I · Half Pluto\u2019s diameter, mutually tidally locked',
   description:

@@ -17,11 +17,9 @@ function smallBody(opts: {
   externalId?: string;
   /** True body radius in km (for the info panel). */
   radiusKm: number;
-  color: string;
-  cameraDistance: number;
   labelTier?: number;
   /** Full Keplerian elements (heliocentric ecliptic J2000, km, deg). */
-  elements: Omit<MoonOrbitalElements, 'parentId'>;
+  elements: MoonOrbitalElements;
   /** Short prose description for the info panel. */
   description?: string;
   /** Key-value fact pairs rendered as a grid. */
@@ -31,24 +29,17 @@ function smallBody(opts: {
   /** Position tracking metadata. */
   tracking?: { mode: string; source: string; epoch?: string };
 }): TrackedObject {
-  const fullElements: MoonOrbitalElements = {
-    ...opts.elements,
-    parentId: 'sun'
-  };
   return {
     id: opts.id,
     name: opts.name,
     type: opts.type,
     parent: 'sun',
-    offsetFn: (date, target) => computeMoonOffset(fullElements, date, target),
+    offsetFn: (date, target) => computeMoonOffset(opts.elements, date, target),
     rendererKind: 'point-marker',
-    cameraDistance: opts.cameraDistance,
     labelTier: opts.labelTier ?? 4,
     metadata: {
       subtitle: opts.subtitle,
       externalId: opts.externalId,
-      color: opts.color,
-      pixelSize: 11,
       description: opts.description,
       facts: opts.facts,
       sources: opts.sources,
@@ -66,8 +57,6 @@ const CERES = smallBody({
   subtitle: '1 Ceres · Largest body in the asteroid belt, dwarf planet',
   externalId: '1',
   radiusKm: 469.7,
-  color: '#b8a888',
-  cameraDistance: 6,
   labelTier: 2,
   tracking: {
     mode: 'Approximate orbit',
@@ -104,8 +93,6 @@ const PALLAS = smallBody({
   subtitle: '2 Pallas · Third largest asteroid, 35° orbital inclination',
   externalId: '2',
   radiusKm: 256,
-  color: '#a8a09c',
-  cameraDistance: 6,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -140,8 +127,6 @@ const VESTA = smallBody({
   subtitle: '4 Vesta · Second most massive, Dawn mission target',
   externalId: '4',
   radiusKm: 262.7,
-  color: '#c4b8a0',
-  cameraDistance: 6,
   labelTier: 3,
   tracking: {
     mode: 'Approximate orbit',
@@ -177,8 +162,6 @@ const HYGIEA = smallBody({
   subtitle: '10 Hygiea · Fourth largest asteroid',
   externalId: '10',
   radiusKm: 215,
-  color: '#7c7468',
-  cameraDistance: 6,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -213,8 +196,6 @@ const PSYCHE_16 = smallBody({
   subtitle: '16 Psyche · Metal-rich asteroid, NASA Psyche mission target',
   externalId: '16',
   radiusKm: 113,
-  color: '#9c7e68',
-  cameraDistance: 6,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -251,8 +232,6 @@ const EROS = smallBody({
   subtitle: '433 Eros · First asteroid landed on (NEAR Shoemaker, 2001)',
   externalId: '433',
   radiusKm: 8.42,
-  color: '#a89070',
-  cameraDistance: 5,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -287,8 +266,6 @@ const ITOKAWA = smallBody({
   subtitle: '25143 Itokawa · Hayabusa first sample return (2010)',
   externalId: '25143',
   radiusKm: 0.165,
-  color: '#9c8870',
-  cameraDistance: 5,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -323,8 +300,6 @@ const BENNU = smallBody({
   subtitle: '101955 Bennu · OSIRIS-REx sample returned 2023',
   externalId: '101955',
   radiusKm: 0.245,
-  color: '#5c5450',
-  cameraDistance: 5,
   labelTier: 3,
   tracking: {
     mode: 'Approximate orbit',
@@ -360,8 +335,6 @@ const RYUGU = smallBody({
   subtitle: '162173 Ryugu · Hayabusa2 sample returned 2020',
   externalId: '162173',
   radiusKm: 0.435,
-  color: '#5c544c',
-  cameraDistance: 5,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -396,8 +369,6 @@ const APOPHIS = smallBody({
   subtitle: '99942 Apophis · Famous close-Earth approach in April 2029',
   externalId: '99942',
   radiusKm: 0.185,
-  color: '#a87858',
-  cameraDistance: 5,
   labelTier: 3,
   tracking: {
     mode: 'Approximate orbit',
@@ -433,8 +404,6 @@ const DIDYMOS = smallBody({
   subtitle: '65803 Didymos · DART planetary-defense test target (2022)',
   externalId: '65803',
   radiusKm: 0.39,
-  color: '#7c6c5c',
-  cameraDistance: 5,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -471,8 +440,6 @@ const ERIS = smallBody({
   subtitle: '136199 Eris · More massive than Pluto, dwarf planet',
   externalId: '136199',
   radiusKm: 1163,
-  color: '#dcd8d0',
-  cameraDistance: 8,
   labelTier: 2,
   tracking: {
     mode: 'Approximate orbit',
@@ -509,8 +476,6 @@ const HAUMEA = smallBody({
   subtitle: '136108 Haumea · Egg-shaped, 4-hour rotation, has rings',
   externalId: '136108',
   radiusKm: 798,
-  color: '#e8e0d4',
-  cameraDistance: 7,
   labelTier: 3,
   tracking: {
     mode: 'Approximate orbit',
@@ -547,8 +512,6 @@ const MAKEMAKE = smallBody({
   subtitle: '136472 Makemake · Reddish methane-ice surface',
   externalId: '136472',
   radiusKm: 715,
-  color: '#c89878',
-  cameraDistance: 7,
   labelTier: 3,
   tracking: {
     mode: 'Approximate orbit',
@@ -585,8 +548,6 @@ const SEDNA = smallBody({
   subtitle: '90377 Sedna · Distant trans-Neptunian object, dwarf planet candidate',
   externalId: '90377',
   radiusKm: 498,
-  color: '#a85838',
-  cameraDistance: 8,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -622,8 +583,6 @@ const QUAOAR = smallBody({
   subtitle: '50000 Quaoar · Ringed Kuiper belt object, dwarf planet candidate',
   externalId: '50000',
   radiusKm: 555,
-  color: '#a89888',
-  cameraDistance: 7,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -661,8 +620,6 @@ const HALLEY = smallBody({
   subtitle: '1P/Halley · Most famous periodic comet, 75-year retrograde orbit',
   externalId: '1P',
   radiusKm: 5.5,
-  color: '#a8d8ff',
-  cameraDistance: 8,
   labelTier: 2,
   tracking: {
     mode: 'Approximate orbit',
@@ -698,8 +655,6 @@ const COMET_67P = smallBody({
   subtitle: '67P · Rosetta mission target, first comet landed on (2014)',
   externalId: '67P',
   radiusKm: 2.0,
-  color: '#80b8e0',
-  cameraDistance: 6,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -734,8 +689,6 @@ const TEMPEL_1 = smallBody({
   subtitle: '9P/Tempel 1 · Deep Impact target (2005), Stardust-NExT flyby (2011)',
   externalId: '9P',
   radiusKm: 3.0,
-  color: '#88c0e8',
-  cameraDistance: 6,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'

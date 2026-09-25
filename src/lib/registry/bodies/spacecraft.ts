@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { AU_TO_SCENE } from '$lib/scene-config';
 import { computeMoonOffset, type MoonOrbitalElements } from '$utils/moons';
 import { planetSurfaceToInertialOffset } from '$utils/planetSurface';
@@ -20,8 +19,6 @@ function spacecraftPointMarker(opts: {
   type: 'spacecraft' | 'lander';
   subtitle?: string;
   externalId?: string;
-  color: string;
-  cameraDistance: number;
   labelTier?: number;
   description?: string;
   facts?: { label: string; value: string }[];
@@ -36,7 +33,6 @@ function spacecraftPointMarker(opts: {
     parent: opts.parent,
     offsetFn: opts.offsetFn,
     rendererKind: 'point-marker',
-    cameraDistance: opts.cameraDistance,
     labelTier: opts.labelTier ?? 4,
     metadata: {
       subtitle: opts.subtitle,
@@ -44,9 +40,7 @@ function spacecraftPointMarker(opts: {
       description: opts.description,
       facts: opts.facts,
       sources: opts.sources,
-      tracking: opts.tracking,
-      color: opts.color,
-      pixelSize: 11
+      tracking: opts.tracking
     }
   };
 }
@@ -56,15 +50,7 @@ function staticOffset(scenePos: [number, number, number]): TrackedObject['offset
   return (_date, target) => target.set(scenePos[0], scenePos[1], scenePos[2]);
 }
 
-/**
- * Convert HORIZONS heliocentric ECLIPTIC J2000 Cartesian (in AU) to
- * scene-frame Cartesian (100 scene units per AU). Used for the
- * static spacecraft snapshots fetched from HORIZONS.
- *
- * helio.ts maps ecliptic axes (x, y, z) → scene axes (x, z, -y), with
- * AU_TO_SCENE = 100 (1 AU = 100 scene units). This helper applies both
- * transformations so each entry can paste the raw HORIZONS X/Y/Z values.
- */
+/** HORIZONS heliocentric ecliptic J2000 AU to scene coordinates, so records paste raw X/Y/Z. */
 function helioAuToScene(
   ecl_x_au: number,
   ecl_y_au: number,
@@ -95,25 +81,16 @@ function landerOffset(
 }
 
 /**
- * Earth-Sun L2 offset from Earth's center: ~1.5 million km in the
- * anti-Sun direction. Computed each frame from Earth's current
- * heliocentric position.
+ * Sun–Earth L2, about 1.5 million km beyond Earth on the Sun–Earth line:
+ * r · (mu / 3)^(1/3), with mu the Earth–Moon to Sun mass ratio.
  */
-// Illustrative local offset: L2 would sit at Earth's enlarged surface at AU scale.
-const L2_DISTANCE_SCENE = 8;
+const L2_FRACTION = Math.cbrt(3.0404e-6 / 3);
 function l2Offset(): TrackedObject['offsetFn'] {
   return (date, target) => {
-    const earth = getById('earth');
-    if (!earth) return null;
-    const earthPos = earth.offsetFn(date, _l2Tmp);
-    if (!earthPos) return null;
-    const len = earthPos.length();
-    if (len === 0) return null;
-    const k = L2_DISTANCE_SCENE / len;
-    return target.set(earthPos.x * k, earthPos.y * k, earthPos.z * k);
+    const earth = getById('earth')?.offsetFn(date, target);
+    return earth ? earth.multiplyScalar(L2_FRACTION) : null;
   };
 }
-const _l2Tmp = new Vector3();
 
 // ── Mars orbiters (real Keplerian elements from JPL HORIZONS) ───────────
 
@@ -124,8 +101,6 @@ const MRO = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · In orbit since 2006',
   externalId: '-74',
-  color: '#E8441E',
-  cameraDistance: 1.0,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -146,7 +121,6 @@ const MRO = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 3649.635498229657,
     e: 0.006639282082142034,
     i_deg: 71.43302599356795,
@@ -165,8 +139,6 @@ const MAVEN = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · Mars atmosphere mission, 2013–2026',
   externalId: '-202',
-  color: '#8A8A85',
-  cameraDistance: 1.2,
   tracking: {
     epoch: '2026-03-01T00:00:00 TDB',
     mode: 'Historical orbit',
@@ -187,7 +159,6 @@ const MAVEN = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 5737.515,
     e: 0.370304,
     i_deg: 71.55677,
@@ -206,8 +177,6 @@ const MARS_EXPRESS = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'ESA · In orbit since 2003',
   externalId: '-41',
-  color: '#787878',
-  cameraDistance: 1.4,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -228,7 +197,6 @@ const MARS_EXPRESS = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 8816.782573211754,
     e: 0.5683176117617985,
     i_deg: 113.7442835581175,
@@ -247,8 +215,6 @@ const TGO = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'ESA / Roscosmos · Trace Gas Orbiter',
   externalId: '-143',
-  color: '#787878',
-  cameraDistance: 1.0,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -269,7 +235,6 @@ const TGO = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 3777.684998323223,
     e: 0.008440483786485776,
     i_deg: 100.9446259354991,
@@ -290,8 +255,6 @@ const CURIOSITY = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · MSL rover, Gale crater, since 2012',
   externalId: '-76',
-  color: '#E8441E',
-  cameraDistance: 0.6,
   labelTier: 5,
   tracking: {
     mode: 'Landing site',
@@ -316,8 +279,6 @@ const PERSEVERANCE = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · Mars 2020 rover, Jezero crater, since 2021',
   externalId: '-168',
-  color: '#CC6040',
-  cameraDistance: 0.6,
   labelTier: 5,
   tracking: {
     mode: 'Landing site',
@@ -346,8 +307,6 @@ const JUNO = spacecraftPointMarker({
   parent: 'jupiter',
   subtitle: 'NASA · Highly elliptical polar orbit since 2016',
   externalId: '-61',
-  color: '#A09A90',
-  cameraDistance: 30,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -363,7 +322,6 @@ const JUNO = spacecraftPointMarker({
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/juno/' }],
   offsetFn: orbiterOffset({
-    parentId: 'jupiter',
     a_km: 2947743.947650929,
     e: 0.9731156514920578,
     i_deg: 100.2845975364874,
@@ -384,8 +342,6 @@ const JWST = spacecraftPointMarker({
   parent: 'earth',
   subtitle: 'NASA / ESA / CSA · Earth-Sun L2 halo orbit, since 2022',
   externalId: '-170',
-  color: '#E8441E',
-  cameraDistance: 4,
   labelTier: 3,
   tracking: { mode: 'Illustration', source: 'Approximate L2 direction; halo orbit not modeled' },
   description:
@@ -413,8 +369,6 @@ const PARKER = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · Closest spacecraft to the Sun in history',
   externalId: '-96',
-  color: '#E8441E',
-  cameraDistance: 5,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -443,8 +397,6 @@ const SOLAR_ORBITER = spacecraftPointMarker({
   parent: 'sun',
   subtitle: "ESA / NASA · Heliocentric, observing the Sun's poles",
   externalId: '-144',
-  color: '#E8441E',
-  cameraDistance: 5,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -474,8 +426,6 @@ const BEPI = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'ESA / JAXA · En route to Mercury orbit',
   externalId: '-121',
-  color: '#8A8A85',
-  cameraDistance: 5,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -507,8 +457,6 @@ const LUCY = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · En route to the Jupiter Trojans',
   externalId: '-49',
-  color: '#8A8A85',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -535,8 +483,6 @@ const PSYCHE = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · En route to the metal asteroid 16 Psyche',
   externalId: '-255',
-  color: '#787878',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -563,8 +509,6 @@ const JUICE = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'ESA · Jupiter Icy Moons Explorer, en route',
   externalId: '-28',
-  color: '#787878',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -593,8 +537,6 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · En route to Jupiter system, arrival 2030',
   externalId: '-159',
-  color: '#A09A90',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -627,8 +569,6 @@ const VOYAGER_1 = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · Farthest human-made object, in interstellar space since 2012',
   externalId: '-31',
-  color: '#E8441E',
-  cameraDistance: 50,
   labelTier: 2,
   tracking: {
     mode: 'Snapshot',
@@ -654,8 +594,6 @@ const VOYAGER_2 = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · In interstellar space since 2018',
   externalId: '-32',
-  color: '#8A8A85',
-  cameraDistance: 50,
   labelTier: 2,
   tracking: {
     mode: 'Snapshot',
@@ -681,8 +619,6 @@ const NEW_HORIZONS = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · Past Pluto, into the Kuiper belt, since 2015',
   externalId: '-98',
-  color: '#A09A90',
-  cameraDistance: 30,
   labelTier: 3,
   tracking: {
     mode: 'Snapshot',

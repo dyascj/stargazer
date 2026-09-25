@@ -15,7 +15,6 @@ export const SUN: TrackedObject = {
   parent: null,
   offsetFn: (_date, target) => target.set(0, 0, 0),
   rendererKind: 'star',
-  cameraDistance: 8,
   labelTier: 1,
   metadata: {
     subtitle: 'Sol',
@@ -24,7 +23,7 @@ export const SUN: TrackedObject = {
       "The Sun is a G-type main-sequence star containing 99.86% of the solar system's total mass. It fuses roughly 600 million tons of hydrogen into helium every second, producing the energy that drives nearly all life on Earth.",
     facts: [
       { label: 'Mass', value: '1.989 × 10³⁰ kg' },
-      { label: 'Surface temperature', value: '5,778 K' },
+      { label: 'Surface temperature', value: '5,772 K' },
       { label: 'Core temperature', value: '~1.57 × 10⁷ K' },
       { label: 'Spectral class', value: 'G2V' },
       { label: 'Age', value: '~4.6 billion years' },

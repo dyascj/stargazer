@@ -1,12 +1,12 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
  * Uranus — ice giant, volumetric mean radius (3.98 × Earth, ~25,362 km per NASA
  * Planetary Fact Sheet). True
- * heliocentric position from the Standish ephemeris (~19.19 AU = ~1919
- * scene units from the Sun, well beyond Saturn).
+ * heliocentric position from the Standish ephemeris (~19.19 AU from the Sun).
  *
  * Pole orientation from IAU 2018: RA = 257.31°, Dec = -15.18°. Uranus's
  * obliquity is 97.77° — its rotation axis lies almost in its orbital
@@ -25,7 +25,6 @@ export const URANUS: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'uranus', date),
   rendererKind: 'planet-body',
-  cameraDistance: 25,
   labelTier: 1,
   metadata: {
     subtitle: 'Sol VII · The Tilted Ice Giant',
@@ -33,13 +32,12 @@ export const URANUS: TrackedObject = {
     radius: URANUS_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: URANUS_RADIUS_KM,
     textureUrl: '/textures/2k_uranus.jpg',
-    poleVec: [-0.2113, 0.1346, 0.9682],
+    poleVec: equatorialToScene(257.311, -15.175),
     rotationModel: 'iau-w',
     rotationW0Deg: 203.81,
     rotationRateDegPerDay: -501.1600928,
     dayLength: '17h 14m (retrograde)',
     yearLength: '84.01 Earth years',
-    orbitColor: 0x787878,
     description:
       'Uranus is an ice giant tilted nearly 98 degrees on its side, likely from an ancient collision with an Earth-sized object. Its blue-green color comes from methane in the atmosphere absorbing red wavelengths of sunlight.',
     facts: [
