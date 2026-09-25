@@ -7,8 +7,6 @@ import type { ObjectType, TrackedObject } from '../types';
  * All render as point-markers (labeled dots) regardless of true size.
  */
 
-const EPOCH_JD = 2461305; // JD TDB at 2026-09-21 00:00 UTC
-
 // ── Helper ──────────────────────────────────────────────────────────────
 
 function smallBody(opts: {
@@ -23,7 +21,7 @@ function smallBody(opts: {
   cameraDistance: number;
   labelTier?: number;
   /** Full Keplerian elements (heliocentric ecliptic J2000, km, deg). */
-  elements: Omit<MoonOrbitalElements, 'parentId' | 'epoch_jd'>;
+  elements: Omit<MoonOrbitalElements, 'parentId'>;
   /** Short prose description for the info panel. */
   description?: string;
   /** Key-value fact pairs rendered as a grid. */
@@ -35,8 +33,7 @@ function smallBody(opts: {
 }): TrackedObject {
   const fullElements: MoonOrbitalElements = {
     ...opts.elements,
-    parentId: 'sun',
-    epoch_jd: EPOCH_JD
+    parentId: 'sun'
   };
   return {
     id: opts.id,
@@ -72,9 +69,12 @@ const CERES = smallBody({
   color: '#b8a888',
   cameraDistance: 6,
   labelTier: 2,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Ceres is the largest object in the asteroid belt and the only dwarf planet in the inner solar system. NASA\'s Dawn spacecraft orbited Ceres from 2015 to 2018, revealing bright salt deposits in Occator crater and evidence of a subsurface ocean.',
+    "Ceres is the largest object in the asteroid belt and the only dwarf planet in the inner solar system. NASA's Dawn spacecraft orbited Ceres from 2015 to 2018, revealing bright salt deposits in Occator crater and evidence of a subsurface ocean.",
   facts: [
     { label: 'Diameter', value: '939.4 km' },
     { label: 'Type', value: 'C-type (carbonaceous)' },
@@ -86,13 +86,14 @@ const CERES = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 413780118.05,
-    e: 0.079755173,
-    i_deg: 10.58746551,
-    Omega_deg: 80.24898726,
-    omega_deg: 73.20212873,
-    M_deg: 296.9078530,
-    period_days: 1680.214536
+    epoch_jd: 2461308.5,
+    a_km: 413783392.9107563,
+    e: 0.0797588998851834,
+    i_deg: 10.58742959502459,
+    Omega_deg: 80.24898041071454,
+    omega_deg: 73.19735222889308,
+    M_deg: 297.6626438681804,
+    period_days: 1680.2344830158604
   }
 });
 
@@ -105,7 +106,10 @@ const PALLAS = smallBody({
   radiusKm: 256,
   color: '#a8a09c',
   cameraDistance: 6,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Pallas is the third-largest asteroid in the belt and has the most steeply tilted orbit of any large asteroid at nearly 35 degrees. Its high inclination makes it one of the most difficult large asteroids to visit with a spacecraft.',
   facts: [
@@ -118,13 +122,14 @@ const PALLAS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 414293153.40,
-    e: 0.230707323,
-    i_deg: 34.93381199,
-    Omega_deg: 172.8869693,
-    omega_deg: 310.9863102,
-    M_deg: 276.5782618,
-    period_days: 1683.340387
+    epoch_jd: 2461308.5,
+    a_km: 414292185.7998007,
+    e: 0.2307081098801466,
+    i_deg: 34.93384628276768,
+    Omega_deg: 172.8869931072204,
+    omega_deg: 310.9868831764436,
+    M_deg: 277.3262285753271,
+    period_days: 1683.3344893735457
   }
 });
 
@@ -138,9 +143,12 @@ const VESTA = smallBody({
   color: '#c4b8a0',
   cameraDistance: 6,
   labelTier: 3,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Vesta is the second-most-massive asteroid and the brightest one visible from Earth. NASA\'s Dawn spacecraft orbited Vesta from 2011 to 2012, mapping its giant south-pole impact basin Rheasilvia and confirming it as the source of HED meteorites found on Earth.',
+    "Vesta is the second-most-massive asteroid and the brightest one visible from Earth. NASA's Dawn spacecraft orbited Vesta from 2011 to 2012, mapping its giant south-pole impact basin Rheasilvia and confirming it as the source of HED meteorites found on Earth.",
   facts: [
     { label: 'Diameter', value: '525.4 km' },
     { label: 'Type', value: 'V-type (basaltic)' },
@@ -151,13 +159,14 @@ const VESTA = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 353237849.75,
-    e: 0.090228938,
-    i_deg: 7.143878611,
-    Omega_deg: 103.6998545,
-    omega_deg: 151.4386688,
-    M_deg: 109.60504417,
-    period_days: 1325.290722
+    epoch_jd: 2461308.5,
+    a_km: 353237034.6993514,
+    e: 0.09022951943252078,
+    i_deg: 7.143878673308204,
+    Omega_deg: 103.6998195814081,
+    omega_deg: 151.4372305324901,
+    M_deg: 110.557311654413,
+    period_days: 1325.2861346678594
   }
 });
 
@@ -170,7 +179,10 @@ const HYGIEA = smallBody({
   radiusKm: 215,
   color: '#7c7468',
   cameraDistance: 6,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Hygiea is the fourth-largest asteroid in the main belt and the largest member of its own collisional family. Observations in 2019 revealed its nearly spherical shape, making it a candidate for dwarf planet reclassification.',
   facts: [
@@ -183,13 +195,14 @@ const HYGIEA = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 471348836.62,
-    e: 0.106113258,
-    i_deg: 3.826155074,
-    Omega_deg: 283.0992037,
-    omega_deg: 312.5305204,
-    M_deg: 270.2914173,
-    period_days: 2042.791152
+    epoch_jd: 2461308.5,
+    a_km: 471344371.4325055,
+    e: 0.1060957621616686,
+    i_deg: 3.826043054021866,
+    Omega_deg: 283.0981931882536,
+    omega_deg: 312.536533204696,
+    M_deg: 270.901072401851,
+    period_days: 2042.7621240542103
   }
 });
 
@@ -202,9 +215,12 @@ const PSYCHE_16 = smallBody({
   radiusKm: 113,
   color: '#9c7e68',
   cameraDistance: 6,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    '16 Psyche is one of the most massive metallic asteroids, thought to be the exposed iron-nickel core of a protoplanet stripped by ancient collisions. NASA\'s Psyche spacecraft launched in 2023 and is en route to arrive in 2029.',
+    "16 Psyche is one of the most massive metallic asteroids, thought to be the exposed iron-nickel core of a protoplanet stripped by ancient collisions. NASA's Psyche spacecraft launched in 2023 and is en route to arrive in 2029.",
   facts: [
     { label: 'Diameter', value: '226 km' },
     { label: 'Type', value: 'M-type (metallic)' },
@@ -215,13 +231,14 @@ const PSYCHE_16 = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 437743059.86,
-    e: 0.135362765,
-    i_deg: 3.100693304,
-    Omega_deg: 149.9589763,
-    omega_deg: 230.1094373,
-    M_deg: 100.23558002,
-    period_days: 1828.265284
+    epoch_jd: 2461308.5,
+    a_km: 437742394.0420263,
+    e: 0.1353788408070741,
+    i_deg: 3.100763602441462,
+    Omega_deg: 149.9586357325038,
+    omega_deg: 230.1103552679133,
+    M_deg: 100.9223196787965,
+    period_days: 1828.2611130730934
   }
 });
 
@@ -236,9 +253,12 @@ const EROS = smallBody({
   radiusKm: 8.42,
   color: '#a89070',
   cameraDistance: 5,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Eros is a peanut-shaped near-Earth asteroid and the first one ever orbited and landed on by a spacecraft. NASA\'s NEAR Shoemaker studied it for a year before touching down on its surface in February 2001.',
+    "Eros is a peanut-shaped near-Earth asteroid and the first one ever orbited and landed on by a spacecraft. NASA's NEAR Shoemaker studied it for a year before touching down on its surface in February 2001.",
   facts: [
     { label: 'Diameter', value: '16.84 km' },
     { label: 'Type', value: 'S-type (siliceous)' },
@@ -249,13 +269,14 @@ const EROS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 218153465.24,
-    e: 0.222848900,
-    i_deg: 10.82854798,
-    Omega_deg: 304.2680277,
-    omega_deg: 178.9226983,
-    M_deg: 120.99814461,
-    period_days: 643.211029
+    epoch_jd: 2461308.5,
+    a_km: 218153601.5184805,
+    e: 0.2228485188632107,
+    i_deg: 10.82855047378059,
+    Omega_deg: 304.2680163369688,
+    omega_deg: 178.9228596207485,
+    M_deg: 122.956898489421,
+    period_days: 643.211631832949
   }
 });
 
@@ -268,9 +289,12 @@ const ITOKAWA = smallBody({
   radiusKm: 0.165,
   color: '#9c8870',
   cameraDistance: 5,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Itokawa is a tiny rubble-pile asteroid and the first body from which a spacecraft collected and returned surface samples. JAXA\'s Hayabusa touched down in 2005 and delivered its sample capsule to Earth in 2010.',
+    "Itokawa is a tiny rubble-pile asteroid and the first body from which a spacecraft collected and returned surface samples. JAXA's Hayabusa touched down in 2005 and delivered its sample capsule to Earth in 2010.",
   facts: [
     { label: 'Diameter', value: '330 m' },
     { label: 'Type', value: 'S-type (siliceous)' },
@@ -281,13 +305,14 @@ const ITOKAWA = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 198083490.83,
-    e: 0.280134396,
-    i_deg: 1.620915845,
-    Omega_deg: 69.07464661,
-    omega_deg: 162.8350270,
-    M_deg: 238.2616459,
-    period_days: 556.522504
+    epoch_jd: 2461308.5,
+    a_km: 198083895.4707977,
+    e: 0.280132469307435,
+    i_deg: 1.620917820788096,
+    Omega_deg: 69.07467123899607,
+    omega_deg: 162.8346784121909,
+    M_deg: 240.5259924615493,
+    period_days: 556.5242089887976
   }
 });
 
@@ -301,9 +326,12 @@ const BENNU = smallBody({
   color: '#5c5450',
   cameraDistance: 5,
   labelTier: 3,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Bennu is a carbon-rich near-Earth asteroid studied up close by NASA\'s OSIRIS-REx mission. The spacecraft collected a 121-gram surface sample in 2020 and delivered it to Earth in September 2023, the largest asteroid sample ever returned.',
+    "Bennu is a carbon-rich near-Earth asteroid studied up close by NASA's OSIRIS-REx mission. The spacecraft collected a 121-gram surface sample in 2020 and delivered it to Earth in September 2023, the largest asteroid sample ever returned.",
   facts: [
     { label: 'Diameter', value: '490 m' },
     { label: 'Type', value: 'B-type (carbonaceous)' },
@@ -314,13 +342,14 @@ const BENNU = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 168434527.80,
-    e: 0.203677699,
-    i_deg: 6.033020394,
-    Omega_deg: 1.966583220,
-    omega_deg: 66.40070908,
-    M_deg: 158.67354992,
-    period_days: 436.372118
+    epoch_jd: 2461308.5,
+    a_km: 168434533.4797864,
+    e: 0.2036775782082132,
+    i_deg: 6.033018635604575,
+    Omega_deg: 1.966561080421638,
+    omega_deg: 66.40067224341615,
+    M_deg: 161.5610840146221,
+    period_days: 436.3721403671968
   }
 });
 
@@ -333,9 +362,12 @@ const RYUGU = smallBody({
   radiusKm: 0.435,
   color: '#5c544c',
   cameraDistance: 5,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Ryugu is a diamond-shaped rubble-pile asteroid visited by JAXA\'s Hayabusa2 mission. The spacecraft collected subsurface samples from two sites and returned them to Earth in December 2020, revealing pristine material from the early solar system.',
+    "Ryugu is a diamond-shaped rubble-pile asteroid visited by JAXA's Hayabusa2 mission. The spacecraft collected subsurface samples from two sites and returned them to Earth in December 2020, revealing pristine material from the early solar system.",
   facts: [
     { label: 'Diameter', value: '870 m' },
     { label: 'Type', value: 'Cb-type (carbonaceous)' },
@@ -346,13 +378,14 @@ const RYUGU = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 178157342.58,
-    e: 0.191042280,
-    i_deg: 5.866463653,
-    Omega_deg: 251.2891909,
-    omega_deg: 211.6067866,
-    M_deg: 141.59751548,
-    period_days: 474.696356
+    epoch_jd: 2461308.5,
+    a_km: 178157410.3357631,
+    e: 0.1910418824358389,
+    i_deg: 5.866462384358195,
+    Omega_deg: 251.2891897149181,
+    omega_deg: 211.6068482073406,
+    M_deg: 144.2517860946087,
+    period_days: 474.6966268464379
   }
 });
 
@@ -366,7 +399,10 @@ const APOPHIS = smallBody({
   color: '#a87858',
   cameraDistance: 5,
   labelTier: 3,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Apophis is a near-Earth asteroid that will pass within 31,000 km of Earth on April 13, 2029, close enough to be visible to the naked eye. It briefly held the highest impact probability ever recorded before further observations ruled out a collision.',
   facts: [
@@ -379,13 +415,14 @@ const APOPHIS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 137979116.92,
-    e: 0.191183200,
-    i_deg: 3.341090685,
-    Omega_deg: 203.8926362,
-    omega_deg: 126.6840956,
-    M_deg: 291.6017845,
-    period_days: 323.541765
+    epoch_jd: 2461308.5,
+    a_km: 137979128.6125993,
+    e: 0.1911834169672756,
+    i_deg: 3.341090641435702,
+    Omega_deg: 203.8926355186399,
+    omega_deg: 126.6840987271241,
+    M_deg: 295.496202825044,
+    period_days: 323.5418061955801
   }
 });
 
@@ -398,9 +435,12 @@ const DIDYMOS = smallBody({
   radiusKm: 0.39,
   color: '#7c6c5c',
   cameraDistance: 5,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Didymos is a binary near-Earth asteroid whose moonlet Dimorphos was the target of NASA\'s DART mission, the first planetary-defense test. The 2022 impact successfully shortened Dimorphos\'s orbit by about 33 minutes.',
+    "Didymos is a binary near-Earth asteroid whose moonlet Dimorphos was the target of NASA's DART mission, the first planetary-defense test. The 2022 impact successfully shortened Dimorphos's orbit by about 33 minutes.",
   facts: [
     { label: 'Diameter', value: '780 m' },
     { label: 'Type', value: 'S-type (siliceous)' },
@@ -411,13 +451,14 @@ const DIDYMOS = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 245755765.96,
-    e: 0.383108987,
-    i_deg: 3.413787749,
-    Omega_deg: 72.98527624,
-    omega_deg: 319.5751793,
-    M_deg: 309.7844914,
-    period_days: 769.070022
+    epoch_jd: 2461308.5,
+    a_km: 245755752.8949338,
+    e: 0.383108791505512,
+    i_deg: 3.413785999623758,
+    Omega_deg: 72.98524491787856,
+    omega_deg: 319.5751939461843,
+    M_deg: 311.4228261967006,
+    period_days: 769.0699604616356
   }
 });
 
@@ -433,7 +474,10 @@ const ERIS = smallBody({
   color: '#dcd8d0',
   cameraDistance: 8,
   labelTier: 2,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Eris is the most massive known dwarf planet, about 27% more massive than Pluto. Its discovery in 2005 directly triggered the IAU\'s reclassification of Pluto and the creation of the "dwarf planet" category.',
   facts: [
@@ -447,13 +491,14 @@ const ERIS = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 10158792566.2,
-    e: 0.438723567,
-    i_deg: 43.95064038,
-    Omega_deg: 35.99509451,
-    omega_deg: 150.8327068,
-    M_deg: 211.9195936,
-    period_days: 204396.4966
+    epoch_jd: 2461308.5,
+    a_km: 10158665198.13438,
+    e: 0.4387402397575026,
+    i_deg: 43.95143537776111,
+    Omega_deg: 35.99478560252218,
+    omega_deg: 150.8337007876735,
+    M_deg: 211.9250572749998,
+    period_days: 204392.65257625675
   }
 });
 
@@ -467,12 +512,15 @@ const HAUMEA = smallBody({
   color: '#e8e0d4',
   cameraDistance: 7,
   labelTier: 3,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Haumea is one of the fastest-rotating large objects in the solar system, completing a full turn in under 4 hours, which stretches it into an elongated ellipsoid. In 2017 it became the first trans-Neptunian object confirmed to have a ring system.',
   facts: [
     { label: 'Diameter', value: '~1,560 km (long axis)' },
-    { label: 'Type', value: 'Kuiper belt dwarf planet' },
+    { label: 'Type', value: 'Kuiper belt object' },
     { label: 'Orbital period', value: '283 years' },
     { label: 'Discovery', value: '2004' }
   ],
@@ -481,13 +529,14 @@ const HAUMEA = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 6445371926.7,
-    e: 0.193911090,
-    i_deg: 28.20846572,
-    Omega_deg: 121.7869931,
-    omega_deg: 240.5784385,
-    M_deg: 223.6860700,
-    period_days: 103295.7096
+    epoch_jd: 2461308.5,
+    a_km: 6445486553.032326,
+    e: 0.1938933119809018,
+    i_deg: 28.20846654998062,
+    Omega_deg: 121.7869177234272,
+    omega_deg: 240.5753192305041,
+    M_deg: 223.7012498167996,
+    period_days: 103298.46519511612
   }
 });
 
@@ -501,12 +550,15 @@ const MAKEMAKE = smallBody({
   color: '#c89878',
   cameraDistance: 7,
   labelTier: 3,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Makemake is the second-brightest Kuiper belt object after Pluto. Its reddish surface is covered in frozen methane and ethane, and it has a small, very dark moon designated S/2015 (136472) 1.',
   facts: [
     { label: 'Diameter', value: '1,430 km' },
-    { label: 'Type', value: 'Kuiper belt dwarf planet' },
+    { label: 'Type', value: 'Kuiper belt object' },
     { label: 'Orbital period', value: '306 years' },
     { label: 'Discovery', value: '2005' }
   ],
@@ -515,26 +567,30 @@ const MAKEMAKE = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 6820734032.2,
-    e: 0.158292640,
-    i_deg: 29.02521573,
-    Omega_deg: 79.30995264,
-    omega_deg: 297.0635360,
-    M_deg: 170.3047899,
-    period_days: 112449.3583
+    epoch_jd: 2461308.5,
+    a_km: 6820852922.184614,
+    e: 0.1582722438968301,
+    i_deg: 29.02514315680083,
+    Omega_deg: 79.3103652958183,
+    omega_deg: 297.0632832704269,
+    M_deg: 170.3162202596469,
+    period_days: 112452.29836800031
   }
 });
 
 const SEDNA = smallBody({
   id: 'sedna',
   name: 'Sedna',
-  type: 'dwarf-planet',
-  subtitle: '90377 Sedna · 12700-year extreme orbit, near perihelion now',
+  type: 'trans-neptunian',
+  subtitle: '90377 Sedna · Distant trans-Neptunian object, dwarf planet candidate',
   externalId: '90377',
   radiusKm: 498,
   color: '#a85838',
   cameraDistance: 8,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Sedna has one of the longest known orbital periods of any solar system object, taking roughly 11,400 years to complete a single orbit. It is currently approaching perihelion (around 2076), the closest it has been to the Sun in thousands of years.',
   facts: [
@@ -548,31 +604,35 @@ const SEDNA = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 80846340454.6,
-    e: 0.859054466,
-    i_deg: 11.92509572,
-    Omega_deg: 144.5135717,
-    omega_deg: 311.1384003,
-    M_deg: 358.5890015,
-    period_days: 4588818.2623
+    epoch_jd: 2461308.5,
+    a_km: 80833088660.06702,
+    e: 0.8590322776375543,
+    i_deg: 11.92508817291838,
+    Omega_deg: 144.5138783202088,
+    omega_deg: 311.1396624703944,
+    M_deg: 358.5888639364885,
+    period_days: 4587690.055687345
   }
 });
 
 const QUAOAR = smallBody({
   id: 'quaoar',
   name: 'Quaoar',
-  type: 'dwarf-planet',
-  subtitle: '50000 Quaoar · Kuiper belt object with a small ring system',
+  type: 'trans-neptunian',
+  subtitle: '50000 Quaoar · Ringed Kuiper belt object, dwarf planet candidate',
   externalId: '50000',
   radiusKm: 555,
   color: '#a89888',
   cameraDistance: 7,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     'Quaoar is a large Kuiper belt object with a surprisingly distant ring system discovered in 2023. Its ring orbits well beyond the Roche limit, challenging existing theories of how planetary rings form and persist.',
   facts: [
     { label: 'Diameter', value: '1,110 km' },
-    { label: 'Type', value: 'Kuiper belt dwarf planet' },
+    { label: 'Type', value: 'Kuiper belt object' },
     { label: 'Orbital period', value: '286 years' },
     { label: 'Discovery', value: '2002' }
   ],
@@ -581,13 +641,14 @@ const QUAOAR = smallBody({
     { name: 'NASA Solar System', url: 'https://science.nasa.gov/solar-system/' }
   ],
   elements: {
-    a_km: 6457689299.2,
-    e: 0.035016431,
-    i_deg: 7.991682695,
-    Omega_deg: 188.9012764,
-    omega_deg: 162.6588558,
-    M_deg: 293.7462315,
-    period_days: 103591.9546
+    epoch_jd: 2461308.5,
+    a_km: 6457719077.373945,
+    e: 0.03500885067850146,
+    i_deg: 7.991686405490958,
+    Omega_deg: 188.9007052857439,
+    omega_deg: 162.6458359047294,
+    M_deg: 293.7708344161258,
+    period_days: 103592.67114510763
   }
 });
 
@@ -603,9 +664,12 @@ const HALLEY = smallBody({
   color: '#a8d8ff',
   cameraDistance: 8,
   labelTier: 2,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Halley\'s Comet is the most famous periodic comet and the only short-period comet regularly visible to the naked eye from Earth. It travels a retrograde orbit, looping from just inside Venus\'s orbit out past Neptune.',
+    "Halley's Comet is the most famous periodic comet and the only short-period comet regularly visible to the naked eye from Earth. It travels a retrograde orbit, looping from just inside Venus's orbit out past Neptune.",
   facts: [
     { label: 'Orbital period', value: '75.3 years' },
     { label: 'Nucleus diameter', value: '11 km' },
@@ -616,13 +680,14 @@ const HALLEY = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 2671739200.3,
-    e: 0.968025230,
-    i_deg: 162.1894136,
-    Omega_deg: 59.27847170,
-    omega_deg: 112.1789663,
-    M_deg: 193.6888086,
-    period_days: 27567.7551
+    epoch_jd: 2461308.5,
+    a_km: 2671740462.889814,
+    e: 0.9680259382822869,
+    i_deg: 162.189717161241,
+    Omega_deg: 59.276141329396,
+    omega_deg: 112.1766560666165,
+    M_deg: 193.7360763765414,
+    period_days: 27567.77468022077
   }
 });
 
@@ -635,7 +700,10 @@ const COMET_67P = smallBody({
   radiusKm: 2.0,
   color: '#80b8e0',
   cameraDistance: 6,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
     '67P is a Jupiter-family comet with a distinctive two-lobed "rubber duck" shape. ESA\'s Rosetta orbiter studied it for over two years and deployed the Philae lander to its surface in November 2014, the first controlled landing on a comet.',
   facts: [
@@ -648,13 +716,14 @@ const COMET_67P = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 517458801.80,
-    e: 0.649491449,
-    i_deg: 3.866124061,
-    Omega_deg: 36.28850199,
-    omega_deg: 22.23717531,
-    M_deg: 273.2780653,
-    period_days: 2349.762543
+    epoch_jd: 2461308.5,
+    a_km: 517458852.2472796,
+    e: 0.6494898040635164,
+    i_deg: 3.866114247824125,
+    Omega_deg: 36.28831148857406,
+    omega_deg: 22.23732197960117,
+    M_deg: 273.8141184816336,
+    period_days: 2349.762887089106
   }
 });
 
@@ -667,9 +736,12 @@ const TEMPEL_1 = smallBody({
   radiusKm: 3.0,
   color: '#88c0e8',
   cameraDistance: 6,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    mode: 'Approximate orbit',
+    source: 'Keplerian propagation from JPL HORIZONS elements'
+  },
   description:
-    'Tempel 1 is the only comet visited by two separate missions. NASA\'s Deep Impact deliberately crashed an impactor into it in 2005 to study its interior composition, and Stardust-NExT flew by in 2011 to photograph the resulting crater.',
+    "Tempel 1 is the only comet visited by two separate missions. NASA's Deep Impact deliberately crashed an impactor into it in 2005 to study its interior composition, and Stardust-NExT flew by in 2011 to photograph the resulting crater.",
   facts: [
     { label: 'Orbital period', value: '5.58 years' },
     { label: 'Nucleus diameter', value: '6 km' },
@@ -680,13 +752,14 @@ const TEMPEL_1 = smallBody({
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
   ],
   elements: {
-    a_km: 494496631.57,
-    e: 0.464944062,
-    i_deg: 10.47054161,
-    Omega_deg: 66.77644692,
-    omega_deg: 184.6048920,
-    M_deg: 276.6322468,
-    period_days: 2195.105082
+    epoch_jd: 2461308.5,
+    a_km: 494502373.1062958,
+    e: 0.4649182575570984,
+    i_deg: 10.46999124288456,
+    Omega_deg: 66.77260701968652,
+    omega_deg: 184.6067659253375,
+    M_deg: 277.2056144288105,
+    period_days: 2195.143312689199
   }
 });
 

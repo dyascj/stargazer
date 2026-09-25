@@ -48,13 +48,23 @@ export const TRACKED_OBJECTS: TrackedObject[] = [
 
 /** Index by id for O(1) lookup. Built once at module load. */
 const BY_ID: Record<string, TrackedObject> = (() => {
-  const map: Record<string, TrackedObject> = {};
+  const map: Record<string, TrackedObject> = Object.create(null);
   for (const obj of TRACKED_OBJECTS) {
     if (map[obj.id]) {
-      // eslint-disable-next-line no-console
-      console.warn(`[Stargazer registry] Duplicate id: ${obj.id}`);
+      throw new Error(`Duplicate registry id: ${obj.id}`);
     }
     map[obj.id] = obj;
+  }
+  for (const object of TRACKED_OBJECTS) {
+    const visited = new Set<string>();
+    let current: TrackedObject | undefined = object;
+    while (current) {
+      if (visited.has(current.id)) throw new Error(`Registry cycle: ${current.id}`);
+      visited.add(current.id);
+      if (current.parent && !map[current.parent])
+        throw new Error(`Unknown parent: ${current.parent}`);
+      current = current.parent ? map[current.parent] : undefined;
+    }
   }
   return map;
 })();
@@ -98,7 +108,7 @@ export function getWorldPosition(
     const body: TrackedObject | undefined = BY_ID[currentId];
     if (!body) return null;
     const offset = body.offsetFn(date, scratch);
-    if (!offset) return null;
+    if (!offset || !Number.isFinite(offset.x + offset.y + offset.z)) return null;
     target.add(offset);
     currentId = body.parent;
   }

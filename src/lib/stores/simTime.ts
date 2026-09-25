@@ -1,53 +1,71 @@
-import { get, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 
-/**
- * Simulation time — decoupled from the wall clock so time-scrub, fast-forward,
- * and pause work without retrofitting date parameters everywhere.
- */
+// JPL's short-range planetary element fit is valid over this interval.
+export const MIN_SIM_TIME = Date.UTC(1800, 0, 1);
+export const MAX_SIM_TIME = Date.UTC(2050, 0, 1);
+export const RATE_STEPS = [1, 60, 3600, 86_400, 2_592_000, 31_536_000];
+export const simTime = writable(new Date());
+export const simRate = writable(1);
+export const simIsOffsetFromWallClock = writable(false);
+export const simSecond = derived(simTime, (date) => Math.floor(date.getTime() / 1000));
+export const displayTime = derived(simSecond, (second) => new Date(second * 1000));
+export const isLive = derived(
+  [simRate, simIsOffsetFromWallClock],
+  ([rate, offset]) => rate === 1 && !offset
+);
+let resumeRate = 1;
 
-/** Live simulation Date. Updated each frame by advanceSimTime. */
-export const simTime = writable<Date>(new Date());
-
-/**
- * How fast simulated time advances relative to real time.
- *  1.0 = real time (default)
- *  0   = paused
- *  60  = 1 minute of sim time per real second
- *  86400 = 1 day per real second
- *  negative = backwards in time
- */
-export const simRate = writable<number>(1.0);
-
-/**
- * When false, advanceSimTime re-syncs to Date.now() each frame to prevent drift.
- * When true (user scrubbed or paused), time walks forward purely via realDt * simRate.
- */
-export const simIsOffsetFromWallClock = writable<boolean>(false);
-
-/** Advance simTime by realDtMs × simRate. At rate≈1 with no offset, snaps to Date.now(). */
-export function advanceSimTime(realDtMs: number): void {
-  const rate = get(simRate);
-  const offset = get(simIsOffsetFromWallClock);
-
-  if (!offset && Math.abs(rate - 1.0) < 1e-9) {
-    // Real-time mode: re-sync to wall clock every frame.
-    simTime.set(new Date());
-    return;
-  }
-
-  // Scrub / fast-forward / pause: walk forward by scaled real dt.
-  const current = get(simTime).getTime();
-  simTime.set(new Date(current + realDtMs * rate));
+export function setSimRate(rate: number): void {
+  if (!Number.isFinite(rate) || Math.abs(rate) > RATE_STEPS.at(-1)!) return;
+  const previous = get(simRate);
+  if (previous !== 0) resumeRate = previous;
+  if (rate !== 0) resumeRate = rate;
+  simIsOffsetFromWallClock.set(true);
+  simRate.set(rate);
 }
 
-/** Jump to a specific date (e.g. user scrubbed timeline). Sets offset flag. */
+export function togglePause(): void {
+  setSimRate(get(simRate) === 0 ? resumeRate : 0);
+}
+
+export function reverseTime(): void {
+  const rate = get(simRate);
+  if (rate === 0) resumeRate = -resumeRate;
+  else setSimRate(-rate);
+}
+
+export function stepSimRate(direction: number): void {
+  const rate = get(simRate) || resumeRate;
+  const index = RATE_STEPS.findIndex((step) => step >= Math.abs(rate));
+  const next = Math.max(0, Math.min(RATE_STEPS.length - 1, index + direction));
+  setSimRate(Math.sign(rate) * RATE_STEPS[next]);
+}
+
 export function setSimTime(date: Date): void {
-  simTime.set(date);
+  const time = date.getTime();
+  if (!Number.isFinite(time)) return;
+  simTime.set(new Date(Math.max(MIN_SIM_TIME, Math.min(MAX_SIM_TIME, time))));
   simIsOffsetFromWallClock.set(true);
 }
 
-/** Return to real-time mode (clears the offset flag). */
+export function advanceSimTime(realDtMs: number): void {
+  const rate = get(simRate);
+  if (rate === 0 || !Number.isFinite(realDtMs) || realDtMs < 0) return;
+  if (get(isLive)) {
+    simTime.set(new Date());
+    return;
+  }
+  // A background tab must not leap years when its animation frame resumes.
+  const time = get(simTime).getTime() + Math.min(realDtMs, 100) * rate;
+  if (time <= MIN_SIM_TIME || time >= MAX_SIM_TIME) {
+    setSimTime(new Date(time));
+    setSimRate(0);
+  } else simTime.set(new Date(time));
+}
+
 export function resyncSimTimeToNow(): void {
+  resumeRate = 1;
   simTime.set(new Date());
+  simRate.set(1);
   simIsOffsetFromWallClock.set(false);
 }

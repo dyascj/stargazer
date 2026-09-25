@@ -1,57 +1,61 @@
-import * as satellite from '$lib/satellite-shim';
+import * as satellite from 'satellite.js';
 import { latLonAltToVec3 } from './coords';
 import { EARTH_RADIUS, EARTH_RADIUS_KM } from '../scene-config';
 
 export interface IssOrbitOptions {
-  /** Where to start propagation. Default: now. */
   start?: Date;
-  /** How many minutes of orbit to trace. Default: 92 (one full orbit). */
+  /** Earth-fixed frame in which the entire inertial orbit is drawn. */
+  frameDate?: Date;
+  /** Defaults to one period derived from the TLE's mean motion. */
   durationMinutes?: number;
-  /** Number of points along the polyline. Default: 240. */
   samples?: number;
 }
 
-/**
- * Propagate a TLE forward via SGP4 and return a Float32Array of XYZ scene-space
- * positions ready for a BufferGeometry position attribute.
- */
+/** An inertial orbital arc expressed in the Earth mesh's current rotating frame. */
 export function computeIssOrbit(
   tle: { line1: string; line2: string },
   options: IssOrbitOptions = {}
 ): Float32Array {
   const start = options.start ?? new Date();
-  const durationMinutes = options.durationMinutes ?? 92;
+  const frameDate = options.frameDate ?? start;
   const samples = options.samples ?? 240;
-
   const satrec = satellite.twoline2satrec(tle.line1, tle.line2);
+  const duration = options.durationMinutes ?? (2 * Math.PI) / satrec.no;
+  const epoch = (satrec.jdsatepoch - 2440587.5) * 86400000;
+  if (
+    !Number.isInteger(samples) ||
+    samples < 2 ||
+    samples > 2000 ||
+    !Number.isFinite(duration) ||
+    duration <= 0
+  )
+    throw new RangeError('Invalid orbit sampling parameters');
+  if (
+    !Number.isFinite(start.getTime()) ||
+    !Number.isFinite(frameDate.getTime()) ||
+    Math.abs(start.getTime() - epoch) > 7 * 86400000
+  )
+    return new Float32Array();
   const positions = new Float32Array(samples * 3);
-  const intervalMs = (durationMinutes * 60 * 1000) / (samples - 1);
-
-  let writeIdx = 0;
-  let validCount = 0;
-
+  const gmst = satellite.gstime(frameDate);
   for (let i = 0; i < samples; i++) {
-    const date = new Date(start.getTime() + i * intervalMs);
+    const date = new Date(start.getTime() + (i * duration * 60000) / (samples - 1));
+    if (Math.abs(date.getTime() - epoch) > 7 * 86400000) return new Float32Array();
     const result = satellite.propagate(satrec, date);
-    if (!result.position || typeof result.position === 'boolean') continue;
-
-    const gmst = satellite.gstime(date);
-    const geo = satellite.eciToGeodetic(
-      result.position as satellite.EciVec3<satellite.Kilometer>,
-      gmst
+    if (!result?.position) return new Float32Array();
+    const geo = satellite.eciToGeodetic(result.position, gmst);
+    if (![geo.latitude, geo.longitude, geo.height].every(Number.isFinite) || geo.height < 0)
+      return new Float32Array();
+    positions.set(
+      latLonAltToVec3(
+        satellite.degreesLat(geo.latitude),
+        satellite.degreesLong(geo.longitude),
+        geo.height,
+        EARTH_RADIUS,
+        EARTH_RADIUS_KM
+      ),
+      i * 3
     );
-
-    const lat = satellite.degreesLat(geo.latitude);
-    const lon = satellite.degreesLong(geo.longitude);
-    const altKm = geo.height;
-
-    const [x, y, z] = latLonAltToVec3(lat, lon, altKm, EARTH_RADIUS, EARTH_RADIUS_KM);
-    positions[writeIdx++] = x;
-    positions[writeIdx++] = y;
-    positions[writeIdx++] = z;
-    validCount++;
   }
-
-  // If propagation failed for some samples, return only the valid prefix
-  return validCount === samples ? positions : positions.slice(0, validCount * 3);
+  return positions;
 }

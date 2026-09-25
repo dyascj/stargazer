@@ -21,7 +21,7 @@ export const SUN: TrackedObject = {
     subtitle: 'Sol',
     radiusKm: SUN_RADIUS_KM,
     description:
-      'The Sun is a G-type main-sequence star containing 99.86% of the solar system\'s total mass. It fuses roughly 600 million tons of hydrogen into helium every second, producing the energy that drives nearly all life on Earth.',
+      "The Sun is a G-type main-sequence star containing 99.86% of the solar system's total mass. It fuses roughly 600 million tons of hydrogen into helium every second, producing the energy that drives nearly all life on Earth.",
     facts: [
       { label: 'Mass', value: '1.989 × 10³⁰ kg' },
       { label: 'Surface temperature', value: '5,778 K' },

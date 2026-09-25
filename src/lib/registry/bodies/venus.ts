@@ -34,7 +34,6 @@ export const VENUS: TrackedObject = {
     externalId: '299',
     radius: VENUS_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: VENUS_RADIUS_KM,
-    geometryDetail: 5,
     textureUrl: '/textures/2k_venus_atmosphere.jpg',
     poleVec: [0.0187, 0.9998, -0.0112],
     rotationModel: 'iau-w',
@@ -42,11 +41,9 @@ export const VENUS: TrackedObject = {
     rotationRateDegPerDay: -1.4813688,
     hasAtmosphere: true,
     atmosphereColor: [0.95, 0.85, 0.55],
-    shaderAmbient: 0.05,
-    shaderBrightness: 1.85,
     dayLength: '243 Earth days (retrograde)',
     yearLength: '224.7 Earth days',
-    orbitColor: 0xA09A90,
+    orbitColor: 0xa09a90,
     description:
       'Venus is the hottest planet in the solar system due to a runaway greenhouse effect, with surface temperatures high enough to melt lead. It rotates backward compared to most planets, and its thick clouds of sulfuric acid completely obscure the surface.',
     facts: [
@@ -55,7 +52,10 @@ export const VENUS: TrackedObject = {
       { label: 'Mean temperature', value: '737 K (464 °C)' },
       { label: 'Atmosphere', value: '96.5% CO₂, 3.5% N₂' },
       { label: 'Known moons', value: '0' },
-      { label: 'Magnetic field', value: 'No intrinsic field; induced magnetosphere from solar wind interaction' }
+      {
+        label: 'Magnetic field',
+        value: 'No intrinsic field; induced magnetosphere from solar wind interaction'
+      }
     ],
     sources: [
       {
@@ -63,6 +63,9 @@ export const VENUS: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };

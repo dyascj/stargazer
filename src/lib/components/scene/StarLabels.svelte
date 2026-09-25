@@ -1,7 +1,6 @@
 <script lang="ts">
   import { T } from '@threlte/core';
   import { HTML } from '@threlte/extras';
-  import { Vector3 } from 'three';
 
   /**
    * Famous reference stars labelled in the starfield.
@@ -82,10 +81,6 @@
     name: s.name,
     pos: starPosition(s)
   }));
-
-  // Reuse a single Vector3 (currently unused but kept for parity with
-  // other scene components in case we want to project stars to screen).
-  const _scratch = new Vector3();
 </script>
 
 {#each STARS_WITH_POS as star (star.name)}
@@ -98,15 +93,12 @@
 
 <style>
   .star-label {
-    font-family:
-      'Geist Mono Variable',
-      ui-monospace,
-      monospace;
-    font-size: 9px;
+    font-family: 'Geist Mono Variable', ui-monospace, monospace;
+    font-size: 11px;
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: rgba(220, 235, 255, 0.45);
+    text-transform: none;
+    letter-spacing: 0;
+    color: #f5f0e8b3;
     text-shadow: 0 0 6px rgba(15, 23, 42, 0.75);
     pointer-events: none;
     white-space: nowrap;

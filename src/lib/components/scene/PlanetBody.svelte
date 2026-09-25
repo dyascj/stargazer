@@ -6,8 +6,8 @@
     Color,
     DoubleSide,
     LinearFilter,
+    LinearMipmapLinearFilter,
     Matrix4,
-    Quaternion,
     RepeatWrapping,
     ShaderMaterial,
     Vector3,
@@ -15,16 +15,14 @@
   } from 'three';
   import { get } from 'svelte/store';
   import type { Snippet } from 'svelte';
+  import { brightLighting } from '$stores/ui';
+  import { poleQuaternion } from '$utils/pole';
   import { simTime } from '$stores/simTime';
   import { getGmstRadians } from '$utils/earth';
   import { getById, getWorldPosition } from '$lib/registry/registry';
   import { enterBody, leaveBody } from '$utils/sceneCursor';
   import { markPendingClick } from '$utils/sceneClick';
-  import {
-    isPlanetBody,
-    type PlanetBodyMetadata,
-    type TrackedObject
-  } from '$lib/registry/types';
+  import { isPlanetBody, type PlanetBodyMetadata, type TrackedObject } from '$lib/registry/types';
 
   /**
    * Generic planet / moon / dwarf-planet renderer.
@@ -52,10 +50,7 @@
    * underneath them.
    */
 
-  let {
-    object: objectProp,
-    children
-  }: { object: TrackedObject; children?: Snippet } = $props();
+  let { object: objectProp, children }: { object: TrackedObject; children?: Snippet } = $props();
 
   // svelte-ignore state_referenced_locally
   const object = objectProp;
@@ -97,11 +92,11 @@
     #include <common>
     #include <logdepthbuf_pars_vertex>
 
-    varying vec3 vLocalPos;
+    varying vec2 vSurfaceUv;
     varying vec3 vNormal;
 
     void main() {
-      vLocalPos = position;
+      vSurfaceUv = uv;
       vNormal = normalize(mat3(modelMatrix) * normal);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       #include <logdepthbuf_vertex>
@@ -115,27 +110,27 @@
     #include <logdepthbuf_pars_fragment>
 
     uniform sampler2D uAlbedo;
+    uniform sampler2D uClouds;
+    uniform float uHasClouds;
     uniform vec3 uSunDir;
     uniform float uAmbient;
     uniform float uBrightness;
 
-    varying vec3 vLocalPos;
+    varying vec2 vSurfaceUv;
     varying vec3 vNormal;
-
-    const float INV_PI = 0.31830988618;
-    const float INV_TWO_PI = 0.15915494309;
 
     void main() {
       #include <logdepthbuf_fragment>
-      vec3 dir = normalize(vLocalPos);
-      float lat = asin(clamp(dir.y, -1.0, 1.0));
-      float lon = atan(-dir.z, dir.x);
-      vec2 uv = vec2(lon * INV_TWO_PI + 0.5, lat * INV_PI + 0.5);
+      vec2 uv = vSurfaceUv;
 
       vec3 albedo = texture2D(uAlbedo, uv).rgb;
+      if (uHasClouds > 0.5) {
+        float clouds = texture2D(uClouds, uv).r;
+        albedo = mix(albedo, vec3(0.95), clouds * 0.85);
+      }
 
       float lambert = dot(normalize(vNormal), uSunDir);
-      float diffuse = smoothstep(-0.05, 0.18, lambert);
+      float diffuse = pow(max(lambert, 0.0), 0.62);
       vec3 color = albedo * (diffuse * uBrightness + uAmbient);
       gl_FragColor = vec4(color, 1.0);
     }
@@ -157,7 +152,7 @@
     void main() {
       #include <logdepthbuf_fragment>
       float lambert = dot(normalize(vNormal), uSunDir);
-      float diffuse = smoothstep(-0.05, 0.18, lambert);
+      float diffuse = pow(max(lambert, 0.0), 0.62);
       vec3 color = uSolidColor * (diffuse * uBrightness + uAmbient);
       gl_FragColor = vec4(color, 1.0);
     }
@@ -166,33 +161,43 @@
   const surfaceUniforms: Record<string, { value: unknown }> = useTextureMode
     ? {
         uAlbedo: { value: null },
+        uClouds: { value: null },
+        uHasClouds: { value: 0 },
         uSunDir: { value: new Vector3(1, 0, 0) },
-        uAmbient: { value: meta.shaderAmbient },
-        uBrightness: { value: meta.shaderBrightness }
+        uAmbient: { value: 0.035 },
+        uBrightness: { value: 1.05 }
       }
     : {
         uSolidColor: { value: new Color(meta.solidColor ?? '#888888') },
         uSunDir: { value: new Vector3(1, 0, 0) },
-        uAmbient: { value: meta.shaderAmbient },
-        uBrightness: { value: meta.shaderBrightness }
+        uAmbient: { value: 0.035 },
+        uBrightness: { value: 1.05 }
       };
 
   const surfaceMaterial = new ShaderMaterial({
     vertexShader,
     fragmentShader: useTextureMode ? texturedFragment : solidFragment,
-    uniforms: surfaceUniforms as never
+    uniforms: surfaceUniforms
   });
 
   if (useTextureMode && meta.textureUrl) {
     const baseTextures = useTexture([meta.textureUrl]);
     baseTextures.then(([albedo]) => {
       albedo.wrapS = RepeatWrapping;
-      albedo.minFilter = LinearFilter;
+      albedo.minFilter = LinearMipmapLinearFilter;
       albedo.magFilter = LinearFilter;
-      albedo.generateMipmaps = false;
+      albedo.generateMipmaps = true;
       albedo.needsUpdate = true;
       surfaceMaterial.uniforms.uAlbedo.value = albedo;
       surfaceMaterial.uniformsNeedUpdate = true;
+    });
+  }
+
+  if (object.id === 'earth') {
+    useTexture(['/textures/earth_clouds_2k.webp']).then(([clouds]) => {
+      clouds.wrapS = RepeatWrapping;
+      surfaceMaterial.uniforms.uClouds.value = clouds;
+      surfaceMaterial.uniforms.uHasClouds.value = 1;
     });
   }
 
@@ -207,8 +212,12 @@
     #include <logdepthbuf_pars_vertex>
 
     varying vec3 vNormal;
+    varying vec3 vView;
+    varying vec3 vWorldNormal;
     void main() {
       vNormal = normalize(normalMatrix * normal);
+      vWorldNormal = normalize(mat3(modelMatrix) * normal);
+      vView = normalize(-(modelViewMatrix * vec4(position, 1.0)).xyz);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       #include <logdepthbuf_vertex>
     }
@@ -219,11 +228,15 @@
     #include <logdepthbuf_pars_fragment>
 
     uniform vec3 uAtmosColor;
+    uniform vec3 uSunDir;
     varying vec3 vNormal;
+    varying vec3 vWorldNormal;
+    varying vec3 vView;
     void main() {
       #include <logdepthbuf_fragment>
-      float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-      gl_FragColor = vec4(uAtmosColor, 1.0) * intensity;
+      float rim = pow(clamp(1.0 + dot(normalize(vNormal), normalize(vView)), 0.0, 1.0), 3.0);
+      float sunlight = smoothstep(-0.25, 0.6, dot(normalize(vWorldNormal), uSunDir));
+      gl_FragColor = vec4(uAtmosColor, rim * (0.06 + 0.42 * sunlight));
     }
   `;
 
@@ -232,14 +245,18 @@
   // Lights both sides equally with abs(dot(normal, sunDir)) so the
   // rings dim during equinoxes when the Sun is edge-on.
   const ringVertex = /* glsl */ `
+    uniform float uInnerRadius;
+    uniform float uOuterRadius;
     #include <common>
     #include <logdepthbuf_pars_vertex>
 
+    varying vec3 vOffset;
     varying vec2 vUv;
     varying vec3 vNormal;
 
     void main() {
-      vUv = uv;
+      vUv = vec2((length(position.xy) - uInnerRadius) / (uOuterRadius - uInnerRadius), 0.5);
+      vOffset = (modelMatrix * vec4(position, 0.0)).xyz;
       vNormal = normalize(mat3(modelMatrix) * normal);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       #include <logdepthbuf_vertex>
@@ -252,10 +269,12 @@
     #include <common>
     #include <logdepthbuf_pars_fragment>
 
+    uniform float uPlanetRadius;
     uniform sampler2D uAlpha;
     uniform vec3 uColor;
     uniform vec3 uSunDir;
 
+    varying vec3 vOffset;
     varying vec2 vUv;
     varying vec3 vNormal;
 
@@ -268,12 +287,15 @@
       // transparency and the RGB for the ring color (matched to a
       // realistic palette). We multiply by uColor as a tint.
       float alpha = ringSample.a;
-      vec3 ringColor = ringSample.rgb * uColor;
+      vec3 ringColor = sqrt(ringSample.rgb) * uColor;
 
       // Both sides lit equally — the ring particles scatter sunlight
       // through to the opposite face.
       float lambert = abs(dot(normalize(vNormal), uSunDir));
-      float shading = 0.35 + 0.65 * lambert;
+      float along = -dot(vOffset, uSunDir);
+      float shadowDistance = length(vOffset + along * uSunDir);
+      float shadow = along > 0.0 ? smoothstep(uPlanetRadius * 0.98, uPlanetRadius * 1.02, shadowDistance) : 1.0;
+      float shading = (0.65 + 0.35 * lambert) * (0.12 + 0.88 * shadow);
 
       gl_FragColor = vec4(ringColor * shading, alpha);
     }
@@ -292,9 +314,12 @@
         side: DoubleSide,
         uniforms: {
           uAlpha: { value: null },
+          uInnerRadius: { value: meta.hasRings.innerRadius },
+          uOuterRadius: { value: meta.hasRings.outerRadius },
+          uPlanetRadius: { value: meta.radius },
           uColor: { value: new Color(meta.hasRings.color ?? '#ffffff') },
           uSunDir: { value: new Vector3(1, 0, 0) }
-        } as never
+        }
       })
     : null;
 
@@ -319,14 +344,7 @@
   const sunDir = new Vector3();
 
   // Pole orientation — built once at mount if a poleVec is provided.
-  let poleQuat: Quaternion | null = null;
-  if (meta.poleVec) {
-    poleQuat = new Quaternion();
-    poleQuat.setFromUnitVectors(
-      new Vector3(0, 1, 0),
-      new Vector3(meta.poleVec[0], meta.poleVec[1], meta.poleVec[2])
-    );
-  }
+  const poleQuat = meta.poleVec ? poleQuaternion(meta.poleVec) : null;
 
   // Tidal-lock helpers — only used when rotationModel === 'tidal-lock'.
   const xAxis = new Vector3();
@@ -373,7 +391,8 @@
 
     // Hover brightness: smoothly animate the shader brightness up when
     // hovered, back down when not. Gives immediate visual feedback.
-    const targetBrightness = meta.shaderBrightness + (hovered ? HOVER_BRIGHTNESS_BOOST : 0);
+    surfaceMaterial.uniforms.uAmbient.value = get(brightLighting) ? 0.3 : 0.035;
+    const targetBrightness = 1.08 + (hovered ? HOVER_BRIGHTNESS_BOOST : 0);
     const currentBrightness = surfaceMaterial.uniforms.uBrightness.value as number;
     surfaceMaterial.uniforms.uBrightness.value =
       currentBrightness + (targetBrightness - currentBrightness) * 0.2;
@@ -442,18 +461,19 @@
       onpointerover={onHoverEnter}
       onpointerout={onHoverLeave}
     >
-      <T.IcosahedronGeometry args={[meta.radius, meta.geometryDetail]} />
+      <T.SphereGeometry args={[meta.radius, 96, 64]} />
       <T is={surfaceMaterial} />
     </T.Mesh>
 
     {#if meta.hasAtmosphere}
       <!-- Fresnel rim glow shell (Earth, Venus, Titan). -->
       <T.Mesh scale={1.04}>
-        <T.IcosahedronGeometry args={[meta.radius, Math.max(4, meta.geometryDetail - 1)]} />
+        <T.SphereGeometry args={[meta.radius, 64, 48]} />
         <T.ShaderMaterial
           vertexShader={atmosphereVertex}
           fragmentShader={atmosphereFragment}
-          uniforms={{ uAtmosColor: { value: atmosColor } }}
+          uniforms={{ uAtmosColor: { value: atmosColor }, uSunDir: { value: sunDir } }}
+          depthWrite={false}
           side={BackSide}
           transparent
         />
@@ -473,9 +493,7 @@
          RingGeometry is built in the XY plane by default; we rotate it
          90° around X so it lies in the XZ plane (the equatorial plane). -->
     <T.Mesh rotation={[Math.PI / 2, 0, 0]}>
-      <T.RingGeometry
-        args={[meta.hasRings.innerRadius, meta.hasRings.outerRadius, 128, 1]}
-      />
+      <T.RingGeometry args={[meta.hasRings.innerRadius, meta.hasRings.outerRadius, 128, 1]} />
       <T is={ringMaterial} />
     </T.Mesh>
   {/if}

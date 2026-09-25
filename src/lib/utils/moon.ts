@@ -3,12 +3,13 @@ import { EARTH_RADIUS_KM, MOON_DISTANCE_SCALE } from '../scene-config';
 
 /**
  * Lunar state at a single instant. Uses low-precision Meeus formulas —
- * accurate to a few arc-minutes in position, ~0.5% in distance, < 1° in phase.
+ * A truncated educational model, not a precision ephemeris. Omitted lunar
+ * perturbations can produce degree-scale position errors.
  */
 export interface LunarState {
-  /** Geographic latitude of the subsolar point on the Moon */
+  /** Geographic latitude of the sublunar point on Earth */
   lat: number;
-  /** Geographic longitude of the subsolar point on the Moon */
+  /** Geographic longitude of the sublunar point on Earth */
   lon: number;
   /** Geocentric ecliptic longitude (degrees) — used for scene placement */
   eclipticLon: number;
@@ -20,7 +21,7 @@ export interface LunarState {
   synodicAngle: number;
   /** Illuminated fraction of visible disc [0..1] */
   illumination: number;
-  /** Days since last new moon (0..29.53) */
+  /** Phase-derived age estimate (0..29.53 days), not an event-time calculation */
   ageDays: number;
   phaseName: string;
   /** True while waxing (new → full) */

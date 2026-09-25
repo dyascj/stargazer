@@ -32,14 +32,11 @@ export const URANUS: TrackedObject = {
     externalId: '799',
     radius: URANUS_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: URANUS_RADIUS_KM,
-    geometryDetail: 5,
     textureUrl: '/textures/2k_uranus.jpg',
     poleVec: [-0.2113, 0.1346, 0.9682],
     rotationModel: 'iau-w',
     rotationW0Deg: 203.81,
     rotationRateDegPerDay: -501.1600928,
-    shaderAmbient: 0.03,
-    shaderBrightness: 1.85,
     dayLength: '17h 14m (retrograde)',
     yearLength: '84.01 Earth years',
     orbitColor: 0x787878,
@@ -50,7 +47,6 @@ export const URANUS: TrackedObject = {
       { label: 'Surface gravity', value: '8.87 m/s²' },
       { label: 'Mean temperature', value: '76 K (cloud tops)' },
       { label: 'Atmosphere', value: '~83% H₂, ~15% He, ~2% CH₄' },
-      { label: 'Known moons', value: '28' },
       { label: 'Magnetic field', value: 'Yes, tilted 59° from rotation axis, offset from center' }
     ],
     sources: [
@@ -59,6 +55,9 @@ export const URANUS: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };

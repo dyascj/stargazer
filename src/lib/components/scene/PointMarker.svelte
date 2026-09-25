@@ -13,16 +13,13 @@
     type Mesh
   } from 'three';
   import { get } from 'svelte/store';
+  import { reducedMotion } from '$stores/reducedMotion';
   import { simTime } from '$stores/simTime';
   import { selection } from '$lib/stores/selection';
   import { getWorldPosition } from '$lib/registry/registry';
   import { enterBody, leaveBody } from '$utils/sceneCursor';
   import { markPendingClick } from '$utils/sceneClick';
-  import {
-    isPointMarker,
-    type PointMarkerMetadata,
-    type TrackedObject
-  } from '$lib/registry/types';
+  import { isPointMarker, type PointMarkerMetadata, type TrackedObject } from '$lib/registry/types';
 
   /**
    * Point marker renderer: constant-pixel-size dot for spacecraft, landers,
@@ -226,7 +223,7 @@
     // Selection + pulse uniforms.
     const isSelected = get(selection) === object.id;
     material.uniforms.uSelected.value = isSelected ? 1 : 0;
-    if (isSelected) {
+    if (isSelected && !get(reducedMotion)) {
       elapsedSec += dt;
       const phase = (elapsedSec % PULSE_PERIOD_SEC) / PULSE_PERIOD_SEC;
       material.uniforms.uPulsePhase.value = phase;

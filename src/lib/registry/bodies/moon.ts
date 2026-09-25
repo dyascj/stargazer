@@ -32,15 +32,13 @@ export const MOON: TrackedObject = {
     radius: MOON_RADIUS,
     radiusKm: MOON_RADIUS_KM,
     textureUrl: '/textures/moon_albedo_2k.webp',
-    geometryDetail: 5,
     rotationModel: 'tidal-lock',
     lightingFromParent: true,
-    shaderAmbient: 0.012,
-    shaderBrightness: 1.95,
     dayLength: '29.53 Earth days',
     yearLength: '27.32 Earth days (sidereal)',
     orbitalPeriodDays: 27.32166,
-    description: "Earth's only natural satellite and the fifth-largest moon in the solar system. Tidally locked — the same face always points toward Earth. Its gravitational pull drives Earth's ocean tides.",
+    description:
+      "Earth's only natural satellite and the fifth-largest moon in the solar system. Tidally locked — the same face always points toward Earth. Its gravitational pull drives Earth's ocean tides.",
     facts: [
       { label: 'Diameter', value: '3,474.8 km' },
       { label: 'Mass', value: '7.342 × 10²² kg' },
@@ -48,11 +46,14 @@ export const MOON: TrackedObject = {
       { label: 'Orbital period', value: '27.32 days (sidereal)' },
       { label: 'Distance from Earth', value: '384,400 km' },
       { label: 'Surface temp', value: '−173 to 127 °C' },
-      { label: 'Age', value: '~4.51 billion years' },
+      { label: 'Age', value: '~4.51 billion years' }
     ],
     sources: [
-      { name: 'NASA Moon Fact Sheet', url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html' },
-      { name: 'LROC', url: 'https://lroc.im-ldi.com/' },
-    ],
+      {
+        name: 'NASA Moon Fact Sheet',
+        url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html'
+      },
+      { name: 'LROC', url: 'https://lroc.im-ldi.com/' }
+    ]
   }
 };

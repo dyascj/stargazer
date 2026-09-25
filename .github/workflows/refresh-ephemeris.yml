@@ -15,10 +15,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - run: npm ci
 
       - name: Refresh ephemeris data from JPL HORIZONS
         run: node scripts/refresh-ephemeris.mjs
+
+      - run: npx prettier --write src/lib/registry/bodies
+      - run: npm test
 
       - name: Commit and push if changed
         run: |

@@ -29,3 +29,33 @@ dev-dist
 
 # Internal docs (specs, plans)
 docs
+
+# Private workspace notes, settings, and assets
+/.local-assets/
+/AUDIT.md
+/AGENTS.md
+/CLAUDE.md
+/.animawake
+/.codex/
+/.claude/
+/.cursor/
+/.t3/
+/.mcp.json
+/.envrc
+
+# Credentials and signing material
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials.json
+secrets.json
+
+# Local reports and caches
+*.log
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/

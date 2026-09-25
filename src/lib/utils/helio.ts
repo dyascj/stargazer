@@ -1,9 +1,11 @@
 import { Vector3 } from 'three';
 import { AU_TO_SCENE } from '../scene-config';
+import { solveKepler } from './kepler';
 
 /**
  * Heliocentric position helpers using the Standish/Meeus orbital element approach.
- * Matches NASA's "Approximate Positions of the Planets" to within a few arc-minutes.
+ * JPL Table 1 fit, valid 1800–2050. Earth uses the Earth–Moon barycenter
+ * approximation. Accuracy varies by planet; these are not navigation ephemerides.
  */
 
 const DEG = Math.PI / 180;
@@ -54,20 +56,20 @@ export const PLANETS: Record<string, OrbitalElementsWithRates> = {
     longNode: [76.67984255, -0.27769418]
   },
   earth: {
-    a: [1.00000018, -0.00000003],
-    e: [0.01673163, -0.00003661],
-    i: [-0.00054346, -0.01337178],
-    L: [100.46691572, 35999.37306329],
-    longPeri: [102.93005885, 0.3179526],
-    longNode: [-5.11260389, -0.24123856]
+    a: [1.00000261, 0.00000562],
+    e: [0.01671123, -0.00004392],
+    i: [-0.00001531, -0.01294668],
+    L: [100.46457166, 35999.37244981],
+    longPeri: [102.93768193, 0.32327364],
+    longNode: [0, 0]
   },
   mars: {
-    a: [1.52371243, 0.00000097],
-    e: [0.09336511, 0.00009149],
-    i: [1.85181869, -0.00724757],
-    L: [-4.56813164, 19140.29934243],
-    longPeri: [-23.91744784, 0.45223625],
-    longNode: [49.71320984, -0.26852431]
+    a: [1.52371034, 0.00001847],
+    e: [0.0933941, 0.00007882],
+    i: [1.84969142, -0.00813131],
+    L: [-4.55343205, 19140.30268499],
+    longPeri: [-23.94362959, 0.44441088],
+    longNode: [49.55953891, -0.29257343]
   },
   jupiter: {
     a: [5.202887, -0.00011607],
@@ -115,18 +117,6 @@ function mod(value: number, modulus: number): number {
   return ((value % modulus) + modulus) % modulus;
 }
 
-function solveKepler(meanAnomalyRad: number, eccentricity: number): number {
-  let E = meanAnomalyRad;
-  for (let iter = 0; iter < 12; iter++) {
-    const dE =
-      (E - eccentricity * Math.sin(E) - meanAnomalyRad) /
-      (1 - eccentricity * Math.cos(E));
-    E -= dE;
-    if (Math.abs(dE) < 1e-10) break;
-  }
-  return E;
-}
-
 /** Evaluate orbital elements at a given Julian-century offset T. */
 export function evaluateElements(els: OrbitalElementsWithRates, T: number): OrbitalElements {
   return {
@@ -140,9 +130,7 @@ export function evaluateElements(els: OrbitalElementsWithRates, T: number): Orbi
 }
 
 /** Heliocentric ecliptic position of a planet (AU, ecliptic Cartesian). */
-export function heliocentricEclipticAU(
-  els: OrbitalElements
-): { x: number; y: number; z: number } {
+export function heliocentricEclipticAU(els: OrbitalElements): { x: number; y: number; z: number } {
   const M = mod(els.L - els.longPeri, 360) * DEG;
   const omega = (els.longPeri - els.longNode) * DEG;
   const i = els.i * DEG;
@@ -206,8 +194,10 @@ export function getOrbitEllipsePoints(
     const xOrb = els.a * (Math.cos(E) - els.e);
     const yOrb = els.a * Math.sqrt(1 - els.e * els.e) * Math.sin(E);
 
-    const x = (cosO * cosw - sinO * sinw * cosi) * xOrb + (-cosO * sinw - sinO * cosw * cosi) * yOrb;
-    const y = (sinO * cosw + cosO * sinw * cosi) * xOrb + (-sinO * sinw + cosO * cosw * cosi) * yOrb;
+    const x =
+      (cosO * cosw - sinO * sinw * cosi) * xOrb + (-cosO * sinw - sinO * cosw * cosi) * yOrb;
+    const y =
+      (sinO * cosw + cosO * sinw * cosi) * xOrb + (-sinO * sinw + cosO * cosw * cosi) * yOrb;
     const z = sinw * sini * xOrb + cosw * sini * yOrb;
 
     positions[s * 3] = x * AU_TO_SCENE;

@@ -1,19 +1,20 @@
 import { Vector3 } from 'three';
-import { EARTH_RADIUS_KM } from '../scene-config';
+import { EARTH_RADIUS_KM, AU_KM, AU_TO_SCENE } from '../scene-config';
+import { solveKepler } from './kepler';
 
 /**
  * Keplerian orbit helper for moons and planet orbiters.
  *
  * Propagates mean Keplerian elements (J2000 ecliptic frame, parent body at origin)
  * forward in time via mean motion, solves Kepler's equation, and outputs the body's
- * offset from its parent CENTER in scene units. Supports arbitrary eccentricity.
+ * offset from its parent CENTER in scene units. Supports elliptic orbits (0 ≤ e < 1).
  *
  * Elements sourced from JPL HORIZONS (EPHEM_TYPE=ELEMENTS, REF_PLANE=ECLIPTIC,
- * OUT_UNITS=KM-D) at epoch 2026-04-08.
+ * OUT_UNITS=KM-D) at each record’s epoch. UTC is used as an approximation to TDB (minute-scale offset).
  */
 
 export interface MoonOrbitalElements {
-  /** Parent body id (informational; the helper doesn't read it). */
+  /** Parent body id: selects AU scaling for Sun-centered orbits. */
   parentId: string;
   /** Semi-major axis in km (J2000 ecliptic). */
   a_km: number;
@@ -59,15 +60,8 @@ export function computeMoonOffset(
   const M_deg = (((elements.M_deg + n * days) % 360) + 360) % 360;
   const M_rad = M_deg * DEG_TO_RAD;
 
-  // Solve Kepler's equation M = E - e·sin(E) by Newton-Raphson.
-  // Converges in 5-10 iterations for any reasonable eccentricity.
   const e = elements.e;
-  let E = M_rad;
-  for (let iter = 0; iter < 12; iter++) {
-    const dE = (E - e * Math.sin(E) - M_rad) / (1 - e * Math.cos(E));
-    E -= dE;
-    if (Math.abs(dE) < 1e-10) break;
-  }
+  const E = solveKepler(M_rad, e);
 
   // Position in the perifocal (orbit) frame, x toward periapsis.
   const a = elements.a_km;
@@ -87,20 +81,15 @@ export function computeMoonOffset(
   const sini = Math.sin(i_rad);
 
   const x_ecl_km =
-    (cosO * cosw - sinO * sinw * cosi) * x_orb +
-    (-cosO * sinw - sinO * cosw * cosi) * y_orb;
+    (cosO * cosw - sinO * sinw * cosi) * x_orb + (-cosO * sinw - sinO * cosw * cosi) * y_orb;
   const y_ecl_km =
-    (sinO * cosw + cosO * sinw * cosi) * x_orb +
-    (-sinO * sinw + cosO * cosw * cosi) * y_orb;
+    (sinO * cosw + cosO * sinw * cosi) * x_orb + (-sinO * sinw + cosO * cosw * cosi) * y_orb;
   const z_ecl_km = sinw * sini * x_orb + cosw * sini * y_orb;
 
   // km → scene units, then map ecliptic axes to the unified scene frame:
   //   scene.x = ecl.x
   //   scene.y = ecl.z   (scene Y = ecliptic north)
   //   scene.z = -ecl.y
-  return target.set(
-    x_ecl_km / EARTH_RADIUS_KM,
-    z_ecl_km / EARTH_RADIUS_KM,
-    -y_ecl_km / EARTH_RADIUS_KM
-  );
+  const scale = elements.parentId === 'sun' ? AU_TO_SCENE / AU_KM : 1 / EARTH_RADIUS_KM;
+  return target.set(x_ecl_km * scale, z_ecl_km * scale, -y_ecl_km * scale);
 }

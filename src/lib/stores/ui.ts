@@ -1,49 +1,35 @@
-import { writable, derived } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 import { selection, SOLAR_SYSTEM_VIEW } from './selection';
 
-/**
- * UI visibility state. Controls which panels are open, collapsed, or
- * hidden. The default state is "minimal": scene fills the viewport,
- * no panels visible. The user pulls things open on demand.
- *
- * The info panel auto-opens when a body is selected and auto-closes
- * when the user returns to solar system view. The navigation drawer
- * and time control expansion are manual toggles.
- */
-
-/** Whether the time control is expanded (full rate buttons + slider). */
 export const timeExpanded = writable(false);
-
-/**
- * Info panel (right side) visibility. Derived from selection: open
- * when a specific body is selected, closed in solar system view.
- * Can also be manually closed via `closeInfoPanel()`.
- */
-const manualClose = writable(false);
-
-/**
- * Info panel is open for any selection (including solar system view,
- * which shows the WelcomePanel). Only closed when manually dismissed.
- */
+export const paletteOpen = writable(false);
+export const immersive = writable(false);
+export const showOrbits = writable(true);
+export const showLabels = writable(true);
+export const showStars = writable(true);
+export const showGrid = writable(false);
+export const showStarLabels = writable(false);
+export const showTrails = writable(true);
+export const brightLighting = writable(false);
+export const cameraCommand = writable<'zoom-in' | 'zoom-out' | 'reset' | 'top' | null>(null);
+// Remember the dismissed selection, not a global close flag that strands the panel.
+const dismissedSelection = writable<string | null>(null);
 export const infoPanelOpen = derived(
-  [manualClose, selection],
-  ([$closed, $sel]) => {
-    if ($sel === null) return false;
-    return !$closed;
-  }
+  [selection, dismissedSelection, immersive],
+  ([id, closed, hidden]) => !!id && id !== SOLAR_SYSTEM_VIEW && id !== closed && !hidden
 );
-
-/** Close the info panel manually (e.g., via the X button). */
 export function closeInfoPanel(): void {
-  manualClose.set(true);
+  const unsubscribe = selection.subscribe((id) => dismissedSelection.set(id));
+  unsubscribe();
+}
+export function openInfoPanel(): void {
+  dismissedSelection.set(null);
+}
+export function selectBody(id: string): void {
+  dismissedSelection.set(null);
+  immersive.set(false);
+  selection.set(id);
+  cameraCommand.set('reset');
 }
 
-// Reset manual close when selection changes (so picking a new body
-// always opens the panel even if the user previously closed it).
-let lastSelection: string | null = SOLAR_SYSTEM_VIEW;
-selection.subscribe((sel) => {
-  if (sel !== lastSelection) {
-    if (sel !== null) manualClose.set(false);
-    lastSelection = sel;
-  }
-});
+export const compareOpen = writable(false);

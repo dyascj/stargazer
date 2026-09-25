@@ -3,7 +3,7 @@
   import { Line2 } from 'three/examples/jsm/lines/Line2.js';
   import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
   import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-  import { Vector3, type Group } from 'three';
+  import { Vector3 } from 'three';
   import { get } from 'svelte/store';
   import { simTime } from '$stores/simTime';
   import { getWorldPosition } from '$lib/registry/registry';
@@ -82,7 +82,6 @@
   const line = new Line2(geometry, material);
   line.frustumCulled = false;
 
-  let groupRef: Group | undefined = $state();
   let lastBuiltAt = 0;
   let lastResW = 0;
   let lastResH = 0;

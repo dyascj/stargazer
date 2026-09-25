@@ -1,6 +1,6 @@
 <script lang="ts">
   import { T } from '@threlte/core';
-  import { BackSide, DoubleSide, ShaderMaterial } from 'three';
+  import { DoubleSide, ShaderMaterial } from 'three';
 
   /**
    * Faint ecliptic plane reference disc at y=0. Helps the user see

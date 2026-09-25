@@ -1,93 +1,66 @@
 <script lang="ts">
   import { get } from 'svelte/store';
-  import { selection, SOLAR_SYSTEM_VIEW } from '$lib/stores/selection';
-  import { simRate } from '$stores/simTime';
+  import { selection, SOLAR_SYSTEM_VIEW } from '$stores/selection';
+  import { togglePause, stepSimRate, resyncSimTimeToNow } from '$stores/simTime';
   import { TRACKED_OBJECTS } from '$lib/registry/registry';
-  import { timeExpanded } from '$stores/ui';
+  import { timeExpanded, paletteOpen, immersive, selectBody, cameraCommand } from '$stores/ui';
 
-  /**
-   * Global keyboard shortcuts. Mounted once in the app page.
-   *
-   *   Arrow Left / Right  — cycle to the previous / next body
-   *   Space               — toggle pause / play
-   *   + / =               — increase time rate
-   *   - / _               — decrease time rate
-   *   Escape              — deselect (return to solar system view),
-   *                         or close drawer/time panel if open
-   *   /                   — open the navigation drawer (search focus)
-   *
-   * All shortcuts are suppressed when an input/textarea/button has
-   * focus so they don't interfere with typing.
-   */
-
-  // Body ids in registry order for cycling
-  const bodyIds = TRACKED_OBJECTS.map((o) => o.id);
-
-  const RATE_STEPS = [1, 60, 3600, 86_400, 2_592_000, 31_536_000];
-
-  function handleKeydown(e: KeyboardEvent): void {
-    // Don't capture when typing in an input
-    const tag = (e.target as HTMLElement)?.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
-    switch (e.key) {
-      case 'ArrowRight':
-      case 'ArrowDown': {
-        e.preventDefault();
-        const sel = get(selection);
-        const idx = bodyIds.indexOf(sel);
-        const next = idx < 0 ? 0 : (idx + 1) % bodyIds.length;
-        selection.set(bodyIds[next]);
+  const bodyIds = TRACKED_OBJECTS.filter((body) => body.type === 'planet').map((body) => body.id);
+  function handleKeydown(event: KeyboardEvent): void {
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      get(paletteOpen)
+    )
+      return;
+    const target = event.target as HTMLElement;
+    if (
+      target.closest('input, textarea, select, button, a, [contenteditable="true"], dialog[open]')
+    )
+      return;
+    switch (event.key.toLowerCase()) {
+      case 'arrowright':
+      case 'arrowleft': {
+        event.preventDefault();
+        const index = bodyIds.indexOf(get(selection) ?? '');
+        selectBody(
+          bodyIds[(index + (event.key === 'ArrowRight' ? 1 : -1) + bodyIds.length) % bodyIds.length]
+        );
         break;
       }
-      case 'ArrowLeft':
-      case 'ArrowUp': {
-        e.preventDefault();
-        const sel = get(selection);
-        const idx = bodyIds.indexOf(sel);
-        const prev = idx <= 0 ? bodyIds.length - 1 : idx - 1;
-        selection.set(bodyIds[prev]);
+      case ' ':
+        event.preventDefault();
+        togglePause();
         break;
-      }
-      case ' ': {
-        e.preventDefault();
-        const rate = get(simRate);
-        if (rate === 0) {
-          simRate.set(1);
-        } else {
-          simRate.set(0);
-        }
-        break;
-      }
       case '+':
-      case '=': {
-        e.preventDefault();
-        const rate = Math.abs(get(simRate)) || 1;
-        const idx = RATE_STEPS.indexOf(rate);
-        if (idx < RATE_STEPS.length - 1) {
-          simRate.set(RATE_STEPS[idx + 1]);
-        }
+      case '=':
+        event.preventDefault();
+        stepSimRate(1);
         break;
-      }
       case '-':
-      case '_': {
-        e.preventDefault();
-        const rate = Math.abs(get(simRate)) || 1;
-        const idx = RATE_STEPS.indexOf(rate);
-        if (idx > 0) {
-          simRate.set(RATE_STEPS[idx - 1]);
-        }
+      case '_':
+        event.preventDefault();
+        stepSimRate(-1);
         break;
-      }
-      case 'Escape': {
-        if (get(timeExpanded)) {
-          timeExpanded.set(false);
-        } else {
-          selection.set(null);
-        }
+      case 'n':
+        resyncSimTimeToNow();
         break;
-      }
-      // '/' is now handled by CommandPalette directly
+      case 'h':
+        selectBody(SOLAR_SYSTEM_VIEW);
+        break;
+      case 'f':
+        immersive.update((value) => !value);
+        break;
+      case 'r':
+        cameraCommand.set('reset');
+        break;
+      case 'escape':
+        if (get(immersive)) immersive.set(false);
+        else if (get(timeExpanded)) timeExpanded.set(false);
+        else selectBody(SOLAR_SYSTEM_VIEW);
+        break;
     }
   }
 </script>

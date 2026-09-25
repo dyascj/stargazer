@@ -27,17 +27,14 @@ export const JUPITER: TrackedObject = {
     externalId: '599',
     radius: JUPITER_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: JUPITER_RADIUS_KM,
-    geometryDetail: 6,
     textureUrl: '/textures/2k_jupiter.jpg',
     poleVec: [-0.0146, 0.9992, 0.0366],
     rotationModel: 'iau-w',
     rotationW0Deg: 67.1,
     rotationRateDegPerDay: 870.536,
-    shaderAmbient: 0.04,
-    shaderBrightness: 1.9,
     dayLength: '9h 55m',
     yearLength: '11.86 Earth years',
-    orbitColor: 0xA09A90,
+    orbitColor: 0xa09a90,
     description:
       'Jupiter is the largest planet in the solar system, containing more mass than all other planets combined. Its Great Red Spot is a persistent anticyclonic storm larger than Earth that has been observed for over 350 years.',
     facts: [
@@ -45,8 +42,7 @@ export const JUPITER: TrackedObject = {
       { label: 'Surface gravity', value: '24.79 m/s²' },
       { label: 'Mean temperature', value: '165 K (cloud tops)' },
       { label: 'Atmosphere', value: '~90% H₂, ~10% He, traces of CH₄, NH₃, H₂O' },
-      { label: 'Known moons', value: '95' },
-      { label: 'Magnetic field', value: 'Yes, strongest in the solar system (~20,000× Earth\'s)' }
+      { label: 'Magnetic field', value: "Yes, strongest in the solar system (~20,000× Earth's)" }
     ],
     sources: [
       {
@@ -54,6 +50,9 @@ export const JUPITER: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };

@@ -1,215 +1,95 @@
-<div align="center">
-  <img src="./static/favicon.svg" width="96" height="96" alt="Stargazer logo" />
-  <h1>Stargazer</h1>
-  <p><em>A clearer view of space.</em></p>
-  <p>
-    Space data is scattered across dozens of government APIs, academic databases, and mission pages. Stargazer brings it all together into one beautiful, interactive 3D view. Live telemetry, real positions, and a design that gets out of the way so you can explore.
-  </p>
-</div>
+# Stargazer
 
----
+An interactive solar system explorer built with SvelteKit, Threlte, and Three.js. Explore planets, moons, spacecraft, and a curated set of satellites; change time, compare world sizes, or check upcoming launches.
 
-## Why Stargazer
+## Run locally
 
-Space is endlessly fascinating, but the data that describes it is fragmented and hard to access. Want to know where the ISS is right now? One API. Where Voyager 1 is? A different database. What Jupiter's moons are doing? Yet another. Stargazer pulls all of these sources into a single 3D scene that you can fly through, click on anything, and learn from. Free, no accounts, runs in any modern browser.
+Requires Node **22.12 or newer**.
 
-We're designers who love space, not astronomers. But we care deeply about getting the details right, so every position in Stargazer is backed by published data from NASA, JPL, ESA, and other public sources. Where we make visual trade-offs (like making planets bigger so you can actually see them), we show you the real numbers in the info panels.
-
----
-
-## What's tracked
-
-The whole solar system, all in one unified scene:
-
-| Category | Count | Examples |
-|---|---|---|
-| **Star** | 1 | Sun |
-| **Planets** | 8 | Mercury through Neptune |
-| **Dwarf planets** | 7 | Pluto, Ceres, Eris, Haumea, Makemake, Sedna, Quaoar |
-| **Moons** | 21 | Earth's Moon, Phobos, Deimos, Io, Europa, Ganymede, Callisto, Titan, Enceladus, Triton, Charon, and more |
-| **Asteroids** | 10 | Vesta, Pallas, Hygiea, 16 Psyche, Eros, Bennu, Ryugu, Itokawa, Didymos, Apophis |
-| **Comets** | 3 | Halley, 67P/Churyumov-Gerasimenko, Tempel 1 |
-| **Earth satellites** | 14 | ISS, Tiangong, Hubble, Chandra, Fermi, GOES-18, NOAA-20, GPS, Starlink, and more |
-| **Spacecraft** | 18 | JWST, Voyager 1/2, Juno, Parker Solar Probe, Curiosity, Perseverance, New Horizons, and more |
-
-Every body has a facts panel with cited sources and a tracking badge showing whether its position is live or a snapshot.
-
----
-
-## Features
-
-### Explore the solar system
-
-- **The entire solar system** in a unified 3D heliocentric scene
-- **Click anything** to fly to it, see its info, and explore its neighborhood
-- **Cinematic camera** that adapts its speed and arc to the distance traveled
-- **Hover any dot** to see what it is; click to select and learn more
-- **Selection reticle** frames whatever you're focused on
-- **Orbit highlighting** dims everything except the selected body's path
-
-### Watch things move
-
-- **Time control** with pause, fast-forward (up to 1 year per second), and reverse
-- **Custom date picker** that works the same on every browser
-- **Timeline slider** spanning 100 years of scrubbing range
-- **Trajectory trails** that show where each body has recently been
-- **Planet rotation** on real axes (Earth tilted 23.4 degrees, Uranus on its side, Pluto upside down)
-- **Comet tail indicators** pointing away from the Sun
-
-### Live tracking
-
-- **ISS position** updated every second from live telemetry
-- **Tiangong** tracked via SGP4 propagation from NORAD data
-- **12 curated Earth-orbit satellites** (Hubble, Chandra, Fermi, GOES-18, GPS, Starlink, and more) with live orbital positions from Celestrak
-- **Crew aboard** the ISS and Tiangong, updated live
-- **Pass predictor** tells you when the ISS will fly over your location
-
-### Rich info panels
-
-- Dedicated panels for Earth, Moon, Mars, ISS, Tiangong, and the Solar System overview
-- Every other body gets an auto-generated panel with facts, description, live distance, tracking source, and cited references
-- Quick-jump strip for fast navigation between planets and famous missions
-- Type filters and search across the entire registry
-
-### Visual details
-
-- Atmosphere shells on Earth, Venus, and Titan
-- Saturn's rings at the correct radii, sitting in Saturn's tilted equatorial plane
-- Sun bloom glow visible from solar system zoom
-- Ecliptic plane grid for orbital inclination reference
-- 16 famous star labels (Sirius, Vega, Polaris, etc.) for celestial orientation
-- Orbit thickness that tapers from inner to outer planets
-
----
-
-## Under the hood
-
-Stargazer uses published astronomical data for all of its positions. Here's the short version of how it works:
-
-1. **Planet positions** come from the Standish/Meeus ephemeris, the same fit behind NASA's "Approximate Positions of the Planets" tables.
-2. **Moon, asteroid, and comet orbits** are propagated from Keplerian elements pulled from JPL HORIZONS.
-3. **Earth-orbit satellites** use NORAD TLE data from Celestrak, propagated client-side with SGP4.
-4. **The ISS** is polled live from wheretheiss.at at 1 Hz.
-5. **Lighting** follows real solar geometry, so the day/night terminator and Moon phase match what's outside your window.
-
-A few visual compromises keep the scene readable: planet bodies are exaggerated so they're visible at interplanetary scale, the Moon's distance is compressed so it doesn't float halfway to Mars, and satellite altitudes are compressed so GEO birds don't appear further from Earth than the Moon. The real physical numbers are always shown in the info panels.
-
----
-
-## Data sources
-
-<div align="center">
-  <img src="./static/nasa-logo.svg" width="100" alt="NASA" />&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="./static/jpl-logo.svg" width="100" alt="JPL" />&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="./static/esa-logo.svg" width="60" alt="ESA" />&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="./static/jaxa-logo.svg" width="80" alt="JAXA" />&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="./static/spacex-logo.svg" width="100" alt="SpaceX" />
-</div>
-
-<br />
-
-Stargazer aggregates from free, public data sources. We are **not affiliated with** any space agency or company listed here. We're fans building on top of public data.
-
-| Source | What it provides |
-|---|---|
-| **[JPL HORIZONS](https://ssd.jpl.nasa.gov/horizons/)** | Orbital elements for moons, asteroids, comets, and spacecraft |
-| **[JPL Small-Body Database](https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html)** | Reference data for asteroids, comets, and dwarf planets |
-| **[NASA Planetary Fact Sheets](https://nssdc.gsfc.nasa.gov/planetary/factsheet/)** | Planet mass, gravity, temperature, atmosphere data |
-| **[NASA Visible Earth](https://visibleearth.nasa.gov/)** | Earth and Moon photographic textures |
-| **[Solar System Scope](https://www.solarsystemscope.com/textures/)** | Planet texture maps (Mercury through Neptune, Saturn's rings). [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
-| **[Celestrak](https://celestrak.org/)** | NORAD TLE sets for ISS, Tiangong, and 12 curated satellites |
-| **[wheretheiss.at](https://wheretheiss.at/)** | Live ISS position, velocity, altitude, and visibility |
-| **[open-notify.org](http://open-notify.org/)** | Humans currently in space, by craft |
-| **BigDataCloud** | Reverse geocoding for satellite sub-point locations |
-| **[satellite.js](https://github.com/shashwatak/satellite-js)** | SGP4 orbit propagation (MIT) |
-| **NASA TV (YouTube)** | Embedded live broadcast |
-
-All API requests involving keys are proxied server-side so credentials never reach the browser.
-
----
-
-## Tech stack
-
-| | |
-|---|---|
-| Framework | [SvelteKit](https://kit.svelte.dev) (Svelte 5 with runes) |
-| 3D rendering | [Threlte 8](https://threlte.xyz) (Three.js wrapper for Svelte) |
-| Satellite math | [satellite.js](https://github.com/shashwatak/satellite-js) (SGP4 propagator) |
-| Styling | [Tailwind CSS](https://tailwindcss.com) + CSS variables |
-| Hosting | [Vercel](https://vercel.com) (`@sveltejs/adapter-vercel`) |
-
----
-
-## Getting started
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Set up env vars
-cp .env.example .env
-#   then open .env and paste your free NASA key from https://api.nasa.gov
-
-# 3. Start the dev server
+```sh
+npm ci
 npm run dev
 ```
 
-Then open <http://localhost:5174>.
+Open http://localhost:5174. The landing page uses a lightweight canvas illustration; the 3D explorer loads on `/app`.
 
-### Configuration
-
-| Variable | Required | Description |
-|---|---|---|
-| `NASA_API_KEY` | yes | Free key from <https://api.nasa.gov>. Server-side only. Proxied through `/api/nasa/[...path]`. |
-| `PUBLIC_KOFI_USERNAME` | no | Ko-fi username for the support button. Leave blank to hide. |
-
----
-
-## Project layout
-
-```
-src/
-├── app.css                          # Design tokens, surface system
-├── lib/
-│   ├── scene-config.ts              # Scale constants, compression factors
-│   ├── registry/
-│   │   ├── types.ts                 # TrackedObject, metadata types
-│   │   ├── registry.ts              # Central body array, getById, getWorldPosition
-│   │   └── bodies/                  # One file per body group
-│   ├── components/
-│   │   ├── scene/                   # 3D components (Threlte Canvas)
-│   │   ├── layout/                  # UI overlay panels
-│   │   └── ui/                      # Reusable primitives (DatePicker, InfoTooltip)
-│   ├── stores/                      # Svelte stores (simTime, selection, satellite data)
-│   ├── utils/                       # Ephemeris, coordinate math, click detection
-│   └── server/                      # Server-only API proxies
-└── routes/
-    ├── +page.svelte                 # Landing page
-    ├── app/+page.svelte             # Main 3D app
-    └── api/                         # Proxy endpoints (ISS, TLE, geocode, NASA)
+```sh
+npm run check
+npm test
+npm run lint
+npm run build
 ```
 
----
+An optional `NASA_API_KEY` in `.env` enables the retained NASA APOD/NEO proxy routes. The explorer does not require a key. Satellite elements and launch schedules require internet access; failed feeds show an unavailable state.
 
-## Contributing
+## Controls
 
-PRs welcome. Two things we care about:
+- Drag to orbit; scroll or pinch to zoom; right-drag or use two fingers to pan.
+- Search with `/` or `Cmd/Ctrl K`. Arrow keys browse search results; Enter flies to a destination.
+- Space pauses time; `+` / `−` change speed; `N` returns to now.
+- `H` opens the solar system overview; `R` resets the camera; `F` toggles immersive mode.
+- Click the date to choose UTC time. “Back to now” resumes the current clock.
+- Open a world's information to compare physical sizes or explore nearby objects.
+- Share view copies a destination link, including simulated date and speed when applicable.
 
-1. **Match the existing patterns.** Run `npm run format` before submitting. Follow the registry pattern for new bodies.
-2. **Keep the data honest.** Positions should come from published sources. Visual compromises are fine as long as the real numbers are shown in the UI.
+## Data and accuracy
 
----
+This is an educational visualization, with explicit approximations:
+
+| Data                         | Method and limits                                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planets and Pluto            | JPL approximate planetary elements, bounded to 1800–2050. Earth uses the Earth–Moon barycenter approximation.                                                           |
+| Earth's Moon                 | Truncated lunar model. Approximate phase, distance, and direction; unsuitable for eclipse timing.                                                                       |
+| Other moons and small bodies | Two-body propagation of dated JPL Horizons elements. Perturbations and maneuvers are omitted.                                                                           |
+| Planet orbiters              | Dated Horizons elements, displayed only within 30 days of their epoch.                                                                                                  |
+| Cruise spacecraft            | Fixed Horizons positions. The inspector shows the snapshot epoch.                                                                                                       |
+| Rovers                       | Landing coordinates, not current rover traverses.                                                                                                                       |
+| Webb                         | Illustrated Sun–Earth L2 neighborhood, not an operational trajectory.                                                                                                   |
+| Earth satellites             | CelesTrak TLEs propagated with satellite.js SGP4 at the selected simulation time, restricted to ±7 days of the element epoch. This window does not guarantee precision. |
+| Launches                     | The Space Devs Launch Library 2; schedules are provisional. SpaceX is included through these third-party sources.                                                       |
+
+Heliocentric distances use 100 scene units per AU. Planet sizes are enlarged; moon systems use individual compression factors. The Sun has its own display scale. Facts and the size-comparison dialog show physical dimensions. Texture clouds, atmosphere glow, and ring shading are illustrative; they are not weather or radiative-transfer simulations.
+
+Time controls display UTC. Element epochs from Horizons are TDB; the simple propagation treats UTC as TDB, introducing a roughly minute-scale time offset near the present. There are no light-time, aberration, or observer-location corrections in the planetary scene.
+
+### Refresh local ephemerides
+
+```sh
+node scripts/refresh-ephemeris.mjs --dry-run
+node scripts/refresh-ephemeris.mjs
+npx prettier --write src/lib/registry/bodies
+npm test
+```
+
+The refresh script updates each record and its epoch together. Failed objects retain their original elements and epoch; files are replaced atomically. It never commits. The existing scheduled GitHub workflow handles repository updates independently; mission descriptions and operational status still require editorial review.
+
+Tests include 30 independent Horizons reference vectors at three epochs, Vallado's SGP4 verification vector, solver edge cases, simulation state transitions, registry invariants, and API/refresh failure handling.
+
+## Structure
+
+- `src/lib/registry`: object data, parent relationships, and position functions.
+- `src/lib/utils`: orbital math, coordinate frames, validation, and scene interaction.
+- `src/lib/stores`: simulation, selection, and subscriber-managed data feeds.
+- `src/lib/components/scene`: 3D rendering and camera behavior.
+- `src/lib/components/layout`: search, controls, destination information, and comparisons.
+- `src/lib/components/landing`: the lightweight interactive landing illustration.
+- `src/routes/api`: validated upstream data proxies.
+- `scripts`: local data refresh and regression tests.
+
+## Sources and credits
+
+- [JPL approximate planetary positions](https://ssd.jpl.nasa.gov/planets/approx_pos.html)
+- [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/)
+- [CelesTrak](https://celestrak.org/) and [SGP4 verification data](https://celestrak.org/publications/AIAA/2006-6753/)
+- [The Space Devs Launch Library 2](https://thespacedevs.com/llapi)
+- [NASA planetary facts](https://nssdc.gsfc.nasa.gov/planetary/factsheet/)
+- [Solar System Scope textures, CC BY 4.0](https://www.solarsystemscope.com/textures/) and NASA Earth imagery
+- [NASA Eyes](https://eyes.nasa.gov/apps/solar-system/#/home), a reference for solar-system exploration
+
+Stargazer is independent of NASA, ESA, JAXA, and SpaceX.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Project code is available under the [MIT license](LICENSE). Bundled third-party assets retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
 
----
-
-## Credits
-
-Powered by [The Lab](https://lab.ordinarycompany.design/).
-
-Planet textures from NASA Visible Earth and [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0). Orbital data from [JPL HORIZONS](https://ssd.jpl.nasa.gov/horizons/). Satellite propagation by [satellite.js](https://github.com/shashwatak/satellite-js). Agency logos from Wikimedia Commons.
-
-Stargazer is **not affiliated with** NASA, ESA, JAXA, SpaceX, or any other space agency or company. We are fans who think this data deserves a better home.
+The default display fallback is the open-source Geist Mono font. Cygnito Mono is a separately licensed font and is not distributed here; the browser can use it if it is already installed locally. Third-party agency logos are not bundled.

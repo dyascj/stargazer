@@ -17,8 +17,7 @@ function compressAltitude(altER: number): number {
   if (altER < LEO_CUTOFF_ER) return altER;
   return (
     LEO_CUTOFF_ER +
-    (MAX_ALT_ER - LEO_CUTOFF_ER) *
-      (1 - Math.exp(-COMPRESS_RATE * (altER - LEO_CUTOFF_ER)))
+    (MAX_ALT_ER - LEO_CUTOFF_ER) * (1 - Math.exp(-COMPRESS_RATE * (altER - LEO_CUTOFF_ER)))
   );
 }
 

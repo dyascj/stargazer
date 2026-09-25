@@ -31,14 +31,11 @@ export const NEPTUNE: TrackedObject = {
     externalId: '899',
     radius: NEPTUNE_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: NEPTUNE_RADIUS_KM,
-    geometryDetail: 5,
     textureUrl: '/textures/2k_neptune.jpg',
     poleVec: [0.3558, 0.8828, 0.3067],
     rotationModel: 'iau-w',
     rotationW0Deg: 253.18,
     rotationRateDegPerDay: 536.3128492,
-    shaderAmbient: 0.03,
-    shaderBrightness: 1.85,
     dayLength: '16h 6m',
     yearLength: '164.79 Earth years',
     orbitColor: 0x686868,
@@ -49,7 +46,6 @@ export const NEPTUNE: TrackedObject = {
       { label: 'Surface gravity', value: '11.15 m/s²' },
       { label: 'Mean temperature', value: '72 K (cloud tops)' },
       { label: 'Atmosphere', value: '~80% H₂, ~19% He, ~1.5% CH₄' },
-      { label: 'Known moons', value: '16' },
       { label: 'Magnetic field', value: 'Yes, tilted 47° from rotation axis, offset from center' }
     ],
     sources: [
@@ -58,6 +54,9 @@ export const NEPTUNE: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };
