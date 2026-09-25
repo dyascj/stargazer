@@ -2,6 +2,7 @@
   "name": "stargazer",
   "version": "0.1.1",
   "private": true,
+  "author": "Charles J. Dyas",
   "description": "An interactive solar system explorer with approximate orbital models, satellite predictions, and sourced mission data.",
   "type": "module",
   "scripts": {

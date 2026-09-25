@@ -56,7 +56,9 @@
     </p>
     <p>Not affiliated with NASA, JPL, ESA, JAXA or SpaceX.</p>
     <p>
-      © {year} The Lab by Ordinary Company. Code under the
+      A personal project by
+      <a href="https://github.com/dyascj" target="_blank" rel="noreferrer">Charles J. (CJ) Dyas</a>.
+      © {year}. Code under the
       <a
         href="https://github.com/dyascj/stargazer/blob/master/LICENSE"
         target="_blank"
