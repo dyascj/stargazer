@@ -32,12 +32,10 @@ Stargazer is a quieter, more beautiful take on [NASA's Eyes on the Solar System]
 - **Time travel.** Scrub planets between 1800 and 2050, pause, reverse, or jump back to now.
 - **Built for phones.** A draggable details sheet, gestures that match the desktop, and a view that recenters above the sheet.
 
-<table>
-  <tr>
-    <td width="50%"><img src=".github/assets/explorer-iss.jpg" alt="The International Space Station over Earth's limb" /></td>
-    <td width="50%"><img src=".github/assets/explorer-overview.jpg" alt="The whole solar system at true scale with orbits and labels" /></td>
-  </tr>
-</table>
+<p>
+  <img src=".github/assets/explorer-iss.jpg" alt="The International Space Station over Earth's limb" width="49.5%" />
+  <img src=".github/assets/explorer-overview.jpg" alt="The whole solar system at true scale with orbits and labels" width="49.5%" />
+</p>
 
 <img src=".github/assets/mobile.jpg" alt="Stargazer on a phone: the ISS, Saturn, and the Moon" width="100%" />
 
