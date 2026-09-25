@@ -21,7 +21,15 @@
     stopAllCuratedSatellites
   } from '$lib/registry/bodies/satellites';
   import { closeInfoPanel, infoPanelOpen, paletteOpen, immersive, selectBody } from '$stores/ui';
-  import { selection, SOLAR_SYSTEM_VIEW, overviewDistance } from '$stores/selection';
+  import {
+    selection,
+    SOLAR_SYSTEM_VIEW,
+    overviewDistance,
+    OVERVIEW_INNER,
+    OVERVIEW_ALL
+  } from '$stores/selection';
+  import { introComplete, sceneReady, viewInset } from '$stores/scene';
+  import { fade } from 'svelte/transition';
   import { getById } from '$lib/registry/registry';
   import { setSimTime, setSimRate, RATE_STEPS } from '$stores/simTime';
 
@@ -29,6 +37,8 @@
   let sheetOffset = $state(0);
   let sheetExpanded = $state(false);
   const docked = $derived($infoPanelOpen && compact.current);
+  // The desktop card (360px plus 16px margins) covers the right of the scene.
+  $effect(() => viewInset.set($infoPanelOpen && !compact.current ? 392 : 0));
 
   function openSearch() {
     // Focus must land inside the tap handler for mobile browsers to raise the keyboard.
@@ -72,9 +82,20 @@
 
 <main
   class="explorer"
+  class:intro={!$introComplete}
   style:--dock-bottom="calc(max(16px, env(safe-area-inset-bottom)) + {docked ? sheetOffset : 0}px)"
 >
-  <div class="viewport" class:beside-card={$infoPanelOpen && !compact.current}><Scene /></div>
+  <div class="viewport"><Scene /></div>
+  {#if !$sceneReady}
+    <div
+      class="boot"
+      out:fade={{ duration: 250 }}
+      aria-label="Loading the solar system"
+      role="status"
+    >
+      <Brand wordmark={false} size={32} />
+    </div>
+  {/if}
 
   {#if $immersive}
     <button class="exit-immersive glass" type="button" onclick={() => immersive.set(false)}
@@ -108,8 +129,8 @@
         <Segmented
           label="Framing"
           options={[
-            { value: 650, label: 'Inner planets' },
-            { value: 9000, label: 'All planets' }
+            { value: OVERVIEW_INNER, label: 'Inner planets' },
+            { value: OVERVIEW_ALL, label: 'All planets' }
           ]}
           value={$overviewDistance}
           onchange={(value) => overviewDistance.set(value)}
@@ -117,7 +138,7 @@
       </div>
     {/if}
 
-    {#if $infoPanelOpen}
+    {#if $infoPanelOpen && $introComplete}
       <InspectorPanel compact={compact.current} bind:sheetOffset bind:sheetExpanded />
     {/if}
 
@@ -144,12 +165,43 @@
     inset: 0;
     z-index: 0;
   }
-  /* Widen the canvas to the left so the focused body centers in the space beside the card. */
-  .viewport.beside-card {
-    left: -392px;
+
+  /* Shown while the first view's textures load; dissolves as the scene fades up. */
+  .boot {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    /* Delayed, so cached loads never flash it. */
+    animation: breathe 1.6s ease-in-out 0.5s infinite alternate both;
+  }
+  @keyframes breathe {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.85;
+    }
+  }
+
+  /* Chrome waits for the opening camera move, then settles in. */
+  .intro :is(.topbar, .framing, .time-dock) {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .intro .topbar {
+    translate: 0 -8px;
+  }
+  .intro .time-dock {
+    translate: -50% 12px;
   }
 
   .topbar {
+    transition:
+      opacity 600ms var(--ease-out),
+      translate 700ms var(--ease-out);
     position: absolute;
     inset: 0 0 auto;
     z-index: 30;
@@ -211,6 +263,7 @@
   }
 
   .framing {
+    transition: opacity 600ms var(--ease-out);
     position: absolute;
     top: 76px;
     left: 20px;
@@ -230,6 +283,7 @@
     translate: -50% 0;
     transition:
       bottom 420ms cubic-bezier(0.22, 0.9, 0.28, 1),
+      translate 700ms var(--ease-out) 120ms,
       opacity 200ms ease;
   }
   .time-dock.hidden {

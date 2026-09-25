@@ -19,12 +19,3 @@ export const OVERVIEW_INNER = 6.5 * AU_TO_SCENE;
 export const OVERVIEW_ALL = 100 * AU_TO_SCENE;
 
 export const overviewDistance = writable(OVERVIEW_ALL);
-
-// ponytail: values from the retired 100-units-per-AU scale, still sent by the
-// UI until it switches to the constants above; delete once it does.
-const LEGACY_OVERVIEW: Record<number, number> = { 650: OVERVIEW_INNER, 9000: OVERVIEW_ALL };
-
-/** Scene distance for an `overviewDistance` value. */
-export function resolveOverviewDistance(value: number): number {
-  return LEGACY_OVERVIEW[value] ?? value;
-}

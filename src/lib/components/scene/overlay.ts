@@ -22,9 +22,16 @@ export const LABEL_HEIGHT = 22;
  * Cross-component wiring: the hovered body (set by input), the camera's
  * distance to what it orbits (set by the camera), and the DOM labels' frame hook.
  */
-export const hooks: { hovered: number; viewDistance: number; afterFrame: (() => void) | null } = {
+export const hooks: {
+  hovered: number;
+  viewDistance: number;
+  /** Current horizontal view offset in pixels; the optical center sits at (width - viewShift) / 2. */
+  viewShift: number;
+  afterFrame: (() => void) | null;
+} = {
   hovered: -1,
   viewDistance: 1,
+  viewShift: 0,
   afterFrame: null
 };
 
@@ -92,7 +99,7 @@ export function updateOverlay(
     if (_view.z >= 0) continue;
     const depth = _view.length();
     screen.depth[i] = depth;
-    screen.x[i] = width / 2 + (focal * _view.x) / -_view.z;
+    screen.x[i] = (width - hooks.viewShift) / 2 + (focal * _view.x) / -_view.z;
     screen.y[i] = height / 2 - (focal * _view.y) / -_view.z;
     const radius = RADII[i];
     screen.radius[i] =
