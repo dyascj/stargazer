@@ -80,7 +80,7 @@
       {/each}
     </h1>
     <p class="lede">
-      Explore {total} objects, from Mercury to Voyager 1, placed with data from NASA JPL and CelesTrak.
+      Explore {total} objects, from Mercury to Voyager&nbsp;1, placed with data from NASA JPL and CelesTrak.
       Free, in your browser.
     </p>
     <div class="actions">
