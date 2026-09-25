@@ -1,6 +1,6 @@
-import { Vector3 } from 'three';
+import type { Vector3 } from 'three';
 import { KM_TO_SCENE } from '../scene-config';
-import { solveKepler } from './kepler';
+import { orbitToEcliptic, solveKepler } from './kepler';
 
 /**
  * Keplerian orbit helper for moons and planet orbiters.
@@ -66,24 +66,14 @@ export function computeMoonOffset(
   const x_orb = a * (Math.cos(E) - e);
   const y_orb = a * Math.sqrt(1 - e * e) * Math.sin(E);
 
-  // Rotate perifocal → ecliptic via the standard 3-1-3 Euler sequence
-  // (ω around z, i around x, Ω around z).
-  const i_rad = elements.i_deg * DEG_TO_RAD;
-  const Omega_rad = elements.Omega_deg * DEG_TO_RAD;
-  const omega_rad = elements.omega_deg * DEG_TO_RAD;
-  const cosO = Math.cos(Omega_rad);
-  const sinO = Math.sin(Omega_rad);
-  const cosw = Math.cos(omega_rad);
-  const sinw = Math.sin(omega_rad);
-  const cosi = Math.cos(i_rad);
-  const sini = Math.sin(i_rad);
-
-  const x_ecl_km =
-    (cosO * cosw - sinO * sinw * cosi) * x_orb + (-cosO * sinw - sinO * cosw * cosi) * y_orb;
-  const y_ecl_km =
-    (sinO * cosw + cosO * sinw * cosi) * x_orb + (-sinO * sinw + cosO * cosw * cosi) * y_orb;
-  const z_ecl_km = sinw * sini * x_orb + cosw * sini * y_orb;
-
+  const { x, y, z } = orbitToEcliptic(
+    x_orb,
+    y_orb,
+    elements.Omega_deg * DEG_TO_RAD,
+    elements.omega_deg * DEG_TO_RAD,
+    elements.i_deg * DEG_TO_RAD,
+    target
+  );
   // km to scene units; ecliptic (x, y, z) maps to scene (x, z, -y).
-  return target.set(x_ecl_km * KM_TO_SCENE, z_ecl_km * KM_TO_SCENE, -y_ecl_km * KM_TO_SCENE);
+  return target.set(x * KM_TO_SCENE, z * KM_TO_SCENE, -y * KM_TO_SCENE);
 }
