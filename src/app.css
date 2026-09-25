@@ -1,6 +1,6 @@
 @import '@fontsource-variable/inter/opsz.css';
 
-/* Minimal reset (replaces Tailwind Preflight). */
+/* Minimal reset. */
 *,
 ::before,
 ::after {
@@ -120,9 +120,7 @@ menu {
   --surface-3: #292929; /* hover */
   --surface-4: #363636; /* controls, pressed */
   --glass: rgb(20 20 20 / 0.72);
-  --glass-subtle: rgb(20 20 20 / 0.55);
   --glass-blur: blur(14px) saturate(1.4);
-  --hairline: rgb(246 248 249 / 0.08); /* only where fill contrast is impossible */
 
   /* Text */
   --text-1: #f5f5f5;
@@ -133,7 +131,6 @@ menu {
   /* Brand and semantics */
   --accent: #00b2ff; /* Mizu 500 */
   --accent-strong: #5cd5ff; /* Mizu 300, legible accent text on dark */
-  --accent-wash: rgb(0 178 255 / 0.16);
   --success: #4ade80;
   --warning: #ffbf33;
   --danger: #f87171;
@@ -155,7 +152,6 @@ menu {
 
   /* Type */
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
   /* Motion (Bencho vocabulary). Springs are CSS linear() approximations. */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -197,43 +193,7 @@ menu {
     1.002,
     1
   ); /* 380ms */
-  --spring-snappy: linear(
-    0,
-    0.03,
-    0.104,
-    0.203,
-    0.313,
-    0.424,
-    0.529,
-    0.625,
-    0.71,
-    0.782,
-    0.841,
-    0.89,
-    0.928,
-    0.957,
-    0.979,
-    0.994,
-    1.005,
-    1.012,
-    1.015,
-    1.017,
-    1.017,
-    1.016,
-    1.015,
-    1.013,
-    1.011,
-    1.009,
-    1.007,
-    1.006,
-    1.004,
-    1.003,
-    1.002,
-    1.002,
-    1
-  ); /* 280ms */
   --dur-fast: 150ms;
-  --dur-base: 240ms;
   --dur-slow: 420ms;
 }
 
@@ -282,11 +242,6 @@ p {
 }
 
 .tabular {
-  font-variant-numeric: tabular-nums;
-}
-
-.mono {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -386,15 +341,6 @@ kbd {
   background: rgb(245 245 245 / 0.08);
   color: var(--text-2);
   font: 500 11px/1 var(--font-sans);
-}
-
-/* Small uppercase eyebrow label, used sparingly. */
-.eyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-3);
 }
 
 /* Staggered entrance. Set --i on siblings for a 70ms cascade. */

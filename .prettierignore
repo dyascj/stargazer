@@ -3,6 +3,5 @@ node_modules
 .vercel
 build
 dist
-dev-dist
 package-lock.json
 static

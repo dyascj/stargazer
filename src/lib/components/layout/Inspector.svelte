@@ -6,8 +6,7 @@
   import { displayTime, isLive, setSimRate, setSimTime } from '$stores/simTime';
   import { closeInfoPanel, compareOpen, selectBody } from '$stores/ui';
   import { getLunarState } from '$utils/moon';
-  import { iss } from '$stores/iss';
-  import { issTle } from '$stores/issTle';
+  import { iss, issTle } from '$stores/iss';
   import { tiangong, tiangongTle } from '$stores/tiangong';
   import { getCuratedSatelliteStore } from '$lib/registry/bodies/satellites';
   import BlurText from '$components/ui/BlurText.svelte';

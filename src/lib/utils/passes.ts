@@ -2,7 +2,7 @@ import * as satellite from 'satellite.js';
 import { getSunElevationAt } from './solar';
 import { EARTH_RADIUS_KM } from '../scene-config';
 
-export interface Observer {
+interface Observer {
   /** Geographic latitude in degrees, +N */
   latitude: number;
   /** Geographic longitude in degrees, +E */

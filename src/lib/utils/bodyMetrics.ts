@@ -3,7 +3,7 @@ import { KM_TO_SCENE, SUN_RADIUS } from '../scene-config';
 import { isPlanetBody, isStar, type TrackedObject } from '../registry/types';
 
 /** Half the ISS's 109 m truss span, the only spacecraft drawn as a model. */
-export const ISS_RADIUS = 0.0545 * KM_TO_SCENE;
+const ISS_RADIUS = 0.0545 * KM_TO_SCENE;
 
 /** Physical radius in scene units; 0 for bodies drawn only as markers. */
 export function bodyRadius(body: TrackedObject): number {
@@ -13,7 +13,7 @@ export function bodyRadius(body: TrackedObject): number {
 }
 
 /** Radius that a close framing must keep on screen, including rings. */
-export function framingRadius(body: TrackedObject): number {
+function framingRadius(body: TrackedObject): number {
   return isPlanetBody(body) && body.metadata.hasRings
     ? body.metadata.hasRings.outerRadius
     : bodyRadius(body);

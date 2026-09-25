@@ -10,7 +10,7 @@ const COS_E = Math.cos(EARTH_OBLIQUITY_RAD);
 const SIN_E = Math.sin(EARTH_OBLIQUITY_RAD);
 
 /** J2000 equatorial unit vector to scene coordinates. */
-export function equatorialVectorToScene(x: number, y: number, z: number): [number, number, number] {
+function equatorialVectorToScene(x: number, y: number, z: number): [number, number, number] {
   const eclipticY = y * COS_E + z * SIN_E;
   const eclipticZ = -y * SIN_E + z * COS_E;
   return [x, eclipticZ, -eclipticY];

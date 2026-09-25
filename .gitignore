@@ -24,8 +24,6 @@ pnpm-debug.log*
 # Vercel
 .vercel
 
-# PWA generated assets
-
 # Internal docs (specs, plans)
 docs
 

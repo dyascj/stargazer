@@ -1,7 +1,4 @@
-/**
- * Scene units. One unit is Earth's mean radius and every size and distance is
- * physically true: there is no per-system compression anywhere in the scene.
- */
+/** Scene units. One unit is Earth's mean radius; every size and distance is physically true. */
 export const EARTH_RADIUS = 1;
 export const EARTH_RADIUS_KM = 6371;
 export const KM_TO_SCENE = 1 / EARTH_RADIUS_KM;
@@ -12,7 +9,7 @@ export const AU_TO_SCENE = AU_KM * KM_TO_SCENE;
 
 // IAU 2006 J2000 obliquity. Applied as rotation.x = -EARTH_OBLIQUITY_RAD
 // to tilt the pole toward -Z (correct orientation for seasonal lighting).
-export const EARTH_OBLIQUITY_DEG = 23.4393;
+const EARTH_OBLIQUITY_DEG = 23.4393;
 export const EARTH_OBLIQUITY_RAD = (EARTH_OBLIQUITY_DEG * Math.PI) / 180;
 
 export const MOON_RADIUS_KM = 1737.4;
