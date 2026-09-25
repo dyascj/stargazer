@@ -10,18 +10,28 @@ import {
 
 const loader = new TextureLoader();
 const cache = new Map<string, Promise<Texture>>();
+let pending = 0;
+
+/** Textures requested but not yet decoded; the intro waits for zero. */
+export function pendingTextures(): number {
+  return pending;
+}
 
 /** Load once and share. Color maps are sRGB; data maps (clouds, ring opacity) stay linear. */
 export function loadTexture(url: string, color = true): Promise<Texture> {
   let texture = cache.get(url);
   if (!texture) {
-    texture = loader.loadAsync(url).then((map) => {
-      map.colorSpace = color ? SRGBColorSpace : NoColorSpace;
-      map.wrapS = RepeatWrapping;
-      map.minFilter = LinearMipmapLinearFilter;
-      map.anisotropy = 8;
-      return map;
-    });
+    pending++;
+    texture = loader
+      .loadAsync(url)
+      .then((map) => {
+        map.colorSpace = color ? SRGBColorSpace : NoColorSpace;
+        map.wrapS = RepeatWrapping;
+        map.minFilter = LinearMipmapLinearFilter;
+        map.anisotropy = 8;
+        return map;
+      })
+      .finally(() => pending--);
     cache.set(url, texture);
   }
   return texture;

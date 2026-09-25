@@ -104,7 +104,9 @@
       sample.sub(current);
       orbit.positions.setXYZ(k, sample.x, sample.y, sample.z);
       const behind = 1 - back / orbit.periodMs;
-      orbit.alphas!.setX(k, strength + trail * behind * behind * behind);
+      // Taper the far end: a period from vis-viva can leave a small gap where the orbit closes.
+      const closing = 1 - MathUtils.smoothstep(k / (SAMPLES - 1), 0.97, 1);
+      orbit.alphas!.setX(k, (strength + trail * behind * behind * behind) * closing);
     }
     orbit.positions.needsUpdate = true;
     orbit.alphas!.needsUpdate = true;

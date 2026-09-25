@@ -35,14 +35,18 @@ export function framingDirection(
   return out.lengthSq() < 1e-12 ? out.set(0, 1, 0) : out.normalize();
 }
 
+export function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
 export function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
 /**
- * Log-distance at flight progress `t`. Long hops pull back mid-flight far
- * enough to see both endpoints, then settle in, instead of skimming past or
- * through anything between them.
+ * Log-distance at eased flight progress `t`. Long hops pull back mid-flight
+ * far enough to see both endpoints, then settle in, instead of skimming past
+ * or through anything between them.
  */
 export function flightLogDistance(
   fromDistance: number,
@@ -53,10 +57,14 @@ export function flightLogDistance(
   const from = Math.log(fromDistance);
   const to = Math.log(toDistance);
   const hump = Math.max(0, Math.log(separation * 1.1) - (from + to) / 2);
-  return from + (to - from) * easeInOutCubic(t) + hump * Math.sin(Math.PI * t);
+  return from + (to - from) * t + hump * Math.sin(Math.PI * t);
 }
 
-/** Flight length in ms: quick for short hops, longer for interplanetary ones. */
+/** Flight length in ms: about 1.2 s for short hops, up to 3 s across the solar system. */
 export function flightDuration(fromDistance: number, toDistance: number, separation: number) {
-  return Math.min(2600, 900 + 160 * Math.log1p(separation / (fromDistance + toDistance)));
+  const zoom = Math.abs(Math.log(toDistance / fromDistance));
+  return Math.min(
+    3000,
+    1200 + 200 * Math.log1p(separation / (fromDistance + toDistance)) + 40 * zoom
+  );
 }

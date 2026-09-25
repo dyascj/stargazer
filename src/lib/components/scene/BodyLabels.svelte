@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { selection } from '$stores/selection';
+  import { introComplete } from '$stores/scene';
   import { selectBody } from '$stores/ui';
   import { BODIES, BODY_COUNT } from './bodyState';
   import { hooks, LABEL_HEIGHT, labelShown, labelWidth, labelX, labelY } from './overlay';
@@ -41,7 +42,7 @@
   });
 </script>
 
-<div class="labels" aria-label="Scene labels">
+<div class="labels" class:arrived={$introComplete} aria-label="Scene labels">
   {#each BODIES as body, i (body.id)}
     <button
       bind:this={elements[i]}
@@ -62,23 +63,28 @@
     overflow: hidden;
     pointer-events: none;
     contain: strict;
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out) 120ms;
+  }
+  .labels.arrived {
+    opacity: 1;
   }
   .label {
     position: absolute;
     top: 0;
     left: 0;
-    height: 20px;
-    padding: 0 4px;
+    height: 22px;
+    padding: 0 9px;
     border: 0;
-    background: none;
+    border-radius: var(--radius-pill);
+    background: rgb(16 16 16 / 0.62);
     font-family: var(--font-sans);
     font-size: 12px;
     font-weight: 450;
-    line-height: 20px;
+    line-height: 22px;
     letter-spacing: 0.01em;
     white-space: nowrap;
     color: var(--text-2);
-    text-shadow: 0 1px 3px rgb(0 0 0 / 0.75);
     opacity: 0;
     visibility: hidden;
     cursor: pointer;
@@ -86,7 +92,8 @@
     transition:
       opacity var(--dur-fast) var(--ease-out),
       visibility 0s linear var(--dur-fast),
-      color var(--dur-fast) var(--ease-out);
+      color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
     will-change: transform;
   }
   .label:global(.shown) {
@@ -103,9 +110,11 @@
   }
   .label.selected {
     color: var(--accent-strong);
+    background: rgb(0 60 88 / 0.55);
   }
   .label:hover {
     color: var(--text-1);
+    background: rgb(41 41 41 / 0.85);
   }
   .label:focus-visible {
     outline: 2px solid var(--accent);

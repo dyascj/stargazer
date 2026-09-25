@@ -37,7 +37,7 @@
 {#if $showGrid}<EclipticGrid />{/if}
 
 <Sun />
-<T.AmbientLight intensity={0.1} />
+<T.AmbientLight intensity={0.3} />
 
 <PlanetBody object={earth}>
   <IssModel />

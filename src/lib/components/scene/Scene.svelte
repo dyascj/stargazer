@@ -2,6 +2,7 @@
   import { Canvas } from '@threlte/core';
   import { ACESFilmicToneMapping, WebGLRenderer } from 'three';
   import { showLabels } from '$stores/ui';
+  import { sceneReady } from '$stores/scene';
   import World from './World.svelte';
   import BodyLabels from './BodyLabels.svelte';
 
@@ -21,7 +22,7 @@
   }
 </script>
 
-<div class="scene">
+<div class="scene" class:ready={$sceneReady}>
   <svelte:boundary>
     <Canvas {createRenderer} {dpr} toneMapping={ACESFilmicToneMapping}><World /></Canvas>
     {#snippet failed()}
@@ -45,6 +46,11 @@
     inset: 0;
     cursor: grab;
     background: var(--bg);
+    opacity: 0;
+    transition: opacity 1.4s var(--ease-out);
+  }
+  .scene.ready {
+    opacity: 1;
   }
   .scene:active {
     cursor: grabbing;

@@ -14,10 +14,12 @@
   import { cameraCommand, selectBody } from '$stores/ui';
   import { hoveredBody } from '$stores/sceneHover';
   import { reducedMotion } from '$stores/reducedMotion';
+  import { introComplete, sceneReady } from '$stores/scene';
   import { simTime } from '$stores/simTime';
   import { framingDistance, minimumDistance } from '$utils/bodyMetrics';
   import {
     easeInOutCubic,
+    easeOutCubic,
     flightDuration,
     flightLogDistance,
     framingDirection
@@ -25,6 +27,7 @@
   import { pickBody } from '$utils/screenSpace';
   import { BODIES, BODY_COUNT, RADII, indexOf, parentOf, positions, valid } from './bodyState';
   import { hooks, screen } from './overlay';
+  import { pendingTextures } from './textures';
 
   /**
    * Orbit camera around the selected body. Rotation, zoom, and pan move goals
@@ -32,6 +35,10 @@
    * Zoom works on log altitude above the focused surface, which feels the same
    * at the ISS and at Neptune. Zooming far out of a moon or satellite drifts
    * the orbit center to its parent, and the camera never enters a body.
+   *
+   * First load: the canvas stays dark until the first view's textures are in,
+   * then fades up while the camera eases in from a wider framing; markers and
+   * labels fade in once it settles. Any input takes over immediately.
    */
 
   const FOV = 45;
@@ -50,6 +57,7 @@
   let logAltitudeGoal = 0;
   let azimuthVelocity = 0;
   let polarVelocity = 0;
+  let zoomVelocity = 0;
   const pan = new Vector3();
   const panGoal = new Vector3();
   const center = new Vector3();
@@ -64,6 +72,7 @@
   let flight: {
     start: number;
     duration: number;
+    intro: boolean;
     fromCenter: Vector3;
     fromDirection: Quaternion;
     toDirection: Quaternion;
@@ -77,6 +86,12 @@
   const flightQuat = new Quaternion();
   let placed = false;
   let awaitingPosition = false;
+  let introStarted = -1;
+  const INTRO_MS = 2600;
+  // Camera motion during a flight, handed to the damping when the user interrupts.
+  const tracked = new Spherical();
+  let trackedLog = 0;
+  let flightVelocity = { azimuth: 0, polar: 0, zoom: 0 };
 
   function surfaceRadius(): number {
     return focus >= 0 ? RADII[focus] : 0;
@@ -108,6 +123,7 @@
   }
 
   function flyTo(id: string | null, instant = false): void {
+    setHover(-1);
     focus = id === SOLAR_SYSTEM_VIEW ? -1 : indexOf(id);
     const body = focus >= 0 ? BODIES[focus] : null;
     const { width, height } = size.current;
@@ -141,15 +157,42 @@
       azimuthGoal = spherical.theta;
       polarGoal = spherical.phi;
       setDistance(toDistance);
+      center.copy(target);
+      cam.position.copy(target).addScaledVector(direction, toDistance);
+      if (!placed && !get(reducedMotion)) {
+        // Hold a wider, rotated framing in the dark until the view is ready.
+        introStarted = performance.now();
+        spherical.theta -= 0.55;
+        spherical.phi = Math.max(0.3, spherical.phi - 0.25);
+        spherical.radius = toDistance * 5;
+        cam.position.setFromSpherical(spherical).add(target);
+        fromTarget.copy(direction);
+        fromTargetDistance = toDistance;
+      } else finishIntro();
       placed = true;
       return;
     }
+    startFlight(fromDistance, toDistance, separation, false);
+  }
+
+  const fromTarget = new Vector3();
+  let fromTargetDistance = 0;
+
+  function startFlight(
+    fromDistance: number,
+    toDistance: number,
+    separation: number,
+    intro: boolean
+  ) {
     fromCenter.copy(center);
     fromQuat.setFromUnitVectors(UP, scratch.copy(cam.position).sub(center).normalize());
     toQuat.setFromUnitVectors(UP, direction);
+    tracked.setFromVector3(scratch.copy(cam.position).sub(center));
+    trackedLog = Math.log(Math.max(tracked.radius - surfaceRadius(), 1e-9));
     flight = {
       start: performance.now(),
-      duration: flightDuration(fromDistance, toDistance, separation),
+      intro,
+      duration: intro ? INTRO_MS : flightDuration(fromDistance, toDistance, separation),
       fromCenter,
       fromDirection: fromQuat,
       toDirection: toQuat,
@@ -159,8 +202,17 @@
     };
   }
 
+  function finishIntro(): void {
+    introStarted = -1;
+    sceneReady.set(true);
+    introComplete.set(true);
+  }
+
+  /** Stop flying where the camera is, keeping its current motion as inertia. */
   function endFlight(): void {
+    if (introStarted >= 0 && !flight) finishIntro();
     if (!flight) return;
+    if (flight.intro) finishIntro();
     flight = null;
     spherical.setFromVector3(scratch.copy(cam.position).sub(center));
     azimuthGoal = spherical.theta;
@@ -168,6 +220,10 @@
     pan.copy(center).sub(resolveAnchor(spherical.radius, anchor));
     panGoal.copy(pan);
     setDistance(spherical.radius);
+    azimuthVelocity = flightVelocity.azimuth;
+    polarVelocity = flightVelocity.polar;
+    zoomVelocity = flightVelocity.zoom;
+    flightVelocity = { azimuth: 0, polar: 0, zoom: 0 };
   }
 
   // ── Input ──────────────────────────────────────────────────────────────
@@ -218,6 +274,7 @@
   /** Zoom by a log factor; with nothing focused, keep the point under the cursor fixed. */
   function zoomBy(logFactor: number, at?: { x: number; y: number }): void {
     endFlight();
+    zoomVelocity = 0;
     const before = logAltitudeGoal;
     logAltitudeGoal = MathUtils.clamp(
       logAltitudeGoal + logFactor,
@@ -263,8 +320,8 @@
           event.button === 2 || event.button === 1 || event.shiftKey || event.ctrlKey;
         gesture = event.pointerType === 'touch' ? 'rotate' : panButton ? 'pan' : 'rotate';
       } else gesture = 'touch';
-      azimuthVelocity = polarVelocity = 0;
       endFlight();
+      azimuthVelocity = polarVelocity = zoomVelocity = 0;
     };
     const move = (event: PointerEvent) => {
       const point = localPoint(event);
@@ -329,6 +386,7 @@
         target?.closest('input, textarea, select, [contenteditable="true"], dialog[open]')
       )
         return;
+      if (introStarted >= 0) endFlight();
       if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
         event.preventDefault();
         zoomBy(event.key === 'ArrowUp' ? -0.35 : 0.35);
@@ -387,9 +445,18 @@
         cam.updateProjectionMatrix();
       }
       if (awaitingPosition && valid[focus]) requested = BODIES[focus].id;
-      if (requested !== null) {
+      if (requested !== null && introStarted < 0) {
         flyTo(requested);
         requested = null;
+      }
+      // The intro waits (in the dark) for the first view's textures, at most a few seconds.
+      if (introStarted >= 0 && !flight) {
+        const waited = performance.now() - introStarted;
+        if ((pendingTextures() === 0 && waited > 250) || waited > 4000) {
+          sceneReady.set(true);
+          direction.copy(fromTarget);
+          startFlight(cam.position.distanceTo(center), fromTargetDistance, 0, true);
+        }
       }
 
       if (flight) {
@@ -397,17 +464,28 @@
           flight.duration > 0
             ? Math.min(1, (performance.now() - flight.start) / flight.duration)
             : 1;
-        const eased = easeInOutCubic(t);
+        const eased = flight.intro ? easeOutCubic(t) : easeInOutCubic(t);
         const target = focus >= 0 ? resolveAnchor(flight.toDistance, anchor) : ORIGIN;
         center.lerpVectors(flight.fromCenter, target, eased);
         flightQuat.slerpQuaternions(flight.fromDirection, flight.toDirection, eased);
         direction.copy(UP).applyQuaternion(flightQuat);
         const distance = Math.exp(
-          flightLogDistance(flight.fromDistance, flight.toDistance, flight.separation, t)
+          flightLogDistance(flight.fromDistance, flight.toDistance, flight.separation, eased)
         );
         cam.position.copy(center).addScaledVector(direction, distance);
+        if (dt > 0) {
+          const previousTheta = tracked.theta;
+          const previousPhi = tracked.phi;
+          tracked.setFromVector3(scratch.copy(cam.position).sub(center));
+          const log = Math.log(Math.max(tracked.radius - surfaceRadius(), 1e-9));
+          const turn = tracked.theta - previousTheta;
+          flightVelocity.azimuth = Math.atan2(Math.sin(turn), Math.cos(turn)) / dt;
+          flightVelocity.polar = (tracked.phi - previousPhi) / dt;
+          flightVelocity.zoom = (log - trackedLog) / dt;
+          trackedLog = log;
+        }
         if (t >= 1) endFlight();
-      } else {
+      } else if (introStarted < 0) {
         if (!gesture) {
           const friction = Math.exp(-dt * 5);
           azimuthGoal += azimuthVelocity * dt;
@@ -415,6 +493,8 @@
           azimuthVelocity *= friction;
           polarVelocity *= friction;
         }
+        logAltitudeGoal += zoomVelocity * dt;
+        zoomVelocity *= Math.exp(-dt * 4);
         const turn = 1 - Math.exp(-dt * 16);
         const zoom = 1 - Math.exp(-dt * 11);
         spherical.theta += (azimuthGoal - spherical.theta) * turn;

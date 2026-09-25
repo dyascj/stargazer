@@ -2,6 +2,7 @@
   import { T, useTask, useThrelte } from '@threlte/core';
   import {
     AdditiveBlending,
+    DoubleSide,
     MathUtils,
     PlaneGeometry,
     ShaderMaterial,
@@ -61,7 +62,8 @@
     `,
     transparent: true,
     depthWrite: false,
-    blending: AdditiveBlending
+    blending: AdditiveBlending,
+    side: DoubleSide
   });
   let mesh: Mesh | undefined = $state();
   const { camera } = useThrelte();

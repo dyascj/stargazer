@@ -16,7 +16,7 @@ export const labelX = new Float64Array(BODY_COUNT);
 export const labelY = new Float64Array(BODY_COUNT);
 export const labelWidth = new Float64Array(BODY_COUNT).fill(80);
 export const labelShown = new Uint8Array(BODY_COUNT);
-export const LABEL_HEIGHT = 20;
+export const LABEL_HEIGHT = 22;
 
 /**
  * Cross-component wiring: the hovered body (set by input), the camera's
@@ -120,7 +120,8 @@ export function updateOverlay(
       screen.markerAlpha[i] = 0;
       continue;
     }
-    const resolved = screen.radius[i] >= 2 && screen.radius[i] < height * 0.08;
+    const resolved =
+      screen.radius[i] >= 2 && screen.radius[i] < height * (i === selected ? 0.12 : 0.05);
     const onScreen =
       screen.x[i] > -40 &&
       screen.x[i] < width + 40 &&
@@ -135,7 +136,7 @@ export function updateOverlay(
           !insideDisc(screen, screen.x[i] + labelWidth[i], screen.y[i], 40, i, 12)));
     if (labelled) {
       order.push(i);
-      labelX[i] = screen.x[i] + Math.max(markerSize[i] / 2, screen.radius[i]) + 6;
+      labelX[i] = screen.x[i] + Math.max(markerSize[i] / 2, screen.radius[i]) + 8;
       labelY[i] = screen.y[i];
       top[i] = labelY[i] - LABEL_HEIGHT / 2;
     }

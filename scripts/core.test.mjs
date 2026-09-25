@@ -454,3 +454,54 @@ test('Tidally locked moons face their planet and spin about its pole', () => {
   // Miranda orbits 4.3° from Uranus's equator; ecliptic north would be ~82° off.
   assert.ok((new Vector3(0, 1, 0).applyQuaternion(q).angleTo(uranusPole) * 180) / Math.PI < 5);
 });
+
+test('Screen-space picking prefers visible markers, then the nearest disc', async () => {
+  const { createScreenBodies, pickBody, isOccluded, placeLabels } = await load('utils/screenSpace');
+  const screen = createScreenBodies(3);
+  // 0: a planet disc at the center; 1: a moon marker in front of it; 2: a moon behind it.
+  screen.x.set([100, 130, 105]);
+  screen.y.set([100, 100, 100]);
+  screen.depth.set([50, 40, 60]);
+  screen.radius.set([40, 0.5, 0.5]);
+  screen.markerAlpha.set([0, 0.9, 0.9]);
+  assert.equal(pickBody(screen, 131, 101, 14), 1);
+  assert.equal(pickBody(screen, 100, 100, 14), 2, 'a visible marker wins over the disc');
+  assert.ok(isOccluded(screen, 105, 100, 60, 2));
+  assert.ok(!isOccluded(screen, 130, 100, 40, 1));
+  screen.markerAlpha[2] = 0;
+  assert.equal(pickBody(screen, 90, 100, 14), 0);
+  assert.equal(pickBody(screen, 300, 300, 14), -1);
+  // Label placement keeps the higher-priority label when two overlap.
+  const placed = new Uint8Array(3);
+  const count = placeLabels(
+    [2, 0, 1],
+    3,
+    [10, 200, 0],
+    [0, 5, 0],
+    [50, 50, 50],
+    [20, 20, 20],
+    placed
+  );
+  assert.equal(count, 2);
+  assert.deepEqual([...placed], [0, 1, 1]);
+});
+
+test('Fly-to paths pull back on long hops and frame lit, open-ringed worlds', async () => {
+  const flight = await load('utils/flight');
+  // Mid-flight the camera is far enough back to see both endpoints.
+  const mid = Math.exp(flight.flightLogDistance(10, 20, 1e6, 0.5));
+  assert.ok(mid > 1e6 && mid < 1.2e6);
+  assert.ok(Math.abs(Math.exp(flight.flightLogDistance(10, 20, 1e6, 1)) - 20) < 1e-9);
+  assert.ok(Math.abs(Math.exp(flight.flightLogDistance(10, 20, 0, 0.5)) - Math.sqrt(200)) < 1e-9);
+  assert.ok(
+    flight.flightDuration(10, 20, 1e6) <= 3000 && flight.flightDuration(10, 20, 50) >= 1200
+  );
+  // A planet is seen within 60° of its sunlit side.
+  const planet = new Vector3(AU_TO_SCENE, 0, 0);
+  const view = flight.framingDirection(planet, null, true, null, new Vector3());
+  assert.ok(view.angleTo(planet.clone().negate().normalize()) < Math.PI / 3);
+  // Rings are opened toward the viewer.
+  const pole = new Vector3(0, 0.88, -0.47).normalize();
+  const ringed = flight.framingDirection(planet, null, true, pole, new Vector3());
+  assert.ok(Math.abs(ringed.dot(pole)) > 0.5);
+});

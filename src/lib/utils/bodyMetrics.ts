@@ -35,7 +35,7 @@ export function framingDistance(
 ): number {
   const radius = framingRadius(body);
   const halfAngle = Math.min(fovYRad / 2, Math.atan(Math.tan(fovYRad / 2) * aspect));
-  if (radius > 0) return radius / Math.sin(halfAngle * (body.id === 'iss' ? 0.6 : 0.4));
+  if (radius > 0) return radius / Math.sin(halfAngle * (body.id === 'iss' ? 0.12 : 0.4));
   const fromParent = body.offsetFn(date, _offset)?.length() ?? 0;
   return Math.max(0.25 * fromParent, 1e-3);
 }
