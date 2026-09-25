@@ -7,25 +7,15 @@ import { KM_TO_SCENE } from '../scene-config';
  * and a few hundred km: an educational model, not an eclipse ephemeris.
  */
 export interface LunarState {
-  /** Geographic latitude of the sublunar point on Earth */
-  lat: number;
-  /** Geographic longitude of the sublunar point on Earth */
-  lon: number;
   /** Geocentric ecliptic longitude, J2000 frame (degrees), used for scene placement */
   eclipticLon: number;
   /** Geocentric ecliptic latitude (degrees), typically within ±5.3° */
   eclipticLat: number;
   /** Earth–Moon center-to-center distance (km) */
   distanceKm: number;
-  /** Synodic angle [0..360°): 0=new, 90=first quarter, 180=full, 270=last quarter */
-  synodicAngle: number;
   /** Illuminated fraction of visible disc [0..1] */
   illumination: number;
-  /** Phase-derived age estimate (0..29.53 days), not an event-time calculation */
-  ageDays: number;
   phaseName: string;
-  /** True while waxing (new → full) */
-  waxing: boolean;
 }
 
 const DEG = Math.PI / 180;
@@ -103,66 +93,38 @@ function computeEcliptic(time: number): void {
   ecliptic.sunLambda = sunMean + 1.914602 * Math.sin(M) + 0.019993 * Math.sin(2 * M);
 }
 
-export function getLunarState(date: Date = new Date()): LunarState {
+export function getLunarState(date: Date): LunarState {
   computeEcliptic(date.getTime());
   const { lambdaOfDate: moonLambda, beta: moonBeta, distanceKm, sunLambda } = ecliptic;
-  const d = (date.getTime() - J2000_MS) / 86400000;
 
-  // Synodic position: moon's eastward angular distance from sun
+  // Synodic angle: the Moon's eastward angular distance from the Sun (0 new, 180 full).
   const synodicAngle = mod(moonLambda - sunLambda, 360);
 
   // Illuminated fraction from the Sun–Moon elongation seen from Earth.
   const elongation = synodicAngle > 180 ? 360 - synodicAngle : synodicAngle;
   const illumination = (1 - Math.cos(elongation * DEG)) / 2;
 
-  const ageDays = (synodicAngle / 360) * 29.530589;
-  const waxing = synodicAngle < 180;
-
   let phaseName: string;
-  if (synodicAngle < 1.5 || synodicAngle > 358.5) phaseName = 'New Moon';
-  else if (synodicAngle < 88.5) phaseName = 'Waxing Crescent';
-  else if (synodicAngle < 91.5) phaseName = 'First Quarter';
-  else if (synodicAngle < 178.5) phaseName = 'Waxing Gibbous';
-  else if (synodicAngle < 181.5) phaseName = 'Full Moon';
-  else if (synodicAngle < 268.5) phaseName = 'Waning Gibbous';
-  else if (synodicAngle < 271.5) phaseName = 'Last Quarter';
-  else phaseName = 'Waning Crescent';
-
-  // Convert moon's ecliptic coordinates to equatorial RA/Dec
-  const moonLambdaRad = moonLambda * DEG;
-  const moonBetaRad = moonBeta * DEG;
-  const epsilon = 23.439 * DEG;
-  const ra = Math.atan2(
-    Math.sin(moonLambdaRad) * Math.cos(epsilon) - Math.tan(moonBetaRad) * Math.sin(epsilon),
-    Math.cos(moonLambdaRad)
-  );
-  const dec = Math.asin(
-    Math.sin(moonBetaRad) * Math.cos(epsilon) +
-      Math.cos(moonBetaRad) * Math.sin(epsilon) * Math.sin(moonLambdaRad)
-  );
-
-  // Convert inertial RA to Earth-fixed geographic longitude using GMST
-  // (matches the convention used by the solar helper)
-  const gmstHours = mod(18.697374558 + 24.06570982441908 * d, 24);
-  const gmstRad = gmstHours * 15 * DEG;
-  const lonRad = Math.atan2(Math.sin(ra - gmstRad), Math.cos(ra - gmstRad));
+  if (synodicAngle < 1.5 || synodicAngle > 358.5) phaseName = 'New moon';
+  else if (synodicAngle < 88.5) phaseName = 'Waxing crescent';
+  else if (synodicAngle < 91.5) phaseName = 'First quarter';
+  else if (synodicAngle < 178.5) phaseName = 'Waxing gibbous';
+  else if (synodicAngle < 181.5) phaseName = 'Full moon';
+  else if (synodicAngle < 268.5) phaseName = 'Waning gibbous';
+  else if (synodicAngle < 271.5) phaseName = 'Last quarter';
+  else phaseName = 'Waning crescent';
 
   return {
-    lat: dec / DEG,
-    lon: lonRad / DEG,
     eclipticLon: ecliptic.lambdaJ2000,
     eclipticLat: moonBeta,
     distanceKm,
-    synodicAngle,
     illumination,
-    ageDays,
-    phaseName,
-    waxing
+    phaseName
   };
 }
 
 /** Moon's true offset from Earth's center in scene units (J2000 ecliptic frame). */
-export function getMoonInertialOffset(target: Vector3, date: Date = new Date()): Vector3 {
+export function getMoonInertialOffset(target: Vector3, date: Date): Vector3 {
   computeEcliptic(date.getTime());
   const lambda = ecliptic.lambdaJ2000 * DEG;
   const beta = ecliptic.beta * DEG;

@@ -1,16 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { magnetic, reducedMotion, scrollProgress } from './motion';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import BlurText from '$components/ui/BlurText.svelte';
+  import { compact, magnetic, scrollProgress } from './motion';
 
   let { total }: { total: number } = $props();
-
-  const headline = 'A clearer view of space.';
-  // Per-letter spans with a running index for the stagger; words stay unbreakable.
-  const words = headline.split(' ').reduce<{ chars: string[]; start: number }[]>((list, word) => {
-    const previous = list.at(-1);
-    list.push({ chars: [...word], start: previous ? previous.start + previous.chars.length : 0 });
-    return list;
-  }, []);
 
   let canvas: HTMLCanvasElement;
   let section: HTMLElement;
@@ -18,28 +12,32 @@
   let hero: Awaited<ReturnType<typeof import('./gl').mountHero>> | undefined;
 
   onMount(() => {
-    if (reducedMotion()) {
+    if (prefersReducedMotion.current) {
       state = 'poster';
       return;
     }
     let cancelled = false;
+    let visible = true;
     // Wait for first paint, then fetch three.js and the scene.
     const handle = requestAnimationFrame(() =>
       setTimeout(async () => {
         try {
           const { mountHero } = await import('./gl');
           if (cancelled) return;
-          const mobile = matchMedia('(max-width: 720px), (pointer: coarse)').matches;
-          const mounted = await mountHero(canvas, { mobile });
+          const mounted = await mountHero(canvas, { mobile: compact() });
           if (cancelled) return mounted.destroy();
           hero = mounted;
+          hero.setActive(visible);
           state = 'live';
         } catch {
           state = 'poster';
         }
       })
     );
-    const visibility = new IntersectionObserver(([entry]) => hero?.setActive(entry.isIntersecting));
+    const visibility = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      hero?.setActive(visible);
+    });
     visibility.observe(section);
     return () => {
       cancelled = true;
@@ -70,15 +68,7 @@
   <div class="scrim" aria-hidden="true"></div>
 
   <div class="content container">
-    <h1 aria-label={headline}>
-      {#each words as word, w (w)}
-        <span class="word" aria-hidden="true"
-          >{#each word.chars as char, c (c)}<span class="char" style:--i={word.start + c}
-              >{char}</span
-            >{/each}</span
-        >{' '}
-      {/each}
-    </h1>
+    <h1><BlurText text="A clearer view of space." delay={200} /></h1>
     <p class="lede">
       Explore {total} objects, from Mercury to Voyager&nbsp;1, placed with data from NASA JPL and CelesTrak.
       Free, in your browser.
@@ -183,23 +173,6 @@
     line-height: 0.94;
     letter-spacing: -0.045em;
   }
-  .word {
-    display: inline-block;
-    white-space: nowrap;
-  }
-  .char {
-    display: inline-block;
-    animation: blur-in 380ms var(--spring-bounce) both;
-    animation-delay: calc(200ms + var(--i) * 18ms);
-  }
-  @keyframes blur-in {
-    from {
-      opacity: 0;
-      filter: blur(5px);
-      translate: 0 -0.5em;
-    }
-  }
-
   .lede {
     max-width: 34ch;
     margin-top: clamp(20px, 3vh, 32px);
@@ -266,7 +239,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .char,
     .lede,
     .actions,
     .caption {

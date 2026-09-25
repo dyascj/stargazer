@@ -3,8 +3,11 @@
  * CSS does the animating; these only feed it state and pointer coordinates.
  */
 
-export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+import { prefersReducedMotion } from 'svelte/motion';
+
 const finePointer = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
+/** Phones and touch-first devices get lighter WebGL scenes. */
+export const compact = () => matchMedia('(max-width: 720px), (pointer: coarse)').matches;
 
 let revealObserver: IntersectionObserver | undefined;
 
@@ -39,7 +42,7 @@ export function inView(node: HTMLElement, callback: (visible: boolean) => void) 
 
 /** Pointer-following CTA: the element drifts up to `strength` px toward the cursor. */
 export function magnetic(node: HTMLElement, strength = 6) {
-  if (!finePointer() || reducedMotion()) return;
+  if (!finePointer() || prefersReducedMotion.current) return;
   const move = (event: PointerEvent) => {
     const box = node.getBoundingClientRect();
     const x = (event.clientX - box.left) / box.width - 0.5;
@@ -59,7 +62,7 @@ export function magnetic(node: HTMLElement, strength = 6) {
 
 /** Tilt card: writes --rx/--ry (deg) and --mx/--my (%) for a moving sheen. */
 export function tilt(node: HTMLElement, max = 6) {
-  if (!finePointer() || reducedMotion()) return;
+  if (!finePointer() || prefersReducedMotion.current) return;
   const move = (event: PointerEvent) => {
     const box = node.getBoundingClientRect();
     const x = (event.clientX - box.left) / box.width;

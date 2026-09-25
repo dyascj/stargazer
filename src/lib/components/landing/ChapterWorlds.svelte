@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { prefersReducedMotion } from 'svelte/motion';
   import type { WorldSpec } from './gl';
-  import { inView, reducedMotion, reveal } from './motion';
+  import { compact, inView, reveal } from './motion';
 
   type World = {
     id: string;
@@ -67,20 +68,24 @@
     buttons[next].focus();
   }
 
-  const mobile = () => matchMedia('(max-width: 720px), (pointer: coarse)').matches;
   const spec = (w: World): WorldSpec => {
     const extra = { ...look[w.id] };
-    if (reducedMotion()) extra.spin = 0;
+    if (prefersReducedMotion.current) extra.spin = 0;
     return { id: w.id, texture: w.texture, rings: w.rings, ...extra };
   };
 
   let visible = false;
+  let loading = false;
+  let destroyed = false;
   async function onView(isVisible: boolean) {
     visible = isVisible;
-    if (viewer || !isVisible || failed) return viewer?.setActive(isVisible);
+    viewer?.setActive(isVisible);
+    if (viewer || loading || !isVisible || failed) return;
+    loading = true;
     try {
       const { mountWorld } = await import('./gl');
-      viewer = mountWorld(canvas, { mobile: mobile() });
+      if (destroyed) return;
+      viewer = mountWorld(canvas, { mobile: compact() });
       viewer.show(spec(world));
       viewer.setActive(visible);
       ready = true;
@@ -90,7 +95,7 @@
   }
 
   function pointer(event: PointerEvent) {
-    if (event.pointerType !== 'mouse' || reducedMotion()) return;
+    if (event.pointerType !== 'mouse' || prefersReducedMotion.current) return;
     const box = canvas.getBoundingClientRect();
     viewer?.setPointer(
       ((event.clientX - box.left) / box.width) * 2 - 1,
@@ -103,6 +108,7 @@
     const observer = new ResizeObserver(() => measure());
     observer.observe(track);
     return () => {
+      destroyed = true;
       observer.disconnect();
       viewer?.destroy();
     };

@@ -76,8 +76,8 @@
   <div class="strip" data-reveal use:reveal style:--d="100ms">
     <p class="strip-label">Data from</p>
     <ul>
-      {#each sources as source, i (source.name)}
-        <li style:--d="{200 + i * 60}ms">
+      {#each sources as source (source.name)}
+        <li>
           <a href={source.href} target="_blank" rel="noreferrer" aria-label={source.name}>
             {#if source.logo}
               <img

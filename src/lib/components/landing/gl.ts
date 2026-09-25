@@ -28,6 +28,7 @@ import {
   ACESFilmicToneMapping,
   DoubleSide
 } from 'three';
+import { easeOutCubic } from '$utils/easing';
 
 const DEG = Math.PI / 180;
 const loader = new TextureLoader();
@@ -57,6 +58,12 @@ function createRenderer(canvas: HTMLCanvasElement, mobile: boolean) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.5 : 2));
   renderer.toneMapping = ACESFilmicToneMapping;
   return renderer;
+}
+
+/** Free the GPU context now instead of waiting for garbage collection. */
+function release(renderer: WebGLRenderer) {
+  renderer.dispose();
+  renderer.forceContextLoss();
 }
 
 /** Render loop that only runs while active and the tab is visible. */
@@ -266,18 +273,18 @@ function createStars(count: number, radius: number) {
   return geometry;
 }
 
-export interface HeroOptions {
-  mobile: boolean;
-  /** Called once textures are ready and the first frame has rendered. */
-  onReady?: () => void;
-}
-
-export async function mountHero(canvas: HTMLCanvasElement, { mobile, onReady }: HeroOptions) {
+export async function mountHero(canvas: HTMLCanvasElement, { mobile }: { mobile: boolean }) {
   const renderer = createRenderer(canvas, mobile);
   const scene = new Scene();
   const camera = new PerspectiveCamera(30, 1, 0.01, 2000);
 
-  const earthMap = await loadTexture('/textures/earth_albedo_2k.webp', renderer);
+  let earthMap: Texture;
+  try {
+    earthMap = await loadTexture('/textures/earth_albedo_2k.webp', renderer);
+  } catch (error) {
+    release(renderer);
+    throw error;
+  }
   const earthMaterial = planetMaterial(earthMap, {
     rim: { value: 0.5 },
     ambient: { value: 0.01 }
@@ -289,10 +296,12 @@ export async function mountHero(canvas: HTMLCanvasElement, { mobile, onReady }: 
   // Clouds are a large download; desktop only, faded in when ready.
   let cloudTarget = 0;
   if (!mobile) {
-    loadTexture('/textures/earth_clouds_2k.webp', renderer, false).then((clouds) => {
-      earthMaterial.uniforms.cloudMap.value = clouds;
-      cloudTarget = 1;
-    });
+    loadTexture('/textures/earth_clouds_2k.webp', renderer, false)
+      .then((clouds) => {
+        earthMaterial.uniforms.cloudMap.value = clouds;
+        cloudTarget = 1;
+      })
+      .catch(() => {}); // Clear skies are a fine fallback.
   }
 
   const atmosphere = new Mesh(
@@ -373,12 +382,10 @@ export async function mountHero(canvas: HTMLCanvasElement, { mobile, onReady }: 
   observer.observe(canvas);
   resize();
 
-  const easeOut = (t: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
-
   function frame(time: number, dt: number) {
     clock += dt;
-    const intro = easeOut(clock / 7);
-    const fade = easeOut(clock / 2.2);
+    const intro = easeOutCubic(Math.min(1, clock / 7));
+    const fade = easeOutCubic(Math.min(1, clock / 2.2));
 
     pointer.x += (pointer.tx - pointer.x) * Math.min(1, dt * 2.5);
     pointer.y += (pointer.ty - pointer.y) * Math.min(1, dt * 2.5);
@@ -423,7 +430,6 @@ export async function mountHero(canvas: HTMLCanvasElement, { mobile, onReady }: 
   }
 
   frame(0, 0);
-  onReady?.();
   const running = loop(frame);
 
   return {
@@ -440,7 +446,7 @@ export async function mountHero(canvas: HTMLCanvasElement, { mobile, onReady }: 
     destroy() {
       running.stop();
       observer.disconnect();
-      renderer.dispose();
+      release(renderer);
       scene.traverse((object) => {
         if (object instanceof Mesh || object instanceof Points) {
           object.geometry.dispose();
@@ -532,6 +538,7 @@ export function mountWorld(canvas: HTMLCanvasElement, { mobile }: { mobile: bool
 
   let current: WorldSpec | null = null;
   let pending: WorldSpec | null = null;
+  let loading: WorldSpec | null = null;
   let opacity = 0;
   let spin = 0;
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -549,12 +556,18 @@ export function mountWorld(canvas: HTMLCanvasElement, { mobile }: { mobile: bool
   resize();
 
   async function apply(spec: WorldSpec) {
+    loading = spec;
     const [map, clouds, rings] = await Promise.all([
       loadTexture(spec.texture, renderer),
       spec.clouds ? loadTexture(spec.clouds, renderer, false) : null,
       spec.rings ? loadTexture(spec.rings.texture, renderer) : null
-    ]);
+    ]).catch(() => []);
     if (pending !== spec) return;
+    if (!map) {
+      // Keep showing the last world rather than an empty frame.
+      pending = loading = null;
+      return;
+    }
     material.uniforms.map.value = map;
     material.uniforms.cloudMap.value = clouds ?? map;
     material.uniforms.clouds.value = clouds ? 0.9 : 0;
@@ -582,7 +595,7 @@ export function mountWorld(canvas: HTMLCanvasElement, { mobile }: { mobile: bool
   function frame(_time: number, dt: number) {
     const target = pending ? 0 : current ? 1 : 0;
     opacity += (target - opacity) * Math.min(1, dt * (target ? 3.5 : 9));
-    if (pending && opacity < 0.02) apply(pending);
+    if (pending && pending !== loading && opacity < 0.02) void apply(pending);
     pointer.x += (pointer.tx - pointer.x) * Math.min(1, dt * 3);
     pointer.y += (pointer.ty - pointer.y) * Math.min(1, dt * 3);
     spin += dt * (current?.spin ?? 0);
@@ -602,7 +615,7 @@ export function mountWorld(canvas: HTMLCanvasElement, { mobile }: { mobile: bool
     show(spec: WorldSpec) {
       if (spec === current && !pending) return;
       pending = spec;
-      if (!current) apply(spec);
+      if (!current) void apply(spec);
     },
     setPointer(x: number, y: number) {
       pointer.tx = x;
@@ -612,7 +625,7 @@ export function mountWorld(canvas: HTMLCanvasElement, { mobile }: { mobile: bool
     destroy() {
       running.stop();
       observer.disconnect();
-      renderer.dispose();
+      release(renderer);
       planet.geometry.dispose();
       ring.geometry.dispose();
       material.dispose();
