@@ -10,8 +10,8 @@ export const sceneReady = writable(false);
 export const introComplete = writable(false);
 
 /**
- * Width in pixels that interface panels cover on the right of the canvas. The
- * camera eases its optical center into the remaining space instead of the
- * canvas resizing, so opening or closing a panel glides rather than jumps.
+ * Pixels that interface panels cover at the right and bottom of the canvas.
+ * The camera eases its optical center into the remaining space instead of the
+ * canvas resizing, so opening, closing, or dragging a panel glides.
  */
-export const viewInset = writable(0);
+export const viewInset = writable({ right: 0, bottom: 0 });

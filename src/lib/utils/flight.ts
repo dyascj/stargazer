@@ -3,12 +3,15 @@ import { Vector3 } from 'three';
 const UP = new Vector3(0, 1, 0);
 const _toSun = new Vector3();
 const _side = new Vector3();
+const _radial = new Vector3();
 
 /**
  * Direction from a body to the camera for a fly-to. Resolved worlds are seen
  * about 50° off the Sun line, so the disc is mostly lit with the terminator in
  * view; ringed planets are raised toward their pole so the rings open; bodies
- * in orbit around a planet are seen from above with the day side behind them;
+ * in orbit around a planet are seen from above with the day side behind them,
+ * except in low orbit, where the camera looks sunward along the horizon so
+ * the planet's limb curves across the frame (the classic view from the ISS);
  * small heliocentric bodies are seen from beyond, with the Sun in the frame.
  */
 export function framingDirection(
@@ -16,7 +19,8 @@ export function framingDirection(
   parent: Vector3 | null,
   resolved: boolean,
   ringPole: Vector3 | null,
-  out: Vector3
+  out: Vector3,
+  parentRadius = 0
 ): Vector3 {
   if (body.lengthSq() === 0) return out.set(0.55, 0.4, 0.73).normalize();
   _toSun.copy(body).negate().normalize();
@@ -27,7 +31,15 @@ export function framingDirection(
       .addScaledVector(UP, 0.35);
     if (ringPole) out.addScaledVector(ringPole, out.dot(ringPole) >= 0 ? 0.7 : -0.7);
   } else if (parent && parent.lengthSq() > 0) {
-    out.copy(body).sub(parent).normalize().addScaledVector(_toSun, 0.8).addScaledVector(UP, 0.2);
+    _radial.copy(body).sub(parent);
+    const lowOrbit = _radial.length() < 3 * parentRadius;
+    _radial.normalize();
+    if (lowOrbit) {
+      // Sunward along the local horizon, raised about 14° so the limb sits low in frame.
+      _side.copy(_toSun).addScaledVector(_radial, -_toSun.dot(_radial));
+      if (_side.lengthSq() < 0.01) _side.crossVectors(_radial, UP);
+      out.copy(_side).normalize().negate().addScaledVector(_radial, 0.25);
+    } else out.copy(_radial).addScaledVector(_toSun, 0.8).addScaledVector(UP, 0.2);
   } else {
     _side.crossVectors(UP, _toSun).normalize();
     out.copy(_side).multiplyScalar(0.8).addScaledVector(_toSun, -1).addScaledVector(UP, 0.3);

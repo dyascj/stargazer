@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { lens } from './overlay';
   import { T, useTask, useThrelte } from '@threlte/core';
   import {
     AdditiveBlending,
@@ -40,7 +41,7 @@
       if (!halo) return;
       const cam = camera.current as PerspectiveCamera;
       const distance = cam.position.length();
-      const focal = size.current.height / 2 / Math.tan(MathUtils.degToRad(cam.fov) / 2);
+      const { focal } = lens(cam, size.current.width, size.current.height);
       const discPixels = (focal * SUN_RADIUS) / Math.max(distance, SUN_RADIUS);
       const haloPixels = Math.max(discPixels * 2.6, 70);
       halo.scale.setScalar((haloPixels * distance) / focal);

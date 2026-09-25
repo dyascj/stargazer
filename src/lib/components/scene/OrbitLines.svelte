@@ -16,7 +16,7 @@
   import { orbitalPeriodMs, orbitSampleOffsetMs } from '$utils/orbit';
   import { BODIES, BODY_COUNT, RADII, indexOf, parentOf, positions, valid } from './bodyState';
   import { createLineStrip } from './polyline';
-  import { hooks } from './overlay';
+  import { hooks, lens } from './overlay';
 
   /**
    * Orbits drawn relative to each body's current position, so the line passes
@@ -121,7 +121,7 @@
       const system = selected >= 0 && moonLike[selected] ? parentOf(selected) : selected;
       const cam = camera.current as PerspectiveCamera;
       const { height } = size.current;
-      const focal = height / 2 / Math.tan(MathUtils.degToRad(cam.fov) / 2);
+      const { focal } = lens(cam, size.current.width, height);
       const now = get(simTime).getTime();
       for (let i = 0; i < BODY_COUNT; i++) {
         const isSelected = i === selected;

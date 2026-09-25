@@ -38,7 +38,13 @@
   let sheetExpanded = $state(false);
   const docked = $derived($infoPanelOpen && compact.current);
   // The desktop card (360px plus 16px margins) covers the right of the scene.
-  $effect(() => viewInset.set($infoPanelOpen && !compact.current ? 392 : 0));
+  // On phones the sheet covers the bottom, capped so a fully open sheet doesn't squash the view.
+  $effect(() =>
+    viewInset.set({
+      right: $infoPanelOpen && !compact.current ? 392 : 0,
+      bottom: docked ? Math.min(sheetOffset, window.innerHeight * 0.45) : 0
+    })
+  );
 
   function openSearch() {
     // Focus must land inside the tap handler for mobile browsers to raise the keyboard.
