@@ -312,7 +312,7 @@
         now - lastTap.time < 320 && Math.hypot(point.x - lastTap.x, point.y - lastTap.y) < 24;
       lastTap = { ...point, time: now };
       if (hit >= 0 && hit !== focus) selectBody(BODIES[hit].id);
-      else if (doubleTap) panGoal.set(0, 0, 0);
+      else if (doubleTap) requested = get(selection);
     };
     const wheel = (event: WheelEvent) => {
       event.preventDefault();

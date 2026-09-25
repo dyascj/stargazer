@@ -16,7 +16,7 @@ export const selection = writable<SelectionId>(SOLAR_SYSTEM_VIEW);
 
 /** Overview camera distances in scene units: the inner planets, or out past Neptune. */
 export const OVERVIEW_INNER = 6.5 * AU_TO_SCENE;
-export const OVERVIEW_ALL = 90 * AU_TO_SCENE;
+export const OVERVIEW_ALL = 100 * AU_TO_SCENE;
 
 export const overviewDistance = writable(OVERVIEW_ALL);
 

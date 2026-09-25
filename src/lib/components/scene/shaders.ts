@@ -60,7 +60,7 @@ export const surfaceFragment = /* glsl */ `
     float clouds = 0.0;
     if (uEarth > 0.5) {
       clouds = texture2D(uClouds, vUv).r;
-      albedo = mix(albedo, vec3(0.72), clouds * 0.9);
+      albedo = mix(albedo, vec3(0.66), clouds * 0.9);
     }
     // Lambert with a slightly softened terminator, as scattering in a real
     // atmosphere or regolith never produces a hard edge.

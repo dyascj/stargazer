@@ -22,7 +22,7 @@ export const EARTH: TrackedObject = {
     textureUrl: '/textures/earth_albedo_2k.webp',
     obliquityRad: EARTH_OBLIQUITY_RAD,
     rotationModel: 'gmst',
-    atmosphere: { color: [0.26, 0.5, 1.0], heightKm: 110, density: 0.7 },
+    atmosphere: { color: [0.26, 0.5, 1.0], heightKm: 110, density: 0.5 },
     dayLength: '23h 56m 04s',
     yearLength: '365.25 days',
     description:

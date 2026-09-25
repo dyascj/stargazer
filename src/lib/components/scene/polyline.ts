@@ -1,41 +1,19 @@
-import type { InterleavedBuffer, InterleavedBufferAttribute } from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Line, type Material } from 'three';
 
 /**
- * A fat polyline of fixed vertex count whose buffers are rewritten in place;
- * LineGeometry.setPositions would allocate new GPU buffers on every update.
+ * A line strip of fixed vertex count whose buffers are rewritten in place.
+ * Strips share each vertex between segments, so translucent lines have no
+ * brighter dots at the joints the way overlapping fat-line segments do.
  */
-export function createPolyline(count: number, material: LineMaterial) {
-  const geometry = new LineGeometry();
-  geometry.setPositions(new Float32Array(count * 3));
-  if (material.vertexColors) geometry.setColors(new Float32Array(count * 3));
-  const line = new Line2(geometry, material);
+export function createLineStrip(count: number, material: Material, withAlpha = false) {
+  const geometry = new BufferGeometry();
+  const attribute = (size: number) =>
+    new BufferAttribute(new Float32Array(count * size), size).setUsage(DynamicDrawUsage);
+  const positions = attribute(3);
+  geometry.setAttribute('position', positions);
+  const alphas = withAlpha ? attribute(1) : null;
+  if (alphas) geometry.setAttribute('aAlpha', alphas);
+  const line = new Line(geometry, material);
   line.frustumCulled = false;
-  const buffer = (name: string) =>
-    (geometry.attributes[name] as InterleavedBufferAttribute | undefined)?.data ?? null;
-  return { line, positions: buffer('instanceStart')!, colors: buffer('instanceColorStart') };
-}
-
-/** Write polyline vertex `k` of `count` into a [start, end] segment buffer. */
-export function writeVertex(
-  buffer: InterleavedBuffer,
-  k: number,
-  count: number,
-  x: number,
-  y: number,
-  z: number
-): void {
-  const array = buffer.array as Float32Array;
-  if (k > 0) {
-    array[(k - 1) * 6 + 3] = x;
-    array[(k - 1) * 6 + 4] = y;
-    array[(k - 1) * 6 + 5] = z;
-  }
-  if (k < count - 1) {
-    array[k * 6] = x;
-    array[k * 6 + 1] = y;
-    array[k * 6 + 2] = z;
-  }
+  return { line, positions, alphas };
 }

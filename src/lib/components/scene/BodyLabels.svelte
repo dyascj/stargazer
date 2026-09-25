@@ -21,7 +21,7 @@
   onMount(() => {
     measure();
     void document.fonts?.ready.then(measure);
-    hooks.afterFrame = () => {
+    const update = () => {
       for (let i = 0; i < BODY_COUNT; i++) {
         const element = elements[i];
         const visible = labelShown[i];
@@ -33,7 +33,11 @@
         }
       }
     };
-    return () => (hooks.afterFrame = null);
+    hooks.afterFrame = update;
+    // A replacement layer may mount before this one is destroyed.
+    return () => {
+      if (hooks.afterFrame === update) hooks.afterFrame = null;
+    };
   });
 </script>
 

@@ -57,7 +57,7 @@
       ? (getById(body.parent)!.metadata as PlanetBodyMetadata).poleVec
       : undefined;
   const isEarth = body.id === 'earth';
-  const SUN_INTENSITY = 1.15;
+  const SUN_INTENSITY = 1;
   const ringNormal = new Vector3();
 
   const surface = new ShaderMaterial({

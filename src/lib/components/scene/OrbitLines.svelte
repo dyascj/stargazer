@@ -5,17 +5,17 @@
     Color,
     Group,
     MathUtils,
+    ShaderMaterial,
     Vector3,
     type PerspectiveCamera
   } from 'three';
-  import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
   import { get } from 'svelte/store';
   import { selection } from '$stores/selection';
   import { simTime } from '$stores/simTime';
   import { showOrbits, showTrails } from '$stores/ui';
   import { orbitalPeriodMs, orbitSampleOffsetMs } from '$utils/orbit';
   import { BODIES, BODY_COUNT, RADII, indexOf, parentOf, positions, valid } from './bodyState';
-  import { createPolyline, writeVertex } from './polyline';
+  import { createLineStrip } from './polyline';
   import { hooks } from './overlay';
 
   /**
@@ -32,8 +32,8 @@
   const { camera, size } = useThrelte();
   const root = new Group();
 
-  interface Orbit extends ReturnType<typeof createPolyline> {
-    material: LineMaterial;
+  interface Orbit extends ReturnType<typeof createLineStrip> {
+    material: ShaderMaterial;
     periodMs: number | null;
     checkedAt: number;
   }
@@ -45,21 +45,41 @@
   const moonLike = Uint8Array.from(BODIES, (body) => +(body.type === 'moon'));
   const sample = new Vector3();
   const current = new Vector3();
-  const color = new Color();
   const date = new Date();
 
   function create(): Orbit {
-    const material = new LineMaterial({
-      vertexColors: true,
+    const material = new ShaderMaterial({
+      uniforms: { uColor: { value: new Color() } },
+      vertexShader: /* glsl */ `
+        #include <common>
+        #include <logdepthbuf_pars_vertex>
+        attribute float aAlpha;
+        varying float vAlpha;
+        void main() {
+          vAlpha = aAlpha;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          #include <logdepthbuf_vertex>
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        #include <common>
+        #include <logdepthbuf_pars_fragment>
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          #include <logdepthbuf_fragment>
+          gl_FragColor = vec4(uColor * vAlpha, 1.0);
+          #include <colorspace_fragment>
+        }
+      `,
       transparent: true,
       depthWrite: false,
-      blending: AdditiveBlending,
-      linewidth: 1.25
+      blending: AdditiveBlending
     });
-    const polyline = createPolyline(SAMPLES, material);
-    polyline.line.renderOrder = 5;
-    root.add(polyline.line);
-    return { ...polyline, material, periodMs: null, checkedAt: -Infinity };
+    const strip = createLineStrip(SAMPLES, material, true);
+    strip.line.renderOrder = 5;
+    root.add(strip.line);
+    return { ...strip, material, periodMs: null, checkedAt: -Infinity };
   }
 
   /** Returns false when the body has no drawable orbit at this date. */
@@ -68,8 +88,7 @@
     index: number,
     now: number,
     strength: number,
-    trail: number,
-    tint: Color
+    trail: number
   ): boolean {
     const body = BODIES[index];
     date.setTime(now);
@@ -83,13 +102,12 @@
       date.setTime(now - back);
       if (!body.offsetFn(date, sample)) return false;
       sample.sub(current);
-      writeVertex(orbit.positions, k, SAMPLES, sample.x, sample.y, sample.z);
+      orbit.positions.setXYZ(k, sample.x, sample.y, sample.z);
       const behind = 1 - back / orbit.periodMs;
-      color.copy(tint).multiplyScalar(strength + trail * behind * behind * behind);
-      writeVertex(orbit.colors!, k, SAMPLES, color.r, color.g, color.b);
+      orbit.alphas!.setX(k, strength + trail * behind * behind * behind);
     }
     orbit.positions.needsUpdate = true;
-    orbit.colors!.needsUpdate = true;
+    orbit.alphas!.needsUpdate = true;
     return true;
   }
 
@@ -100,7 +118,7 @@
       const selected = indexOf(get(selection));
       const system = selected >= 0 && moonLike[selected] ? parentOf(selected) : selected;
       const cam = camera.current as PerspectiveCamera;
-      const { width, height } = size.current;
+      const { height } = size.current;
       const focal = height / 2 / Math.tan(MathUtils.degToRad(cam.fov) / 2);
       const now = get(simTime).getTime();
       for (let i = 0; i < BODY_COUNT; i++) {
@@ -131,12 +149,11 @@
           orbit.line.visible = false;
           continue;
         }
-        const base = (isSelected ? 0.34 : 0.13) * (orbitsOn ? 1 : 0) * fade;
-        const trail = (isSelected ? 0.6 : 0.3) * (trailsOn ? 1 : 0) * fade;
-        orbit.line.visible = rebuild(orbit, i, now, base, trail, isSelected ? ACCENT : NEUTRAL);
+        const base = (isSelected ? 0.4 : 0.2) * (orbitsOn ? 1 : 0) * fade;
+        const trail = (isSelected ? 0.6 : 0.4) * (trailsOn ? 1 : 0) * fade;
+        orbit.line.visible = rebuild(orbit, i, now, base, trail);
         orbit.line.position.copy(positions[i]);
-        orbit.material.linewidth = isSelected ? 1.6 : 1.2;
-        orbit.material.resolution.set(width, height);
+        orbit.material.uniforms.uColor.value.copy(isSelected ? ACCENT : NEUTRAL);
       }
     },
     { after: 'camera' }

@@ -9,7 +9,7 @@ const _side = new Vector3();
  * about 50° off the Sun line, so the disc is mostly lit with the terminator in
  * view; ringed planets are raised toward their pole so the rings open; bodies
  * in orbit around a planet are seen from above with the day side behind them;
- * small heliocentric bodies are seen from the side, looking back sunward.
+ * small heliocentric bodies are seen from beyond, with the Sun in the frame.
  */
 export function framingDirection(
   body: Vector3,
@@ -30,7 +30,7 @@ export function framingDirection(
     out.copy(body).sub(parent).normalize().addScaledVector(_toSun, 0.8).addScaledVector(UP, 0.2);
   } else {
     _side.crossVectors(UP, _toSun).normalize();
-    out.copy(_side).multiplyScalar(0.8).addScaledVector(_toSun, -0.5).addScaledVector(UP, 0.45);
+    out.copy(_side).multiplyScalar(0.8).addScaledVector(_toSun, -1).addScaledVector(UP, 0.3);
   }
   return out.lengthSq() < 1e-12 ? out.set(0, 1, 0) : out.normalize();
 }
