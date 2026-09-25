@@ -11,8 +11,7 @@ export const TYPE_LABELS: Record<ObjectType, string> = {
   comet: 'Comet',
   'earth-satellite': 'Satellite',
   spacecraft: 'Spacecraft',
-  lander: 'Rover',
-  neo: 'Near-Earth object'
+  lander: 'Rover'
 };
 
 const SHORTCUT_IDS: [string, string[]][] = [
@@ -98,8 +97,10 @@ function scoreTerm(term: string, entry: Entry): number {
   if (entry.name.startsWith(term)) return 80;
   if (entry.words.some((word) => word.startsWith(term))) return 60;
   if (entry.text.includes(term)) return 40;
-  if (term.length >= 4 && entry.words.some((word) => withinOneEdit(term, word))) return 25;
-  if (term.length >= 3 && isSubsequence(term, entry.name)) return 10;
+  // Fuzzy tiers need four letters to mean anything: "voy" must not find "Observatory".
+  if (term.length < 4) return 0;
+  if (entry.words.some((word) => withinOneEdit(term, word))) return 25;
+  if (entry.name[0] === term[0] && isSubsequence(term, entry.name)) return 10;
   return 0;
 }
 

@@ -347,6 +347,12 @@ test('Explorer search ranks names, aliases, catalog numbers, and near-miss typos
   assert.equal(first('psp'), 'parker-solar-probe');
   assert.equal(first('satrun'), 'saturn');
   assert.equal(first('jupitr'), 'jupiter');
+  assert.equal(first('prsvrnc'), 'perseverance');
+  // Short queries match literally: no typo or subsequence hits like "Observatory".
+  assert.deepEqual(
+    searchBodies('voy').map((body) => body.id),
+    ['voyager-1', 'voyager-2']
+  );
   assert.deepEqual(searchBodies('   '), []);
   assert.deepEqual(searchBodies('zzzzqqq'), []);
   assert.equal(
