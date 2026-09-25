@@ -489,39 +489,3 @@ kbd {
     scroll-behavior: auto !important;
   }
 }
-
-/*
- * Temporary Tailwind compatibility: the only utility classes still used after the
- * Tailwind removal (Scene.svelte, HoverTooltip.svelte). Delete once those files
- * move to scoped styles.
- */
-.absolute {
-  position: absolute;
-}
-.fixed {
-  position: fixed;
-}
-.inset-0 {
-  inset: 0;
-}
-.pointer-events-none {
-  pointer-events: none;
-}
-.z-\[55\] {
-  z-index: 55;
-}
-.text-\[12px\] {
-  font-size: 12px;
-}
-.ml-3 {
-  margin-left: 0.75rem;
-}
-.-translate-y-1\/2 {
-  transform: translateY(-50%);
-}
-.px-3 {
-  padding-inline: 0.75rem;
-}
-.py-1 {
-  padding-block: 0.25rem;
-}
