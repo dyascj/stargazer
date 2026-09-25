@@ -14,7 +14,7 @@
 
   const title = 'Stargazer · A clearer view of space';
   const description = $derived(
-    `Explore ${data.counts.total} planets, moons, spacecraft and satellites in a real-time 3D solar system, placed with data from NASA JPL and CelesTrak. Free, in your browser.`
+    `Explore ${data.counts.total} planets, moons, spacecraft, satellites and small bodies in a 3D solar system, placed with data from NASA JPL and CelesTrak. Free, in your browser.`
   );
 </script>
 
