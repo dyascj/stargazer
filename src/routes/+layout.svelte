@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-  <title>Stargazer · Explore space</title>
+  <title>Stargazer</title>
 </svelte:head>
 
 {@render children()}

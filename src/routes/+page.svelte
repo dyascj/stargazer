@@ -12,6 +12,18 @@
 
   let { data } = $props();
 
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'Stargazer',
+    url: 'https://stargazer-lab.vercel.app/',
+    applicationCategory: 'EducationalApplication',
+    operatingSystem: 'Any',
+    browserRequirements: 'Requires WebGL',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    image: 'https://stargazer-lab.vercel.app/og-image.jpg'
+  };
+
   const title = 'Stargazer · A clearer view of space';
   const description = $derived(
     `Explore ${data.counts.total} planets, moons, spacecraft, satellites and small bodies in a 3D solar system, placed with data from NASA JPL and CelesTrak. Free, in your browser.`
@@ -21,16 +33,9 @@
 <svelte:head>
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="/og-image.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={title} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content="/og-image.png" />
+  <link rel="canonical" href="https://stargazer-lab.vercel.app/" />
+  <meta property="og:url" content="https://stargazer-lab.vercel.app/" />
+  {@html `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>`}
 </svelte:head>
 
 <div class="landing">
