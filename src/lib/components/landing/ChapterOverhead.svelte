@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { formatNumber } from '$utils/format';
   import { reveal } from './motion';
 
   let {
@@ -77,7 +78,7 @@
     {#if iss.speedKmh}
       <p class="ticker" data-reveal use:reveal style:--d="160ms">
         Since you opened this page, the ISS has traveled
-        <strong>{Math.floor(traveled).toLocaleString('en-US')} km</strong>.
+        <strong>{formatNumber(Math.floor(traveled))} km</strong>.
       </p>
     {/if}
     <a class="visit" href="/app?body=iss" data-reveal use:reveal style:--d="220ms"

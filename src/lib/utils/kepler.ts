@@ -23,3 +23,27 @@ export function solveKepler(meanAnomaly: number, eccentricity: number): number {
   }
   return e;
 }
+
+/**
+ * Rotate an orbit-plane point (x toward periapsis) into the J2000 ecliptic frame
+ * through the argument of periapsis, inclination, and ascending node (radians).
+ */
+export function orbitToEcliptic<T extends { x: number; y: number; z: number }>(
+  x: number,
+  y: number,
+  node: number,
+  argPeri: number,
+  inclination: number,
+  out: T
+): T {
+  const cosO = Math.cos(node);
+  const sinO = Math.sin(node);
+  const cosw = Math.cos(argPeri);
+  const sinw = Math.sin(argPeri);
+  const cosi = Math.cos(inclination);
+  const sini = Math.sin(inclination);
+  out.x = (cosO * cosw - sinO * sinw * cosi) * x + (-cosO * sinw - sinO * cosw * cosi) * y;
+  out.y = (sinO * cosw + cosO * sinw * cosi) * x + (-sinO * sinw + cosO * cosw * cosi) * y;
+  out.z = sinw * sini * x + cosw * sini * y;
+  return out;
+}

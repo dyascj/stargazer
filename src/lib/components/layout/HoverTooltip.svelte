@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { hoveredBody, cursorPosition } from '$lib/stores/sceneHover';
+  import { hoveredBody, cursorPosition } from '$stores/sceneHover';
 </script>
 
 <div

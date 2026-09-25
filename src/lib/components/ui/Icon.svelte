@@ -14,13 +14,8 @@
     info: '<circle cx="10" cy="10" r="7"/><path d="M10 9v4.5"/><circle cx="10" cy="6.6" r=".4" fill="currentColor"/>',
     link: '<path d="M8.5 11.5a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2l-.9.9"/><path d="M11.5 8.5a3 3 0 0 0-4.2 0l-2.6 2.6a3 3 0 0 0 4.2 4.2l.9-.9"/>',
     check: '<path d="m4.5 10.5 3.5 3.5 7.5-8"/>',
-    expand: '<path d="M4 8V4h4M16 8V4h-4M4 12v4h4M16 12v4h-4"/>',
-    keyboard:
-      '<rect x="2.5" y="5" width="15" height="10" rx="2"/><path d="M6 8.5h.01M9 8.5h.01M12 8.5h.01M15 8.5h.01M6.5 12h7"/>',
     compare: '<circle cx="7" cy="11" r="4"/><circle cx="14" cy="9" r="2.5"/>',
-    external: '<path d="M7 5h8v8M15 5 5.5 14.5"/>',
-    rocket:
-      '<path d="M10 2.5c2.7 1.8 4 4.6 4 8.2l-1.5 3.3h-5L6 10.7c0-3.6 1.3-6.4 4-8.2Z"/><circle cx="10" cy="8" r="1.4"/><path d="M8.5 17h3"/>'
+    external: '<path d="M7 5h8v8M15 5 5.5 14.5"/>'
   } as const;
   export type IconName = keyof typeof PATHS;
 </script>

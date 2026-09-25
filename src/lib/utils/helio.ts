@@ -1,6 +1,6 @@
-import { Vector3 } from 'three';
+import type { Vector3 } from 'three';
 import { AU_TO_SCENE } from '../scene-config';
-import { solveKepler } from './kepler';
+import { orbitToEcliptic, solveKepler } from './kepler';
 
 /**
  * Heliocentric position helpers using the Standish/Meeus orbital element approach.
@@ -106,33 +106,61 @@ function at(element: [number, number], T: number): number {
   return element[0] + element[1] * T;
 }
 
+/** Elements at a date: `a` in AU, angles in radians, `M` the mean anomaly. */
+export interface MeanElements {
+  a: number;
+  e: number;
+  i: number;
+  node: number;
+  argPeri: number;
+  M: number;
+}
+
+export function meanElements(
+  elements: OrbitalElementsWithRates,
+  date: Date,
+  out = {} as MeanElements
+): MeanElements {
+  const T = (date.getTime() - J2000_MS) / (86400000 * 36525);
+  const longPeri = at(elements.longPeri, T);
+  const longNode = at(elements.longNode, T);
+  out.a = at(elements.a, T);
+  out.e = at(elements.e, T);
+  out.i = at(elements.i, T) * DEG;
+  out.node = longNode * DEG;
+  out.argPeri = (longPeri - longNode) * DEG;
+  out.M = mod(at(elements.L, T) - longPeri, 360) * DEG;
+  return out;
+}
+
+type Point = { x: number; y: number; z: number };
+
+/** Ecliptic position in AU at eccentric anomaly `E` along the orbit. */
+export function orbitPointAU<T extends Point>(el: MeanElements, E: number, out: T): T {
+  const x = el.a * (Math.cos(E) - el.e);
+  const y = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(E);
+  return orbitToEcliptic(x, y, el.node, el.argPeri, el.i, out);
+}
+
+const scratch = {} as MeanElements;
+
+/** Heliocentric J2000 ecliptic position in AU. */
+export function planetEclipticAU<T extends Point>(
+  elements: OrbitalElementsWithRates,
+  date: Date,
+  out: T
+): T {
+  const el = meanElements(elements, date, scratch);
+  return orbitPointAU(el, solveKepler(el.M, el.e), out);
+}
+
 /** Heliocentric scene-space position of a planet (scene Y = ecliptic north). */
 export function getPlanetScenePosition(
   target: Vector3,
   planetKey: keyof typeof PLANETS,
-  date: Date = new Date()
+  date: Date
 ): Vector3 {
-  const T = (date.getTime() - J2000_MS) / (86400000 * 36525);
-  const els = PLANETS[planetKey];
-  const a = at(els.a, T);
-  const e = at(els.e, T);
-  const i = at(els.i, T) * DEG;
-  const longPeri = at(els.longPeri, T);
-  const longNode = at(els.longNode, T);
-  const E = solveKepler(mod(at(els.L, T) - longPeri, 360) * DEG, e);
-  const xOrb = a * (Math.cos(E) - e);
-  const yOrb = a * Math.sqrt(1 - e * e) * Math.sin(E);
-
-  const cosO = Math.cos(longNode * DEG);
-  const sinO = Math.sin(longNode * DEG);
-  const cosw = Math.cos((longPeri - longNode) * DEG);
-  const sinw = Math.sin((longPeri - longNode) * DEG);
-  const cosi = Math.cos(i);
-  const sini = Math.sin(i);
-
-  const x = (cosO * cosw - sinO * sinw * cosi) * xOrb + (-cosO * sinw - sinO * cosw * cosi) * yOrb;
-  const y = (sinO * cosw + cosO * sinw * cosi) * xOrb + (-sinO * sinw + cosO * cosw * cosi) * yOrb;
-  const z = sinw * sini * xOrb + cosw * sini * yOrb;
+  const { x, y, z } = planetEclipticAU(PLANETS[planetKey], date, target);
   // Ecliptic (x, y, z) maps to scene (x, z, -y): scene Y is ecliptic north.
   return target.set(x * AU_TO_SCENE, z * AU_TO_SCENE, -y * AU_TO_SCENE);
 }

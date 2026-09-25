@@ -4,46 +4,35 @@ import {
   type SatelliteStore
 } from '$stores/satelliteFactory';
 import { ecfKmToInertialOffset } from '$utils/earth';
-import type { SatelliteCategory, TrackedObject } from '../types';
+import type { TrackedObject } from '../types';
 
 /**
- * Curated Earth-orbit satellites driven by real NORAD TLEs from Celestrak,
- * propagated client-side with SGP4. Each renders as a point-marker.
- * ISS and Tiangong use separate dedicated stores and remain outside this list.
+ * Curated Earth-orbit satellites driven by CelesTrak TLEs, propagated
+ * client-side with SGP4. Each renders as a point marker. The ISS and Tiangong
+ * have their own stores (and pass predictions) and stay outside this list.
  */
 
-// ── Internal store registry ─────────────────────────────────────────────
+const stores: Record<string, SatelliteStore> = {};
 
-const _satelliteStores: Record<string, SatelliteStore> = {};
-
-/** Look up a curated satellite's live data store by registry id. */
+/** A curated satellite's position store, by registry id. */
 export function getCuratedSatelliteStore(id: string): SatelliteStore | undefined {
-  return _satelliteStores[id];
+  return stores[id];
 }
 
-/** Start polling all curated satellite stores. Safe to call multiple times (idempotent). */
+/** Start every curated satellite store. Idempotent. */
 export function startAllCuratedSatellites(): void {
-  for (const store of Object.values(_satelliteStores)) {
-    store.start();
-  }
+  for (const store of Object.values(stores)) store.start();
 }
 
-/** Stop polling all curated satellite stores. Call from onDestroy. */
 export function stopAllCuratedSatellites(): void {
-  for (const store of Object.values(_satelliteStores)) {
-    store.stop();
-  }
+  for (const store of Object.values(stores)) store.stop();
 }
-
-// ── Factory ─────────────────────────────────────────────────────────────
 
 interface CuratedSatelliteOpts {
   id: string;
   noradId: number;
   name: string;
   subtitle: string;
-  /** Sub-category used by the LeftPanel tree to group satellites. */
-  category: SatelliteCategory;
   /** Label visibility tier. Defaults to 5 (close zoom only). */
   labelTier?: number;
   /** Short prose description for the info panel. */
@@ -64,9 +53,7 @@ function curatedSatellite(opts: CuratedSatelliteOpts): TrackedObject {
     tleStore
   });
 
-  // Register the data store in the lookup map so getCuratedSatelliteStore
-  // can find it after the modules finish loading.
-  _satelliteStores[opts.id] = dataStore;
+  stores[opts.id] = dataStore;
 
   return {
     id: opts.id,
@@ -82,7 +69,6 @@ function curatedSatellite(opts: CuratedSatelliteOpts): TrackedObject {
     metadata: {
       subtitle: opts.subtitle,
       externalId: opts.noradId.toString(),
-      satelliteCategory: opts.category,
       description: opts.description,
       facts: opts.facts,
       sources: opts.sources,
@@ -98,7 +84,6 @@ const HUBBLE = curatedSatellite({
   noradId: 20580,
   name: 'Hubble Space Telescope',
   subtitle: 'NASA · Optical / UV / IR observatory, in orbit since 1990',
-  category: 'science',
   labelTier: 4,
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -117,7 +102,6 @@ const CHANDRA = curatedSatellite({
   noradId: 25867,
   name: 'Chandra X-ray Observatory',
   subtitle: 'NASA · X-ray observatory, since 1999',
-  category: 'science',
   labelTier: 4,
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
@@ -136,7 +120,6 @@ const FERMI = curatedSatellite({
   noradId: 33053,
   name: 'Fermi Gamma-ray Space Telescope',
   subtitle: 'NASA / DOE · Gamma-ray sky survey, since 2008',
-  category: 'science',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'Fermi surveys the entire sky in gamma rays every three hours, detecting everything from solar flares to distant gamma-ray bursts and pulsars. It has cataloged thousands of high-energy sources and tested fundamental physics at cosmic scales.',
@@ -156,7 +139,6 @@ const NOAA_20 = curatedSatellite({
   noradId: 43013,
   name: 'NOAA-20 (JPSS-1)',
   subtitle: 'NOAA · Polar-orbiting weather satellite, since 2017',
-  category: 'weather',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'NOAA-20 is the first satellite in the Joint Polar Satellite System, circling the Earth 14 times a day in a sun-synchronous orbit. It collects data on atmospheric temperature, moisture, ozone, and sea surface temperature used in weather forecasting worldwide.',
@@ -174,7 +156,6 @@ const GOES_18 = curatedSatellite({
   noradId: 51850,
   name: 'GOES-18',
   subtitle: 'NOAA · Geostationary weather satellite over the Pacific',
-  category: 'weather',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'GOES-18 (also known as GOES-West) provides continuous weather imagery of the western United States and the Pacific Ocean from geostationary orbit. It produces full-disk Earth images every 10 minutes and can scan severe storm regions every 30 seconds.',
@@ -194,7 +175,6 @@ const SENTINEL_1A = curatedSatellite({
   noradId: 39634,
   name: 'Sentinel-1A',
   subtitle: 'ESA · C-band synthetic aperture radar, since 2014',
-  category: 'earth-observation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     "Sentinel-1A is part of ESA's Copernicus Earth observation program, providing all-weather, day-and-night radar imagery. Its C-band SAR can detect ground deformation at millimeter scale, making it essential for monitoring earthquakes, volcanoes, and ice sheets.",
@@ -212,7 +192,6 @@ const LANDSAT_9 = curatedSatellite({
   noradId: 49260,
   name: 'Landsat 9',
   subtitle: 'NASA / USGS · Land imaging satellite, since 2021',
-  category: 'earth-observation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'Landsat 9 continues a 50-year record of Earth surface observation, the longest continuous satellite imagery program in history. Together with Landsat 8, it captures every point on Earth every 8 days, providing free data for agriculture, forestry, and land-use research.',
@@ -230,7 +209,6 @@ const AQUA = curatedSatellite({
   noradId: 27424,
   name: 'Aqua',
   subtitle: 'NASA · EOS Earth observing satellite, since 2002',
-  category: 'earth-observation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     "Aqua is a key satellite in NASA's Earth Observing System, focused on the water cycle including evaporation, clouds, precipitation, soil moisture, sea ice, and snow cover. Its MODIS instrument produces some of the most widely used Earth science data products.",
@@ -250,7 +228,6 @@ const GPS_NAVSTAR_66 = curatedSatellite({
   noradId: 37753,
   name: 'GPS BIIF-2 (NAVSTAR 66)',
   subtitle: 'U.S. Space Force · GPS Block IIF navigation satellite',
-  category: 'navigation',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'NAVSTAR 66 is a GPS Block IIF navigation satellite, broadcasting L1, L2, and L5 navigation signals. The GPS constellation provides positioning accuracy within a few meters for billions of receivers worldwide.',
@@ -270,7 +247,6 @@ const IRIDIUM_158 = curatedSatellite({
   noradId: 43571,
   name: 'Iridium 158',
   subtitle: 'Iridium · Voice/data relay (sample of 66 in the constellation)',
-  category: 'communication',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'Iridium 158 is part of the Iridium NEXT constellation, a network of 66 cross-linked satellites providing global voice and data coverage including the polar regions. The constellation was fully replaced between 2017 and 2019 with second-generation spacecraft.',
@@ -290,7 +266,6 @@ const STARLINK_5447 = curatedSatellite({
   noradId: 54779,
   name: 'Starlink 5447',
   subtitle: 'SpaceX · A satellite in the Starlink broadband constellation',
-  category: 'internet',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     "Starlink 5447 is a satellite in SpaceX's low-Earth-orbit broadband constellation. Each flat-panel v1.5 spacecraft uses a krypton ion thruster for orbit-raising and station-keeping, and communicates with ground terminals via Ku/Ka-band phased arrays.",
@@ -308,7 +283,6 @@ const ONEWEB_0011 = curatedSatellite({
   noradId: 44062,
   name: 'OneWeb 0011',
   subtitle: 'OneWeb · Sample broadband internet satellite',
-  category: 'internet',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
     'OneWeb 0011 is one of the first-generation satellites in the OneWeb broadband constellation, which provides internet connectivity to remote and underserved areas. The full constellation of 648 satellites orbits in polar planes at 1,200 km altitude.',

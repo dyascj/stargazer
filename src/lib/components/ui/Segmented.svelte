@@ -1,6 +1,5 @@
 <script lang="ts" generics="T extends string | number">
-  import { get } from 'svelte/store';
-  import { reducedMotion } from '$stores/reducedMotion';
+  import { prefersReducedMotion } from 'svelte/motion';
 
   let {
     options,
@@ -36,7 +35,7 @@
     indicator.style.opacity = '1';
     indicator.style.left = `${next.left}px`;
     indicator.style.width = `${next.width}px`;
-    if (animate && placed && placed.left !== next.left && !get(reducedMotion)) {
+    if (animate && placed && placed.left !== next.left && !prefersReducedMotion.current) {
       const left = Math.min(placed.left, next.left);
       const right = Math.max(placed.left + placed.width, next.left + next.width);
       indicator.animate(

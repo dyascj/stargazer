@@ -17,7 +17,7 @@ const DEG_TO_RAD = Math.PI / 180;
 const MOON_MASS_FRACTION = 1 / 82.3006;
 
 /** Greenwich Mean Sidereal Time as a rotation angle in radians. */
-export function getGmstRadians(date: Date = new Date()): number {
+export function getGmstRadians(date: Date): number {
   const d = (date.getTime() - J2000_MS) / 86400000;
   let hours = (18.697374558 + 24.06570982441908 * d) % 24;
   if (hours < 0) hours += 24;
@@ -29,7 +29,7 @@ export function getGmstRadians(date: Date = new Date()): number {
  * Earth–Moon barycenter, which sits about 4,700 km from Earth's center; that
  * offset is visible at true scale, so it is removed using the lunar model.
  */
-export function getEarthScenePosition(target: Vector3, date: Date = new Date()): Vector3 {
+export function getEarthScenePosition(target: Vector3, date: Date): Vector3 {
   getPlanetScenePosition(target, 'earth', date);
   return target.addScaledVector(getMoonInertialOffset(_moon, date), -MOON_MASS_FRACTION);
 }
@@ -38,10 +38,10 @@ export function getEarthScenePosition(target: Vector3, date: Date = new Date()):
  * Apply Earth's orientation (without translation) to an Earth-fixed offset,
  * giving the inertial offset from Earth's center in scene coordinates.
  */
-export function earthLocalToInertialOffset(
+function earthLocalToInertialOffset(
   local: { x: number; y: number; z: number },
   target: Vector3,
-  date: Date = new Date()
+  date: Date
 ): Vector3 {
   _earthRot.makeRotationX(-EARTH_OBLIQUITY_RAD);
   _gmstRot.makeRotationY(getGmstRadians(date));

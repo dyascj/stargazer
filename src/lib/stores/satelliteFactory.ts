@@ -63,8 +63,8 @@ export function createTleStore(catalogId: number): Readable<TleData | null> {
 }
 
 /** A visualization validity window, not a guarantee of orbital accuracy. */
-export const TLE_MAX_AGE_DAYS = 7;
-export function isTleUsable(satrec: satellite.SatRec, date: Date): boolean {
+const TLE_MAX_AGE_DAYS = 7;
+function isTleUsable(satrec: satellite.SatRec, date: Date): boolean {
   const jd = date.getTime() / 86_400_000 + 2440587.5;
   return (
     Number.isFinite(jd) &&
@@ -145,7 +145,7 @@ export function createTleBackedStore({
       state
         ? null
         : satrec
-          ? 'No reliable position at this date. Satellite elements are used only within 7 days of their epoch.'
+          ? `No reliable position at this date. Satellite elements are used only within ${TLE_MAX_AGE_DAYS} days of their epoch.`
           : 'Orbital data unavailable. Try again later.'
     );
   }

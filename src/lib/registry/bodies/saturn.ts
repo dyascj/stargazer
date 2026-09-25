@@ -35,8 +35,7 @@ export const SATURN: TrackedObject = {
     hasRings: {
       innerRadius: 11.69,
       outerRadius: 22.0,
-      textureUrl: '/textures/2k_saturn_ring_alpha.png',
-      color: '#ffffff'
+      textureUrl: '/textures/2k_saturn_ring_alpha.png'
     },
     dayLength: '10h 39m',
     yearLength: '29.46 Earth years',

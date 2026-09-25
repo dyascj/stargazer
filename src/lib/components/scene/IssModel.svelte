@@ -1,7 +1,6 @@
 <script lang="ts">
   import { T, useTask, useThrelte } from '@threlte/core';
   import { DirectionalLight, Matrix4, Vector3, type Group } from 'three';
-  import { get } from 'svelte/store';
   import { onMount } from 'svelte';
   import { EARTH_RADIUS, KM_TO_SCENE } from '$lib/scene-config';
   import { iss } from '$stores/iss';
@@ -47,7 +46,7 @@
   useTask(
     () => {
       if (!group) return;
-      const now = get(simTime).getTime();
+      const now = $simTime.getTime();
       date.setTime(now);
       const state = iss.at(date);
       date.setTime(now + 1000);

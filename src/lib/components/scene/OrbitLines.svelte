@@ -9,7 +9,6 @@
     Vector3,
     type PerspectiveCamera
   } from 'three';
-  import { get } from 'svelte/store';
   import { selection } from '$stores/selection';
   import { simTime } from '$stores/simTime';
   import { showOrbits, showTrails } from '$stores/ui';
@@ -115,14 +114,14 @@
 
   useTask(
     () => {
-      const orbitsOn = get(showOrbits);
-      const trailsOn = get(showTrails);
-      const selected = indexOf(get(selection));
+      const orbitsOn = $showOrbits;
+      const trailsOn = $showTrails;
+      const selected = indexOf($selection);
       const system = selected >= 0 && moonLike[selected] ? parentOf(selected) : selected;
       const cam = camera.current as PerspectiveCamera;
       const { height } = size.current;
       const { focal } = lens(cam, size.current.width, height);
-      const now = get(simTime).getTime();
+      const now = $simTime.getTime();
       for (let i = 0; i < BODY_COUNT; i++) {
         const isSelected = i === selected;
         const wanted =

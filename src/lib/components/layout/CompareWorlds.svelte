@@ -5,6 +5,7 @@
   import { selection } from '$stores/selection';
   import Icon from '$components/ui/Icon.svelte';
   import { glyphColor } from '$components/ui/BodyGlyph.svelte';
+  import { formatNumber } from '$utils/format';
 
   const worlds = TRACKED_OBJECTS.filter(isPlanetBody);
   let dialog: HTMLDialogElement;
@@ -90,9 +91,7 @@
     {#each [left, right] as body, index (index)}
       <button type="button" class="world" onclick={() => explore(body.id)}>
         <span class="name">{body.name}</span>
-        <span class="tabular"
-          >{(body.metadata.radiusKm * 2).toLocaleString('en-US', { maximumFractionDigits: 0 })} km across</span
-        >
+        <span class="tabular">{formatNumber(body.metadata.radiusKm * 2)} km across</span>
         <span class="go">Go there <Icon name="chevron-right" size={14} /></span>
       </button>
     {/each}

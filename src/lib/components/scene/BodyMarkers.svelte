@@ -13,7 +13,7 @@
   import type { ObjectType } from '$lib/registry/types';
   import { selection } from '$stores/selection';
   import { introComplete } from '$stores/scene';
-  import { reducedMotion } from '$stores/reducedMotion';
+  import { prefersReducedMotion } from 'svelte/motion';
   import { BODIES, BODY_COUNT, indexOf, positions } from './bodyState';
   import { hooks, markerSize, screen, updateOverlay } from './overlay';
 
@@ -137,7 +137,7 @@
         selectedAt = performance.now();
       }
       const t = (performance.now() - selectedAt) / 1000;
-      const still = $reducedMotion;
+      const still = prefersReducedMotion.current;
       const spring = still ? 1 : 1 + 0.5 * Math.exp(-7 * t) * Math.cos(11 * t);
       material.uniforms.uRingAlpha.value =
         fade * (still ? 0.9 : Math.min(1, t * 5) * (0.78 + 0.17 * Math.cos(t * 2.4)));

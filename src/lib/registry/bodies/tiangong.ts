@@ -18,9 +18,6 @@ export const TIANGONG: TrackedObject = {
   metadata: {
     subtitle: 'CSS · NORAD 48274',
     externalId: '48274',
-    noradId: 48274,
-    liveStoreKey: 'tiangong',
-    satelliteCategory: 'space-station',
     tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
     description:
       "China's modular space station, operational since 2022. Built from three modules: the Tianhe core, Wentian laboratory, and Mengtian experiment module. Supports a permanent crew of three taikonauts.",
@@ -34,8 +31,7 @@ export const TIANGONG: TrackedObject = {
     ],
     sources: [
       { name: 'CMSA', url: 'http://www.cmsa.gov.cn/' },
-      { name: 'Celestrak TLE', url: 'https://celestrak.org/NORAD/elements/gp.php?CATNR=48274' },
-      { name: 'open-notify', url: 'http://open-notify.org/' }
+      { name: 'Celestrak TLE', url: 'https://celestrak.org/NORAD/elements/gp.php?CATNR=48274' }
     ]
   }
 };

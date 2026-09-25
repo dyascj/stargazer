@@ -1,11 +1,14 @@
 <script lang="ts">
-  /** Heading text that resolves letter by letter from a blur. */
-  let { text }: { text: string } = $props();
+  /** Heading text that resolves letter by letter from a blur, after `delay` ms. */
+  let { text, delay = 0 }: { text: string; delay?: number } = $props();
   // Letters stay grouped per word so lines only break between words.
   const words = $derived.by(() => {
     let offset = 0;
     return text.split(' ').map((word) => {
-      const letters = [...word].map((letter, index) => ({ letter, delay: (offset + index) * 18 }));
+      const letters = [...word].map((letter, index) => ({
+        letter,
+        start: delay + (offset + index) * 18
+      }));
       offset += word.length + 1;
       return letters;
     });
@@ -14,7 +17,7 @@
 
 <span class="visually-hidden">{text}</span><span aria-hidden="true"
   >{#each words as word, index}{#if index}{' '}{/if}<span class="word"
-      >{#each word as { letter, delay }}<span class="letter" style:animation-delay="{delay}ms"
+      >{#each word as { letter, start }}<span class="letter" style:animation-delay="{start}ms"
           >{letter}</span
         >{/each}</span
     >{/each}</span

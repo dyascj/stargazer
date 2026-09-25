@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { OrbitalElementsWithRates } from '$utils/helio';
+  import { prefersReducedMotion } from 'svelte/motion';
+  import { easeInOutCubic } from '$utils/easing';
   import OrbitMap from './OrbitMap.svelte';
-  import { inView, reducedMotion, reveal } from './motion';
+  import { inView, reveal } from './motion';
 
   let { planets }: { planets: { id: string; name: string; elements: OrbitalElementsWithRates }[] } =
     $props();
@@ -27,13 +29,12 @@
   function onView(visible: boolean) {
     if (!visible || played) return;
     played = true;
-    if (reducedMotion()) return;
+    if (prefersReducedMotion.current) return;
     const start = performance.now();
     const duration = 5200;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
-      const eased = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
-      year = FIRST + (thisYear - FIRST) * eased;
+      year = FIRST + (thisYear - FIRST) * easeInOutCubic(t);
       if (t < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);

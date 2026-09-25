@@ -1,7 +1,6 @@
 <script lang="ts">
   import { T, useTask } from '@threlte/core';
   import { LineBasicMaterial } from 'three';
-  import { get } from 'svelte/store';
   import { simTime } from '$stores/simTime';
   import type { SatelliteStore } from '$stores/satelliteFactory';
   import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
@@ -44,7 +43,7 @@
   }
 
   useTask(() => {
-    const state = store.at(get(simTime));
+    const state = store.at($simTime);
     line.visible = !!state;
     if (state) rebuild(state.ecfKm, state.footprintKm);
   });

@@ -42,7 +42,7 @@
   });
 </script>
 
-<div class="labels" class:arrived={$introComplete} aria-label="Scene labels">
+<div class="labels" class:arrived={$introComplete} role="group" aria-label="Scene labels">
   {#each BODIES as body, i (body.id)}
     <button
       bind:this={elements[i]}

@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { flushSync } from 'svelte';
+  import { flushSync, onMount } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
   import Brand from '$components/brand/Brand.svelte';
   import Scene from '$components/scene/Scene.svelte';
@@ -121,6 +120,7 @@
           type="button"
           onclick={openSearch}
           aria-haspopup="dialog"
+          aria-label="Search planets, moons, spacecraft"
         >
           <Icon name="search" size={18} />
           <span class="placeholder">Search planets, moons, spacecraft</span>

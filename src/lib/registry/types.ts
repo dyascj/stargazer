@@ -1,6 +1,6 @@
 import type { Vector3 } from 'three';
 
-/** High-level taxonomy used by the tree, search filters, and renderer dispatch. */
+/** High-level taxonomy used by search, markers, and inspector layout. */
 export type ObjectType =
   | 'star' // Sun
   | 'planet' // Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune
@@ -11,8 +11,7 @@ export type ObjectType =
   | 'comet' // Halley, 67P/Churyumov-Gerasimenko, Tempel 1, etc.
   | 'earth-satellite' // ISS, Tiangong, Hubble, Sentinel-1, etc.
   | 'spacecraft' // JWST (L2), Voyager, Parker Solar Probe, MRO, etc.
-  | 'lander' // Curiosity, Perseverance, Tianwen-1 rover, etc.
-  | 'neo'; // Reserved for future near-Earth-object pass-by tracking
+  | 'lander'; // Curiosity, Perseverance, etc.
 
 /** Which renderer component to instantiate for this body. */
 export type RendererKind = 'star' | 'planet-body' | 'satellite-marker' | 'point-marker';
@@ -22,7 +21,7 @@ export interface BaseObjectMetadata {
   subtitle?: string;
   /** NORAD / IAU / SPK / Minor Planet ID for external catalog cross-reference. */
   externalId?: string;
-  /** Short prose description rendered in GenericBodyPanel. */
+  /** Short prose description for the inspector. */
   description?: string;
   /** Key-value fact pairs rendered as a grid in the info panel. */
   facts?: { label: string; value: string }[];
@@ -83,41 +82,16 @@ export interface PlanetBodyMetadata extends BaseObjectMetadata {
     outerRadius: number;
     /** Alpha-strip texture sampled radially (inner → outer). */
     textureUrl: string;
-    color?: string;
   };
 }
-
-export interface SatelliteMarkerMetadata extends BaseObjectMetadata {
-  /** Key identifying which live position store to subscribe to. */
-  liveStoreKey: 'iss' | 'tiangong';
-  /** NORAD catalog number for cross-referencing with external catalogs. */
-  noradId?: number;
-  /** Sub-category for grouping in the LeftPanel tree. */
-  satelliteCategory?: SatelliteCategory;
-}
-
-export interface PointMarkerMetadata extends BaseObjectMetadata {
-  /** Sub-category for grouping in the LeftPanel tree. */
-  satelliteCategory?: SatelliteCategory;
-}
-
-/** Sub-categories for grouping Earth-orbit satellites in the tree. */
-export type SatelliteCategory =
-  | 'space-station'
-  | 'science'
-  | 'weather'
-  | 'earth-observation'
-  | 'navigation'
-  | 'communication'
-  | 'internet';
 
 export interface StarMetadata extends BaseObjectMetadata {
   /** True solar radius in km, for the info panel display. */
   radiusKm: number;
 }
 
-export type ObjectMetadata =
-  PlanetBodyMetadata | SatelliteMarkerMetadata | PointMarkerMetadata | StarMetadata;
+/** Markers (satellites, spacecraft, small bodies) carry only the base fields. */
+export type ObjectMetadata = PlanetBodyMetadata | StarMetadata | BaseObjectMetadata;
 
 /**
  * Returns the body's offset from its parent in scene-space Cartesian, written
@@ -133,7 +107,7 @@ export interface TrackedObject {
   /** Display name. */
   name: string;
 
-  /** Taxonomy used by the tree, search filters, and panel layout. */
+  /** Taxonomy used by search, markers, and inspector layout. */
   type: ObjectType;
 
   /** Parent body id, or null for the Sun (root). World position is composed by walking this chain. */
@@ -160,18 +134,6 @@ export function isPlanetBody(
   obj: TrackedObject
 ): obj is TrackedObject & { metadata: PlanetBodyMetadata } {
   return obj.rendererKind === 'planet-body';
-}
-
-export function isSatelliteMarker(
-  obj: TrackedObject
-): obj is TrackedObject & { metadata: SatelliteMarkerMetadata } {
-  return obj.rendererKind === 'satellite-marker';
-}
-
-export function isPointMarker(
-  obj: TrackedObject
-): obj is TrackedObject & { metadata: PointMarkerMetadata } {
-  return obj.rendererKind === 'point-marker';
 }
 
 export function isStar(obj: TrackedObject): obj is TrackedObject & { metadata: StarMetadata } {

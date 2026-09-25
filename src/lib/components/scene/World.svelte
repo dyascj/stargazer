@@ -1,6 +1,5 @@
 <script lang="ts">
   import { T, useTask } from '@threlte/core';
-  import { get } from 'svelte/store';
   import { TRACKED_OBJECTS } from '$lib/registry/registry';
   import { isPlanetBody } from '$lib/registry/types';
   import { selection } from '$stores/selection';
@@ -27,7 +26,7 @@
 
   // One simulation instant and one set of body positions per frame, before the camera moves.
   useTask('simulation-clock', (dt) => advanceSimTime(dt * 1000));
-  useTask('bodies', () => updateBodyPositions(get(simTime)), { after: 'simulation-clock' });
+  useTask('bodies', () => updateBodyPositions($simTime), { after: 'simulation-clock' });
 </script>
 
 <CameraRig />

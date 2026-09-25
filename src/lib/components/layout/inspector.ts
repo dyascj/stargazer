@@ -4,6 +4,7 @@ import { isPlanetBody, isStar, type TrackedObject } from '$lib/registry/types';
 import type { SatelliteState } from '$stores/satelliteFactory';
 import type { LunarState } from '$utils/moon';
 import { AU_KM, AU_TO_SCENE } from '$lib/scene-config';
+import { formatNumber } from '$utils/format';
 
 export interface Stat {
   label: string;
@@ -13,11 +14,6 @@ export interface Stat {
 export type Tracking = { mode: string; source: string; epoch?: string };
 
 const LIGHT_KM_PER_S = 299_792.458;
-const fixed = (value: number, digits = 0) =>
-  value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-
-const sentenceCase = (text: string) => text[0] + text.slice(1).toLowerCase();
-
 export function trackingOf(object: TrackedObject): Tracking {
   return (
     object.metadata.tracking ?? {
@@ -42,8 +38,8 @@ const scratch = new Vector3();
 function lightTime(km: number): Stat {
   const minutes = km / LIGHT_KM_PER_S / 60;
   return minutes < 60
-    ? { label: 'Light time', value: fixed(minutes, 1), unit: 'min' }
-    : { label: 'Light time', value: fixed(minutes / 60, 1), unit: 'hr' };
+    ? { label: 'Light time', value: formatNumber(minutes, 1), unit: 'min' }
+    : { label: 'Light time', value: formatNumber(minutes / 60, 1), unit: 'hr' };
 }
 
 /** "243 Earth days (retrograde)" becomes 243 / days with the note moved into the label. */
@@ -61,11 +57,11 @@ export function heroStats(
   lunar: LunarState | null
 ): Stat[] {
   if (satellite) {
-    const lat = `${fixed(Math.abs(satellite.latitude), 1)}°${satellite.latitude >= 0 ? 'N' : 'S'}`;
-    const lon = `${fixed(Math.abs(satellite.longitude), 1)}°${satellite.longitude >= 0 ? 'E' : 'W'}`;
+    const lat = `${formatNumber(Math.abs(satellite.latitude), 1)}°${satellite.latitude >= 0 ? 'N' : 'S'}`;
+    const lon = `${formatNumber(Math.abs(satellite.longitude), 1)}°${satellite.longitude >= 0 ? 'E' : 'W'}`;
     return [
-      { label: 'Altitude', value: fixed(satellite.altitudeKm), unit: 'km' },
-      { label: 'Speed', value: fixed(satellite.velocityKmh), unit: 'km/h' },
+      { label: 'Altitude', value: formatNumber(satellite.altitudeKm), unit: 'km' },
+      { label: 'Speed', value: formatNumber(satellite.velocityKmh), unit: 'km/h' },
       { label: 'Over', value: `${lat} ${lon}` },
       {
         label: 'Sunlight',
@@ -82,14 +78,14 @@ export function heroStats(
   const radiusKm =
     isPlanetBody(object) || isStar(object) ? (object.metadata.radiusKm as number) : null;
   const radius: Stat | null = radiusKm
-    ? { label: 'Radius', value: fixed(radiusKm, radiusKm < 100 ? 1 : 0), unit: 'km' }
+    ? { label: 'Radius', value: formatNumber(radiusKm, radiusKm < 100 ? 1 : 0), unit: 'km' }
     : null;
 
   if (lunar)
     return [
-      { label: 'Phase', value: sentenceCase(lunar.phaseName) },
-      { label: 'Illuminated', value: `${fixed(lunar.illumination * 100)}%` },
-      { label: 'From Earth', value: fixed(lunar.distanceKm), unit: 'km' },
+      { label: 'Phase', value: lunar.phaseName },
+      { label: 'Illuminated', value: `${formatNumber(lunar.illumination * 100)}%` },
+      { label: 'From Earth', value: formatNumber(lunar.distanceKm), unit: 'km' },
       radius!
     ];
 
@@ -97,13 +93,16 @@ export function heroStats(
   const stats: (Stat | null)[] = [];
   if (isStar(object) && hasEarth) {
     const km = (earth.length() / AU_TO_SCENE) * AU_KM;
-    stats.push({ label: 'From Earth', value: fixed(km / AU_KM, 3), unit: 'AU' }, lightTime(km));
+    stats.push(
+      { label: 'From Earth', value: formatNumber(km / AU_KM, 3), unit: 'AU' },
+      lightTime(km)
+    );
   }
   const helio = heliocentric(object);
   if (helio && getWorldPosition(helio.id, date, position, scratch)) {
     const sun: Stat = {
       label: 'From Sun',
-      value: fixed(position.length() / AU_TO_SCENE, 2),
+      value: formatNumber(position.length() / AU_TO_SCENE, 2),
       unit: 'AU'
     };
     // A snapshot marker stays put while Earth moves, so a live light time would mislead.

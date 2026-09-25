@@ -3,12 +3,12 @@ import { poleQuaternion } from './pole';
 import { iauRotationRad } from './rotation';
 import { getById } from '../registry/registry';
 import { isPlanetBody } from '../registry/types';
-import { latLonAltToVec3 } from './coords';
 
 /**
  * A surface site's offset from its planet's center in scene coordinates. The
- * site is spun by the planet's IAU prime-meridian angle and then oriented by
- * its pole, exactly as PlanetBody transforms the planet mesh, so landers stay
+ * site starts in the planet's mesh frame (+X at 0° longitude, +Y north, east
+ * toward -Z), is spun by the IAU prime-meridian angle, and is then oriented by
+ * the pole, exactly as PlanetBody transforms the planet mesh, so landers stay
  * on the rendered surface.
  */
 
@@ -27,7 +27,14 @@ export function planetSurfaceToInertialOffset(
   const meta = parent.metadata;
   const pole = meta.poleVec;
   if (!pole) return null;
-  target.set(...latLonAltToVec3(latDeg, lonDeg, altKm, meta.radius, meta.radiusKm));
+  const lat = latDeg * DEG;
+  const lon = lonDeg * DEG;
+  const r = meta.radius * (1 + altKm / meta.radiusKm);
+  target.set(
+    r * Math.cos(lat) * Math.cos(lon),
+    r * Math.sin(lat),
+    -r * Math.cos(lat) * Math.sin(lon)
+  );
   const w = iauRotationRad(meta, date);
   if (w !== null) target.applyAxisAngle(Y_AXIS, w);
   let quat = _quatCache.get(parentId);
@@ -35,4 +42,5 @@ export function planetSurfaceToInertialOffset(
   return target.applyQuaternion(quat);
 }
 
+const DEG = Math.PI / 180;
 const Y_AXIS = new Vector3(0, 1, 0);

@@ -6,13 +6,13 @@
   import World from './World.svelte';
   import BodyLabels from './BodyLabels.svelte';
 
-  let failed = $state(false);
+  let contextLost = $state(false);
   // Sharp on high-density screens without paying for 3x fill rate on phones.
   const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio, 2);
 
   /** A logarithmic depth buffer resolves metres at the ISS and AU at Neptune in one frame. */
   function createRenderer(canvas: HTMLCanvasElement): WebGLRenderer {
-    canvas.addEventListener('webglcontextlost', () => (failed = true), { once: true });
+    canvas.addEventListener('webglcontextlost', () => (contextLost = true), { once: true });
     return new WebGLRenderer({
       canvas,
       logarithmicDepthBuffer: true,
@@ -34,7 +34,7 @@
     {/snippet}
   </svelte:boundary>
   {#if $showLabels}<BodyLabels />{/if}
-  {#if failed}<div class="scene-error" role="alert">
+  {#if contextLost}<div class="scene-error" role="alert">
       <p>The graphics connection was interrupted.</p>
       <button type="button" onclick={() => window.location.reload()}>Reload scene</button>
     </div>{/if}
