@@ -21,7 +21,7 @@
   } from '$utils/flight';
   import { pickBody } from '$utils/screenSpace';
   import { BODIES, BODY_COUNT, RADII, indexOf, parentOf, positions, valid } from './bodyState';
-  import { hooks, screen } from './overlay';
+  import { hooks, lens, screen } from './overlay';
   import { pendingTextures } from './textures';
 
   /**
@@ -45,7 +45,10 @@
   const cam = new PerspectiveCamera(FOV, 1, 1e-6, 1e12);
 
   let focus = -1;
-  let appliedShift = 0;
+  let shiftX = 0;
+  let shiftY = 0;
+  let appliedX = 0;
+  let appliedY = 0;
   let spherical = new Spherical(1, 1, 0);
   let azimuthGoal = 0;
   let polarGoal = 1;
@@ -80,6 +83,13 @@
   const fromQuat = new Quaternion();
   const toQuat = new Quaternion();
   const flightQuat = new Quaternion();
+  // Orbit frame (local to world). Ecliptic north is up, except in low orbit,
+  // where up follows the local vertical so the planet stays below the camera.
+  const frame = new Quaternion();
+  const frameGoal = new Quaternion();
+  const frameStart = new Quaternion();
+  const frameInverse = new Quaternion();
+  const radial = new Vector3();
   let placed = false;
   let awaitingPosition = false;
   let introStarted = -1;
@@ -88,6 +98,24 @@
   const tracked = new Spherical();
   let trackedLog = 0;
   let flightVelocity = { azimuth: 0, polar: 0, zoom: 0 };
+
+  function updateFrameGoal(): void {
+    const parent = focus >= 0 ? parentOf(focus) : -1;
+    if (parent > 0 && valid[focus] && valid[parent]) {
+      radial.copy(positions[focus]).sub(positions[parent]);
+      if (radial.length() < 3 * RADII[parent]) {
+        frameGoal.setFromUnitVectors(UP, radial.normalize());
+        return;
+      }
+    }
+    frameGoal.identity();
+  }
+  function toLocal(v: Vector3): Vector3 {
+    return v.applyQuaternion(frameInverse.copy(frame).invert());
+  }
+  function toWorld(v: Vector3): Vector3 {
+    return v.applyQuaternion(frame);
+  }
 
   function surfaceRadius(): number {
     return focus >= 0 ? RADII[focus] : 0;
@@ -123,7 +151,8 @@
     focus = id === SOLAR_SYSTEM_VIEW ? -1 : indexOf(id);
     const body = focus >= 0 ? BODIES[focus] : null;
     const { width, height } = size.current;
-    const aspect = (width + get(viewInset)) / Math.max(height, 1);
+    const inset = get(viewInset);
+    const aspect = (width + inset.right) / Math.max(height + inset.bottom, 1);
     const date = get(simTime);
     const toDistance = body
       ? framingDistance(body, date, MathUtils.degToRad(FOV), aspect)
@@ -137,7 +166,8 @@
       parent > 0 && valid[parent] ? positions[parent] : null,
       !body || (RADII[focus] > 0 && body.rendererKind !== 'satellite-marker'),
       ringed ? pole : null,
-      direction
+      direction,
+      parent > 0 ? RADII[parent] : 0
     );
     // Live satellites may not have a position yet; frame them again once they do.
     awaitingPosition = !!body && !valid[focus];
@@ -149,7 +179,9 @@
     if (instant || !placed || get(reducedMotion)) {
       flight = null;
       pan.set(0, 0, 0);
-      spherical.setFromVector3(direction);
+      updateFrameGoal();
+      frame.copy(frameGoal);
+      spherical.setFromVector3(toLocal(scratch.copy(direction)));
       azimuthGoal = spherical.theta;
       polarGoal = spherical.phi;
       setDistance(toDistance);
@@ -161,7 +193,7 @@
         spherical.theta -= 0.55;
         spherical.phi = Math.max(0.3, spherical.phi - 0.25);
         spherical.radius = toDistance * 5;
-        cam.position.setFromSpherical(spherical).add(target);
+        cam.position.copy(toWorld(scratch.setFromSpherical(spherical))).add(target);
         fromTarget.copy(direction);
         fromTargetDistance = toDistance;
       } else finishIntro();
@@ -181,9 +213,11 @@
     intro: boolean
   ) {
     fromCenter.copy(center);
+    updateFrameGoal();
+    frameStart.copy(frame);
     fromQuat.setFromUnitVectors(UP, scratch.copy(cam.position).sub(center).normalize());
     toQuat.setFromUnitVectors(UP, direction);
-    tracked.setFromVector3(scratch.copy(cam.position).sub(center));
+    tracked.setFromVector3(toLocal(scratch.copy(cam.position).sub(center)));
     trackedLog = Math.log(Math.max(tracked.radius - surfaceRadius(), 1e-9));
     flight = {
       start: performance.now(),
@@ -210,7 +244,7 @@
     if (!flight) return;
     if (flight.intro) finishIntro();
     flight = null;
-    spherical.setFromVector3(scratch.copy(cam.position).sub(center));
+    spherical.setFromVector3(toLocal(scratch.copy(cam.position).sub(center)));
     azimuthGoal = spherical.theta;
     polarGoal = spherical.phi;
     pan.copy(center).sub(resolveAnchor(spherical.radius, anchor));
@@ -261,7 +295,7 @@
   }
   function panBy(dx: number, dy: number): void {
     const distance = cam.position.distanceTo(center);
-    const scale = (2 * distance * Math.tan(MathUtils.degToRad(FOV) / 2)) / size.current.height;
+    const scale = distance / lens(cam, size.current.width, size.current.height).focal;
     scratch.setFromMatrixColumn(cam.matrixWorld, 0).multiplyScalar(-dx * scale);
     panGoal.add(scratch);
     scratch.setFromMatrixColumn(cam.matrixWorld, 1).multiplyScalar(dy * scale);
@@ -437,17 +471,23 @@
       const dt = Math.min(delta, 0.1);
       const { width, height } = size.current;
       const inset = $viewInset;
-      hooks.viewShift = $reducedMotion
-        ? inset
-        : MathUtils.lerp(hooks.viewShift, inset, 1 - Math.exp(-dt * 7));
-      if (Math.abs(inset - hooks.viewShift) < 0.5) hooks.viewShift = inset;
-      const shift = hooks.viewShift;
-      const aspect = (width + shift) / Math.max(height, 1);
-      if (cam.aspect !== aspect || appliedShift !== shift) {
+      const ease = $reducedMotion ? 1 : 1 - Math.exp(-dt * 7);
+      shiftX =
+        Math.abs(inset.right - shiftX) < 0.5
+          ? inset.right
+          : MathUtils.lerp(shiftX, inset.right, ease);
+      shiftY =
+        Math.abs(inset.bottom - shiftY) < 0.5
+          ? inset.bottom
+          : MathUtils.lerp(shiftY, inset.bottom, ease);
+      const aspect = (width + shiftX) / Math.max(height + shiftY, 1);
+      if (cam.aspect !== aspect || appliedX !== shiftX || appliedY !== shiftY) {
         cam.aspect = aspect;
-        appliedShift = shift;
-        // Render the canvas as the right-hand window of a wider view; both calls update the projection.
-        if (shift > 0) cam.setViewOffset(width + shift, height, shift, 0, width, height);
+        appliedX = shiftX;
+        appliedY = shiftY;
+        // Render the canvas as the top-right window of a larger view; both calls update the projection.
+        if (shiftX > 0 || shiftY > 0)
+          cam.setViewOffset(width + shiftX, height + shiftY, shiftX, shiftY, width, height);
         else cam.clearViewOffset();
       }
       if (awaitingPosition && valid[focus]) requested = BODIES[focus].id;
@@ -474,6 +514,8 @@
         const target = focus >= 0 ? resolveAnchor(flight.toDistance, anchor) : ORIGIN;
         center.lerpVectors(flight.fromCenter, target, eased);
         flightQuat.slerpQuaternions(flight.fromDirection, flight.toDirection, eased);
+        updateFrameGoal();
+        frame.slerpQuaternions(frameStart, frameGoal, eased);
         direction.copy(UP).applyQuaternion(flightQuat);
         const distance = Math.exp(
           flightLogDistance(flight.fromDistance, flight.toDistance, flight.separation, eased)
@@ -482,7 +524,7 @@
         if (dt > 0) {
           const previousTheta = tracked.theta;
           const previousPhi = tracked.phi;
-          tracked.setFromVector3(scratch.copy(cam.position).sub(center));
+          tracked.setFromVector3(toLocal(scratch.copy(cam.position).sub(center)));
           const log = Math.log(Math.max(tracked.radius - surfaceRadius(), 1e-9));
           const turn = tracked.theta - previousTheta;
           flightVelocity.azimuth = Math.atan2(Math.sin(turn), Math.cos(turn)) / dt;
@@ -510,7 +552,9 @@
         pan.lerp(panGoal, zoom);
         spherical.radius = distanceFromLog(logAltitude);
         center.copy(resolveAnchor(spherical.radius, anchor)).add(pan);
-        cam.position.setFromSpherical(spherical).add(center);
+        updateFrameGoal();
+        frame.slerp(frameGoal, 1 - Math.exp(-dt * 3));
+        cam.position.copy(toWorld(scratch.setFromSpherical(spherical))).add(center);
       }
       lastAnchor.copy(focus >= 0 && valid[focus] ? positions[focus] : ORIGIN);
 
@@ -523,7 +567,7 @@
         if (scratch.lengthSq() < limit * limit)
           cam.position.copy(positions[i]).addScaledVector(scratch.normalize(), limit);
       }
-      cam.up.copy(UP);
+      cam.up.copy(UP).applyQuaternion(frame);
       cam.lookAt(center);
       hooks.viewDistance = cam.position.distanceTo(center);
       cam.updateMatrixWorld();

@@ -25,15 +25,28 @@ export const LABEL_HEIGHT = 22;
 export const hooks: {
   hovered: number;
   viewDistance: number;
-  /** Current horizontal view offset in pixels; the optical center sits at (width - viewShift) / 2. */
-  viewShift: number;
   afterFrame: (() => void) | null;
 } = {
   hovered: -1,
   viewDistance: 1,
-  viewShift: 0,
   afterFrame: null
 };
+
+const _lens = { focal: 1, x: 0, y: 0 };
+
+/**
+ * Focal length and optical center in canvas pixels. The camera renders the
+ * canvas as a window of a larger view when panels cover part of the screen
+ * (see CameraRig), so both come from the full view, not the canvas.
+ */
+export function lens(camera: PerspectiveCamera, width: number, height: number) {
+  const view = camera.view?.enabled ? camera.view : null;
+  const fullHeight = view ? view.fullHeight : height;
+  _lens.focal = fullHeight / 2 / Math.tan(MathUtils.degToRad(camera.fov) / 2);
+  _lens.x = view ? view.fullWidth / 2 - view.offsetX : width / 2;
+  _lens.y = view ? fullHeight / 2 - view.offsetY : height / 2;
+  return _lens;
+}
 
 /**
  * Bodies much farther away than what the camera is looking at are context,
@@ -88,7 +101,7 @@ export function updateOverlay(
 ): void {
   selected = selectedIndex;
   hovered = hoveredIndex;
-  const focal = height / 2 / Math.tan(MathUtils.degToRad(camera.fov) / 2);
+  const { focal, x: centerX, y: centerY } = lens(camera, width, height);
   const context = hooks.viewDistance * CONTEXT_RANGE;
   for (let i = 0; i < BODY_COUNT; i++) {
     screen.depth[i] = 0;
@@ -99,8 +112,8 @@ export function updateOverlay(
     if (_view.z >= 0) continue;
     const depth = _view.length();
     screen.depth[i] = depth;
-    screen.x[i] = (width - hooks.viewShift) / 2 + (focal * _view.x) / -_view.z;
-    screen.y[i] = height / 2 - (focal * _view.y) / -_view.z;
+    screen.x[i] = centerX + (focal * _view.x) / -_view.z;
+    screen.y[i] = centerY - (focal * _view.y) / -_view.z;
     const radius = RADII[i];
     screen.radius[i] =
       radius > 0

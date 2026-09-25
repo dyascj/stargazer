@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { lens } from './overlay';
   import { T, useTask, useThrelte } from '@threlte/core';
   import {
     AdditiveBlending,
@@ -6,7 +7,6 @@
     Color,
     DoubleSide,
     FrontSide,
-    MathUtils,
     PerspectiveCamera,
     Quaternion,
     ShaderMaterial,
@@ -161,7 +161,7 @@
       const position = positions[index];
       const cam = camera.current as PerspectiveCamera;
       const distance = cam.position.distanceTo(position);
-      const focal = size.current.height / 2 / Math.tan(MathUtils.degToRad(cam.fov) / 2);
+      const { focal } = lens(cam, size.current.width, size.current.height);
       const pixels = (focal * extent) / distance;
       group.visible = pixels > 0.5;
       if (!group.visible) return;
