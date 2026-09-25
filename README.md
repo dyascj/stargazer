@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5174. The landing page uses a lightweight canvas illustration; the 3D explorer loads on `/app`.
+Open http://localhost:5174. The landing page is prerendered and loads a small three.js hero after first paint; the 3D explorer loads on `/app`.
 
 ```sh
 npm run check
@@ -72,7 +72,7 @@ Tests include 30 independent Horizons reference vectors at three epochs, Vallado
 - `src/lib/stores`: simulation, selection, and subscriber-managed data feeds.
 - `src/lib/components/scene`: 3D rendering and camera behavior.
 - `src/lib/components/layout`: search, controls, destination information, and comparisons.
-- `src/lib/components/landing`: the lightweight interactive landing illustration.
+- `src/lib/components/landing`: the landing page chapters, motion primitives and its self-contained three.js scenes.
 - `src/routes/api`: validated upstream data proxies.
 - `scripts`: local data refresh and regression tests.
 
@@ -92,4 +92,4 @@ Stargazer is independent of NASA, ESA, JAXA, and SpaceX.
 
 Project code is available under the [MIT license](LICENSE). Bundled third-party assets retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
 
-Typography uses Inter (SIL OFL 1.1). Third-party agency logos are not bundled.
+Typography uses Inter (SIL OFL 1.1). Agency logos in `static/logos` are trademarks of their owners, used only for source attribution; see [Third-party notices](THIRD_PARTY_NOTICES.md).
