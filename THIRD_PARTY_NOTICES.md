@@ -27,16 +27,26 @@ The files below are in `static/textures/`. Source names refer to the library's `
 
 The scene applies illustrative lighting, atmosphere, and display scaling. Retain the source credit, license link, and modification information when redistributing these textures.
 
-## Station illustration
-
-`static/mir-wireframe.svg` includes source metadata crediting **molumen**, [Openclipart item 176068](https://openclipart.org/detail/176068/Clipart-by-molumen), and a [public-domain dedication](https://creativecommons.org/licenses/publicdomain/). The original attribution metadata is retained. The site scales, tints, and fades the illustration with CSS.
-
 ## Fonts
 
 **Inter**: Copyright 2016 The Inter Project Authors. Distributed through the `@fontsource-variable/inter` package under the SIL Open Font License 1.1. A license copy is included in [OFL-inter.txt](static/fonts/OFL-inter.txt).
 
+## Data source logos
+
+The landing page shows these logos, rendered monochrome, in its "Data from" strip. They are trademarks of their respective owners and are used only to attribute data sources. No affiliation, partnership or endorsement is implied, and no rights to the marks are granted. They are not covered by the project's MIT license.
+
+| Repository file                   | Mark                                    | Owner                                         |
+| --------------------------------- | --------------------------------------- | --------------------------------------------- |
+| `static/logos/nasa-worm-logo.svg` | NASA logotype ("worm")                  | National Aeronautics and Space Administration |
+| `static/logos/jpl-logo.svg`       | JPL logo                                | Jet Propulsion Laboratory, Caltech            |
+| `static/logos/esa-logo.svg`       | ESA logo                                | European Space Agency                         |
+| `static/logos/jaxa-logo.svg`      | JAXA logo                               | Japan Aerospace Exploration Agency            |
+| `static/logos/spacex-logo.svg`    | SpaceX logo, shown as a launch provider | Space Exploration Technologies Corp.          |
+
+CelesTrak and The Space Devs are set as plain type, not logo files. SpaceX launch data reaches Stargazer through The Space Devs Launch Library 2.
+
 ## Names and data sources
 
-NASA, JPL, ESA, JAXA, SpaceX, and other organization names identify missions and data sources. No affiliation or endorsement is implied, and no rights to their trademarks are granted. Agency logo files are not bundled.
+NASA, JPL, ESA, JAXA, SpaceX, and other organization names identify missions and data sources. No affiliation or endorsement is implied, and no rights to their trademarks are granted.
 
 Orbital reference data and source links are documented in the [README](README.md#sources-and-credits). Software dependencies retain the licenses distributed with their packages.
