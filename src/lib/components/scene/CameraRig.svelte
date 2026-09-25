@@ -5,16 +5,11 @@
   import { onMount } from 'svelte';
   import { AU_TO_SCENE } from '$lib/scene-config';
   import { isPlanetBody } from '$lib/registry/types';
-  import {
-    overviewDistance,
-    resolveOverviewDistance,
-    selection,
-    SOLAR_SYSTEM_VIEW
-  } from '$stores/selection';
+  import { overviewDistance, selection, SOLAR_SYSTEM_VIEW } from '$stores/selection';
   import { cameraCommand, selectBody } from '$stores/ui';
   import { hoveredBody } from '$stores/sceneHover';
   import { reducedMotion } from '$stores/reducedMotion';
-  import { introComplete, sceneReady } from '$stores/scene';
+  import { introComplete, sceneReady, viewInset } from '$stores/scene';
   import { simTime } from '$stores/simTime';
   import { framingDistance, minimumDistance } from '$utils/bodyMetrics';
   import {
@@ -50,6 +45,7 @@
   const cam = new PerspectiveCamera(FOV, 1, 1e-6, 1e12);
 
   let focus = -1;
+  let appliedShift = 0;
   let spherical = new Spherical(1, 1, 0);
   let azimuthGoal = 0;
   let polarGoal = 1;
@@ -127,11 +123,11 @@
     focus = id === SOLAR_SYSTEM_VIEW ? -1 : indexOf(id);
     const body = focus >= 0 ? BODIES[focus] : null;
     const { width, height } = size.current;
-    const aspect = width / Math.max(height, 1);
+    const aspect = (width + get(viewInset)) / Math.max(height, 1);
     const date = get(simTime);
     const toDistance = body
       ? framingDistance(body, date, MathUtils.degToRad(FOV), aspect)
-      : resolveOverviewDistance(get(overviewDistance)) * Math.max(1, 1.4 / aspect);
+      : get(overviewDistance) * Math.max(1, 1.4 / aspect);
     const target = resolveAnchor(toDistance, destination);
     const parent = focus >= 0 ? parentOf(focus) : -1;
     const ringed = body && isPlanetBody(body) && body.metadata.hasRings && body.metadata.poleVec;
@@ -440,9 +436,19 @@
     (delta) => {
       const dt = Math.min(delta, 0.1);
       const { width, height } = size.current;
-      if (cam.aspect !== width / height) {
-        cam.aspect = width / Math.max(height, 1);
-        cam.updateProjectionMatrix();
+      const inset = $viewInset;
+      hooks.viewShift = $reducedMotion
+        ? inset
+        : MathUtils.lerp(hooks.viewShift, inset, 1 - Math.exp(-dt * 7));
+      if (Math.abs(inset - hooks.viewShift) < 0.5) hooks.viewShift = inset;
+      const shift = hooks.viewShift;
+      const aspect = (width + shift) / Math.max(height, 1);
+      if (cam.aspect !== aspect || appliedShift !== shift) {
+        cam.aspect = aspect;
+        appliedShift = shift;
+        // Render the canvas as the right-hand window of a wider view; both calls update the projection.
+        if (shift > 0) cam.setViewOffset(width + shift, height, shift, 0, width, height);
+        else cam.clearViewOffset();
       }
       if (awaitingPosition && valid[focus]) requested = BODIES[focus].id;
       if (requested !== null && introStarted < 0) {
