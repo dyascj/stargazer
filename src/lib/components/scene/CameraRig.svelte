@@ -8,17 +8,12 @@
   import { overviewDistance, selection, SOLAR_SYSTEM_VIEW } from '$stores/selection';
   import { cameraCommand, selectBody } from '$stores/ui';
   import { hoveredBody } from '$stores/sceneHover';
-  import { reducedMotion } from '$stores/reducedMotion';
+  import { prefersReducedMotion } from 'svelte/motion';
   import { introComplete, sceneReady, viewInset } from '$stores/scene';
   import { simTime } from '$stores/simTime';
   import { framingDistance, minimumDistance } from '$utils/bodyMetrics';
-  import {
-    easeInOutCubic,
-    easeOutCubic,
-    flightDuration,
-    flightLogDistance,
-    framingDirection
-  } from '$utils/flight';
+  import { easeInOutCubic, easeOutCubic } from '$utils/easing';
+  import { flightDuration, flightLogDistance, framingDirection } from '$utils/flight';
   import { pickBody } from '$utils/screenSpace';
   import { BODIES, BODY_COUNT, RADII, indexOf, parentOf, positions, valid } from './bodyState';
   import { hooks, lens, screen } from './overlay';
@@ -94,6 +89,9 @@
   let awaitingPosition = false;
   let introStarted = -1;
   const INTRO_MS = 2600;
+  // Where the intro flight ends, held while the first view's textures load.
+  const fromTarget = new Vector3();
+  let fromTargetDistance = 0;
   // Camera motion during a flight, handed to the damping when the user interrupts.
   const tracked = new Spherical();
   let trackedLog = 0;
@@ -176,7 +174,7 @@
     azimuthVelocity = polarVelocity = 0;
     const fromDistance = cam.position.distanceTo(center);
     const separation = center.distanceTo(target);
-    if (instant || !placed || get(reducedMotion)) {
+    if (instant || !placed || prefersReducedMotion.current) {
       flight = null;
       pan.set(0, 0, 0);
       updateFrameGoal();
@@ -187,7 +185,7 @@
       setDistance(toDistance);
       center.copy(target);
       cam.position.copy(target).addScaledVector(direction, toDistance);
-      if (!placed && !get(reducedMotion)) {
+      if (!placed && !prefersReducedMotion.current) {
         // Hold a wider, rotated framing in the dark until the view is ready.
         introStarted = performance.now();
         spherical.theta -= 0.55;
@@ -202,9 +200,6 @@
     }
     startFlight(fromDistance, toDistance, separation, false);
   }
-
-  const fromTarget = new Vector3();
-  let fromTargetDistance = 0;
 
   function startFlight(
     fromDistance: number,
@@ -441,6 +436,9 @@
       element.removeEventListener('contextmenu', menu);
       window.removeEventListener('keydown', key);
       setHover(-1);
+      // The next visit to the explorer plays its own intro.
+      sceneReady.set(false);
+      introComplete.set(false);
     };
   });
 
@@ -471,7 +469,7 @@
       const dt = Math.min(delta, 0.1);
       const { width, height } = size.current;
       const inset = $viewInset;
-      const ease = $reducedMotion ? 1 : 1 - Math.exp(-dt * 7);
+      const ease = prefersReducedMotion.current ? 1 : 1 - Math.exp(-dt * 7);
       shiftX =
         Math.abs(inset.right - shiftX) < 0.5
           ? inset.right

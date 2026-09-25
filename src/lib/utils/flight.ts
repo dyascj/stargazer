@@ -47,14 +47,6 @@ export function framingDirection(
   return out.lengthSq() < 1e-12 ? out.set(0, 1, 0) : out.normalize();
 }
 
-export function easeOutCubic(t: number): number {
-  return 1 - (1 - t) ** 3;
-}
-
-export function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-}
-
 /**
  * Log-distance at eased flight progress `t`. Long hops pull back mid-flight
  * far enough to see both endpoints, then settle in, instead of skimming past

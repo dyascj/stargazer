@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { lens } from './overlay';
   import { T, useTask, useThrelte } from '@threlte/core';
   import {
     AdditiveBlending,
@@ -11,6 +10,7 @@
   } from 'three';
   import { SUN_RADIUS } from '$lib/scene-config';
   import { glowFragment, glowVertex, sunFragment, sunVertex } from './shaders';
+  import { lens } from './overlay';
   import { UNIT_SPHERE } from './textures';
 
   /**

@@ -1,5 +1,4 @@
-import { get } from 'svelte/store';
-import { reducedMotion } from '$stores/reducedMotion';
+import { prefersReducedMotion } from 'svelte/motion';
 
 /*
  * Card-to-panel morph. The source (a search result) records its rect just before it
@@ -16,7 +15,7 @@ export function morphFromOrigin(panel: HTMLElement): void {
   // An origin nobody claimed promptly (the phone sheet ignores it) must not replay later.
   const from = origin && performance.now() - origin.at < 500 ? origin.rect : null;
   origin = null;
-  if (!from || get(reducedMotion)) return;
+  if (!from || prefersReducedMotion.current) return;
   const to = panel.getBoundingClientRect();
   const style = getComputedStyle(panel);
   const easing = style.getPropertyValue('--ease-morph').trim() || 'ease-out';

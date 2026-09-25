@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { lens } from './overlay';
   import { T, useTask, useThrelte } from '@threlte/core';
   import {
     AdditiveBlending,
@@ -16,7 +15,6 @@
     type Texture
   } from 'three';
   import type { Snippet } from 'svelte';
-  import { get } from 'svelte/store';
   import { KM_TO_SCENE } from '$lib/scene-config';
   import { getById } from '$lib/registry/registry';
   import { isPlanetBody, type PlanetBodyMetadata, type TrackedObject } from '$lib/registry/types';
@@ -26,6 +24,7 @@
   import { poleQuaternion } from '$utils/pole';
   import { iauRotationRad, tidalLockQuaternion } from '$utils/rotation';
   import { indexOf, positions, valid } from './bodyState';
+  import { lens } from './overlay';
   import {
     atmosphereFragment,
     atmosphereVertex,
@@ -52,10 +51,9 @@
   const meta: PlanetBodyMetadata = body.metadata;
   const index = indexOf(body.id);
   const parentIndex = indexOf(body.parent);
+  const parentBody = getById(body.parent);
   const parentPole =
-    getById(body.parent) && isPlanetBody(getById(body.parent)!)
-      ? (getById(body.parent)!.metadata as PlanetBodyMetadata).poleVec
-      : undefined;
+    parentBody && isPlanetBody(parentBody) ? parentBody.metadata.poleVec : undefined;
   const isEarth = body.id === 'earth';
   const SUN_INTENSITY = 1;
   const ringNormal = new Vector3();
@@ -168,10 +166,10 @@
       if (!requested && pixels > 1.5) requestTextures();
       group.position.copy(position);
 
-      const date = get(simTime);
+      const date = $simTime;
       const sunDir = surface.uniforms.uSunDir.value as Vector3;
       sunDir.copy(position).negate().normalize();
-      surface.uniforms.uAmbient.value = get(brightLighting) ? 0.12 : 0.004;
+      surface.uniforms.uAmbient.value = $brightLighting ? 0.12 : 0.004;
       surface.uniforms.uAltitude.value = distance / meta.radius - 1;
 
       if (meta.rotationModel === 'tidal-lock' && parentIndex >= 0) {
