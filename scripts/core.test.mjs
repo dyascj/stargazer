@@ -505,11 +505,11 @@ test('Fly-to paths pull back on long hops and frame lit, open-ringed worlds', as
   const pole = new Vector3(0, 0.88, -0.47).normalize();
   const ringed = flight.framingDirection(planet, null, true, pole, new Vector3());
   assert.ok(Math.abs(ringed.dot(pole)) > 0.5);
-  // Low orbit looks along the horizon toward the Sun, slightly from above.
+  // Low orbit looks along the horizon, side-lit, slightly from above.
   const earth = new Vector3(AU_TO_SCENE, 0, 0);
   const station = earth.clone().add(new Vector3(0, 1.07, 0));
   const horizon = flight.framingDirection(station, earth, false, null, new Vector3(), 1);
   const up = station.clone().sub(earth).normalize();
   assert.ok(horizon.dot(up) > 0.15 && horizon.dot(up) < 0.35);
-  assert.ok(horizon.dot(earth.clone().negate().normalize()) < -0.9);
+  assert.ok(Math.abs(horizon.dot(earth.clone().negate().normalize())) < 0.1);
 });

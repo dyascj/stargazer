@@ -1,7 +1,9 @@
 <script lang="ts">
   import { T, useTask, useThrelte } from '@threlte/core';
   import {
-    AdditiveBlending,
+    CustomBlending,
+    OneFactor,
+    OneMinusSrcAlphaFactor,
     BackSide,
     Color,
     DoubleSide,
@@ -95,7 +97,9 @@
         },
         transparent: true,
         depthWrite: false,
-        blending: AdditiveBlending
+        blending: CustomBlending,
+        blendSrc: OneFactor,
+        blendDst: OneMinusSrcAlphaFactor
       })
     : null;
 
