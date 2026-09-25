@@ -123,10 +123,7 @@ export function updateOverlay(
     const resolved =
       screen.radius[i] >= 2 && screen.radius[i] < height * (i === selected ? 0.12 : 0.05);
     const onScreen =
-      screen.x[i] > -40 &&
-      screen.x[i] < width + 40 &&
-      screen.y[i] > -20 &&
-      screen.y[i] < height + 20;
+      screen.x[i] > 0 && screen.x[i] < width && screen.y[i] > 0 && screen.y[i] < height;
     const labelled =
       onScreen &&
       (screen.markerAlpha[i] > 0.35 || resolved) &&
@@ -136,8 +133,21 @@ export function updateOverlay(
           !insideDisc(screen, screen.x[i] + labelWidth[i], screen.y[i], 40, i, 12)));
     if (labelled) {
       order.push(i);
-      labelX[i] = screen.x[i] + Math.max(markerSize[i] / 2, screen.radius[i]) + 8;
+      const clearance = Math.max(markerSize[i] / 2, screen.radius[i]) + 8;
+      labelX[i] = screen.x[i] + clearance;
       labelY[i] = screen.y[i];
+      // Near the right edge a label flips to the left; if neither side fits, it sits below.
+      if (labelX[i] + labelWidth[i] > width - 8) {
+        labelX[i] = screen.x[i] - clearance - labelWidth[i];
+        if (labelX[i] < 8) {
+          labelX[i] = MathUtils.clamp(
+            screen.x[i] - labelWidth[i] / 2,
+            8,
+            width - 8 - labelWidth[i]
+          );
+          labelY[i] = screen.y[i] + clearance + LABEL_HEIGHT / 2;
+        }
+      }
       top[i] = labelY[i] - LABEL_HEIGHT / 2;
     }
   }

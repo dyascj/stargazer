@@ -37,6 +37,10 @@
   };
   const ACCENT = new Color('#00b2ff');
   const baseColors = BODIES.map((body) => new Color(TINT[body.type] ?? '#d4d4d4'));
+  // Worlds drawn as textured spheres read as selected by their label; the ring is for small things.
+  const ringLimit = Float64Array.from(BODIES, (body) =>
+    body.rendererKind === 'planet-body' ? 10 : 64
+  );
 
   const relative = new Float32Array(BODY_COUNT * 3);
   const colors = new Float32Array(BODY_COUNT * 3);
@@ -149,7 +153,7 @@
         alphas[i] = screen.markerAlpha[i] * fade * (i === hooks.hovered ? 1.15 : 1);
         sizes[i] = markerSize[i];
         rings[i] =
-          i === selectedIndex && screen.depth[i] > 0 && screen.radius[i] < 64
+          i === selectedIndex && screen.depth[i] > 0 && screen.radius[i] < ringLimit[i]
             ? (Math.max(screen.radius[i], markerSize[i] / 2) + 6) * spring
             : 0;
       }
