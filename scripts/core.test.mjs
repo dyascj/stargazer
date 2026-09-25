@@ -321,3 +321,25 @@ test('Launch schedule fails cleanly, normalizes records, and caches successful r
   assert.equal(requests, 1);
   assert.match(headers['cache-control'], /s-maxage=900/);
 });
+
+test('Explorer search ranks names, aliases, catalog numbers, and near-miss typos', async () => {
+  const { searchBodies, SHORTCUTS, SHORTCUT_GROUPS } = await load('components/layout/search');
+  const first = (query) => searchBodies(query)[0]?.id;
+  assert.equal(first('earth'), 'earth');
+  assert.equal(first('sat'), 'saturn');
+  assert.equal(first('hubble'), 'hubble');
+  assert.equal(first('webb'), 'jwst');
+  assert.equal(first('67p'), 'comet-67p');
+  assert.equal(first('25544'), 'iss');
+  assert.equal(first('psp'), 'parker-solar-probe');
+  assert.equal(first('satrun'), 'saturn');
+  assert.equal(first('jupitr'), 'jupiter');
+  assert.deepEqual(searchBodies('   '), []);
+  assert.deepEqual(searchBodies('zzzzqqq'), []);
+  assert.equal(
+    SHORTCUTS.length,
+    SHORTCUT_GROUPS.reduce((sum, group) => sum + group.bodies.length, 0)
+  );
+  for (const group of SHORTCUT_GROUPS)
+    assert.equal(SHORTCUTS[group.start], group.bodies[0], `${group.label} offset`);
+});
