@@ -42,7 +42,7 @@ export interface BaseObjectMetadata {
 export interface PlanetBodyMetadata extends BaseObjectMetadata {
   /** Body radius in scene units (1 unit = Earth radius). */
   radius: number;
-  /** Body radius in km — for the info panel display. */
+  /** Body radius in km, for the info panel. */
   radiusKm: number;
   /** Equirectangular albedo texture URL. Takes precedence over solidColor. */
   textureUrl?: string;
@@ -56,33 +56,27 @@ export interface PlanetBodyMetadata extends BaseObjectMetadata {
   poleVec?: readonly [number, number, number];
   /**
    * Rotation model for the body's daily spin:
-   *  - 'gmst'       — Earth's Greenwich Mean Sidereal Time (Earth only).
-   *  - 'tidal-lock' — always faces parent (tidally locked moons).
-   *  - 'iau-w'      — IAU 2018 W-formula; requires rotationW0Deg and rotationRateDegPerDay.
-   *  - 'none'       — static (default).
+   *  - 'gmst': Earth's Greenwich Mean Sidereal Time (Earth only).
+   *  - 'tidal-lock': always faces the parent (synchronous moons).
+   *  - 'iau-w': IAU W formula; requires rotationW0Deg and rotationRateDegPerDay.
+   *  - 'none': static (default).
    */
   rotationModel?: 'gmst' | 'tidal-lock' | 'iau-w' | 'none';
   /** IAU 2018 prime-meridian angle at J2000 (degrees). Required for 'iau-w'. */
   rotationW0Deg?: number;
   /** IAU 2018 sidereal rotation rate (degrees/day). Negative = retrograde. Required for 'iau-w'. */
   rotationRateDegPerDay?: number;
-  /** Render a Fresnel atmosphere shell. Color defaults to Earth's blue. */
-  hasAtmosphere?: boolean;
-  /** RGB color for the atmosphere shell, [0..1] per channel. */
-  atmosphereColor?: readonly [number, number, number];
   /**
-   * Derive sun direction from the parent's world position instead of this body's own.
-   * Used by the Moon because the Earth-Moon distance is exaggerated in scene scale.
+   * Visible atmosphere: scattering color (linear RGB), the height (km) of the
+   * rendered shell above the surface, and a relative optical density.
    */
-  lightingFromParent?: boolean;
+  atmosphere?: { color: readonly [number, number, number]; heightKm: number; density: number };
   /** Length-of-day string for the info panel (e.g. "23h 56m 04s"). */
   dayLength?: string;
   /** Year length string for the info panel (e.g. "365.25 days"). */
   yearLength?: string;
-  /** Sidereal orbital period (days), used by the orbit ring renderer. */
+  /** Sidereal orbital period (days), used to draw the orbit. */
   orbitalPeriodDays?: number;
-  /** Orbit ellipse color (hex number, e.g. 0x6db8ff). */
-  orbitColor?: number;
   /** Optional planetary ring system rendered as a flat disc. */
   hasRings?: {
     innerRadius: number;
@@ -103,10 +97,6 @@ export interface SatelliteMarkerMetadata extends BaseObjectMetadata {
 }
 
 export interface PointMarkerMetadata extends BaseObjectMetadata {
-  /** Color of the point + label, hex string. */
-  color: string;
-  /** Dot size in screen pixels (constant regardless of distance). Default ~6 px. */
-  pixelSize?: number;
   /** Sub-category for grouping in the LeftPanel tree. */
   satelliteCategory?: SatelliteCategory;
 }
@@ -155,13 +145,9 @@ export interface TrackedObject {
   /** Which renderer component draws this body. */
   rendererKind: RendererKind;
 
-  /** Camera distance after a fly-to (scene units). */
-  cameraDistance: number;
-
   /**
-   * Label visibility tier (1 = always, 5 = only when very close).
-   * Thresholds: 1=always, 2≤1000, 3≤100, 4≤10, 5≤1.5. Defaults to 5.
-   * Selected bodies are always labeled regardless of tier.
+   * Label priority, 1 (highest) to 5. When labels overlap, higher-priority
+   * labels win. Defaults to 5. The selected body is always labeled first.
    */
   labelTier?: number;
 

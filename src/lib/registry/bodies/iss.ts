@@ -1,28 +1,12 @@
-import { Vector3 } from 'three';
 import { iss } from '$stores/iss';
-import { latLonAltToVec3 } from '$utils/coords';
-import { earthLocalToInertialOffset } from '$utils/earth';
-import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
+import { ecfKmToInertialOffset } from '$utils/earth';
 import type { TrackedObject } from '../types';
 
 /**
- * International Space Station — live position polled from
- * wheretheiss.at at 1 Hz.
- *
- * Position pipeline:
- *   1. Read latest lat/lon/alt from the iss store. Return null if no
- *      data yet (cold start) — the renderer skips bodies that return
- *      null for the current frame.
- *   2. lat/lon/alt → local Earth-fixed Cartesian via latLonAltToVec3.
- *   3. earthLocalToInertialOffset → applies Earth's combined
- *      `R_x(-obliquity) · R_y(GMST)` transform, giving the body's
- *      inertial offset from Earth's center.
- *
- * The registry's parent walk then adds Earth's heliocentric position
- * to compose the world position.
+ * International Space Station: CelesTrak elements propagated with SGP4. The
+ * Earth-fixed position is rotated into the inertial scene frame; the registry
+ * parent walk adds Earth's heliocentric position.
  */
-
-const _localTmp = new Vector3();
 
 export const ISS: TrackedObject = {
   id: 'iss',
@@ -31,19 +15,9 @@ export const ISS: TrackedObject = {
   parent: 'earth',
   offsetFn: (date, target) => {
     const data = iss.at(date);
-    if (!data) return null;
-    const [x, y, z] = latLonAltToVec3(
-      data.latitude,
-      data.longitude,
-      data.altitudeKm,
-      EARTH_RADIUS,
-      EARTH_RADIUS_KM
-    );
-    _localTmp.set(x, y, z);
-    return earthLocalToInertialOffset(_localTmp, target, date);
+    return data ? ecfKmToInertialOffset(data.ecfKm, target, date) : null;
   },
   rendererKind: 'satellite-marker',
-  cameraDistance: 2,
   labelTier: 5,
   metadata: {
     subtitle: 'ISS · NORAD 25544',
@@ -53,7 +27,7 @@ export const ISS: TrackedObject = {
     satelliteCategory: 'space-station',
     tracking: { mode: 'TLE prediction', source: 'CelesTrak orbital elements + SGP4' },
     description:
-      "The International Space Station — humanity's largest structure in orbit. A collaboration between NASA, Roscosmos, JAXA, ESA, and CSA. Continuously inhabited since November 2, 2000 — the longest unbroken human presence in space.",
+      "The International Space Station is humanity's largest structure in orbit. A collaboration between NASA, Roscosmos, JAXA, ESA, and CSA. Continuously inhabited since November 2, 2000: the longest unbroken human presence in space.",
     facts: [
       { label: 'Orbital altitude', value: '~408 km' },
       { label: 'Speed', value: '~27,600 km/h' },

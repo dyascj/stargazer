@@ -13,6 +13,8 @@ export interface SatelliteState {
   latitude: number;
   longitude: number;
   altitudeKm: number;
+  /** Earth-fixed position (km): x toward 0° longitude, z toward the north pole. */
+  ecfKm: { x: number; y: number; z: number };
   velocityKmh: number;
   visibility: 'daylight' | 'eclipsed' | 'unknown';
   footprintKm: number;
@@ -104,7 +106,8 @@ export function createTleBackedStore({
         typeof result.velocity === 'boolean'
       )
         return null;
-      const geo = satellite.eciToGeodetic(result.position, satellite.gstime(date));
+      const gmst = satellite.gstime(date);
+      const geo = satellite.eciToGeodetic(result.position, gmst);
       const latitude = satellite.degreesLat(geo.latitude);
       const longitude = satellite.degreesLong(geo.longitude);
       const altitudeKm = geo.height;
@@ -119,6 +122,7 @@ export function createTleBackedStore({
         latitude,
         longitude,
         altitudeKm,
+        ecfKm: satellite.eciToEcf(result.position, gmst),
         velocityKmh,
         visibility:
           getSunElevationAt(latitude, longitude, date) > (-horizon * 180) / Math.PI

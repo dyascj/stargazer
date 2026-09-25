@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import { AU_TO_SCENE } from '$lib/scene-config';
 import { computeMoonOffset, type MoonOrbitalElements } from '$utils/moons';
 import { planetSurfaceToInertialOffset } from '$utils/planetSurface';
@@ -20,8 +19,6 @@ function spacecraftPointMarker(opts: {
   type: 'spacecraft' | 'lander';
   subtitle?: string;
   externalId?: string;
-  color: string;
-  cameraDistance: number;
   labelTier?: number;
   description?: string;
   facts?: { label: string; value: string }[];
@@ -36,7 +33,6 @@ function spacecraftPointMarker(opts: {
     parent: opts.parent,
     offsetFn: opts.offsetFn,
     rendererKind: 'point-marker',
-    cameraDistance: opts.cameraDistance,
     labelTier: opts.labelTier ?? 4,
     metadata: {
       subtitle: opts.subtitle,
@@ -44,9 +40,7 @@ function spacecraftPointMarker(opts: {
       description: opts.description,
       facts: opts.facts,
       sources: opts.sources,
-      tracking: opts.tracking,
-      color: opts.color,
-      pixelSize: 11
+      tracking: opts.tracking
     }
   };
 }
@@ -56,15 +50,7 @@ function staticOffset(scenePos: [number, number, number]): TrackedObject['offset
   return (_date, target) => target.set(scenePos[0], scenePos[1], scenePos[2]);
 }
 
-/**
- * Convert HORIZONS heliocentric ECLIPTIC J2000 Cartesian (in AU) to
- * scene-frame Cartesian (100 scene units per AU). Used for the
- * static spacecraft snapshots fetched from HORIZONS.
- *
- * helio.ts maps ecliptic axes (x, y, z) → scene axes (x, z, -y), with
- * AU_TO_SCENE = 100 (1 AU = 100 scene units). This helper applies both
- * transformations so each entry can paste the raw HORIZONS X/Y/Z values.
- */
+/** HORIZONS heliocentric ecliptic J2000 AU to scene coordinates, so records paste raw X/Y/Z. */
 function helioAuToScene(
   ecl_x_au: number,
   ecl_y_au: number,
@@ -95,25 +81,16 @@ function landerOffset(
 }
 
 /**
- * Earth-Sun L2 offset from Earth's center: ~1.5 million km in the
- * anti-Sun direction. Computed each frame from Earth's current
- * heliocentric position.
+ * Sun–Earth L2, about 1.5 million km beyond Earth on the Sun–Earth line:
+ * r · (mu / 3)^(1/3), with mu the Earth–Moon to Sun mass ratio.
  */
-// Illustrative local offset: L2 would sit at Earth's enlarged surface at AU scale.
-const L2_DISTANCE_SCENE = 8;
+const L2_FRACTION = Math.cbrt(3.0404e-6 / 3);
 function l2Offset(): TrackedObject['offsetFn'] {
   return (date, target) => {
-    const earth = getById('earth');
-    if (!earth) return null;
-    const earthPos = earth.offsetFn(date, _l2Tmp);
-    if (!earthPos) return null;
-    const len = earthPos.length();
-    if (len === 0) return null;
-    const k = L2_DISTANCE_SCENE / len;
-    return target.set(earthPos.x * k, earthPos.y * k, earthPos.z * k);
+    const earth = getById('earth')?.offsetFn(date, target);
+    return earth ? earth.multiplyScalar(L2_FRACTION) : null;
   };
 }
-const _l2Tmp = new Vector3();
 
 // ── Mars orbiters (real Keplerian elements from JPL HORIZONS) ───────────
 
@@ -124,8 +101,6 @@ const MRO = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · In orbit since 2006',
   externalId: '-74',
-  color: '#E8441E',
-  cameraDistance: 1.0,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -134,7 +109,7 @@ const MRO = spacecraftPointMarker({
   description:
     'MRO studies Mars from orbit with the most powerful camera ever sent to another planet. It has returned more data about Mars than all other orbital missions combined.',
   facts: [
-    { label: 'Launch Date', value: 'Aug 12, 2005' },
+    { label: 'Launch date', value: 'Aug 12, 2005' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'High-resolution imaging and climate monitoring of Mars' }
@@ -146,7 +121,6 @@ const MRO = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 3649.635498229657,
     e: 0.006639282082142034,
     i_deg: 71.43302599356795,
@@ -165,8 +139,6 @@ const MAVEN = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · Mars atmosphere mission, 2013–2026',
   externalId: '-202',
-  color: '#8A8A85',
-  cameraDistance: 1.2,
   tracking: {
     epoch: '2026-03-01T00:00:00 TDB',
     mode: 'Historical orbit',
@@ -175,7 +147,7 @@ const MAVEN = spacecraftPointMarker({
   description:
     'MAVEN revealed how Mars lost much of its atmosphere to space and relayed rover communications. Contact was lost on December 6, 2025; NASA announced the mission’s end on June 3, 2026. The archived orbit shown here is not a current position.',
   facts: [
-    { label: 'Launch Date', value: 'Nov 18, 2013' },
+    { label: 'Launch date', value: 'Nov 18, 2013' },
     { label: 'Agency', value: 'NASA/GSFC' },
     { label: 'Status', value: 'Mission ended June 3, 2026' },
     { label: 'Objective', value: 'Study Mars upper atmosphere and atmospheric loss' }
@@ -187,7 +159,6 @@ const MAVEN = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 5737.515,
     e: 0.370304,
     i_deg: 71.55677,
@@ -206,8 +177,6 @@ const MARS_EXPRESS = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'ESA · In orbit since 2003',
   externalId: '-41',
-  color: '#787878',
-  cameraDistance: 1.4,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -216,7 +185,7 @@ const MARS_EXPRESS = spacecraftPointMarker({
   description:
     "Mars Express is ESA's first planetary mission, studying the Martian surface, subsurface, and atmosphere. Its MARSIS radar confirmed the presence of subsurface water ice deposits.",
   facts: [
-    { label: 'Launch Date', value: 'Jun 2, 2003' },
+    { label: 'Launch date', value: 'Jun 2, 2003' },
     { label: 'Agency', value: 'ESA' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'Global imaging and subsurface radar of Mars' }
@@ -228,7 +197,6 @@ const MARS_EXPRESS = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 8816.782573211754,
     e: 0.5683176117617985,
     i_deg: 113.7442835581175,
@@ -247,8 +215,6 @@ const TGO = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'ESA / Roscosmos · Trace Gas Orbiter',
   externalId: '-143',
-  color: '#787878',
-  cameraDistance: 1.0,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -257,7 +223,7 @@ const TGO = spacecraftPointMarker({
   description:
     'The Trace Gas Orbiter searches for methane and other trace gases in the Martian atmosphere that could indicate biological or geological activity. It also serves as a data relay for surface missions.',
   facts: [
-    { label: 'Launch Date', value: 'Mar 14, 2016' },
+    { label: 'Launch date', value: 'Mar 14, 2016' },
     { label: 'Agency', value: 'ESA / Roscosmos' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Detect trace gases and relay surface data' }
@@ -269,7 +235,6 @@ const TGO = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    parentId: 'mars',
     a_km: 3777.684998323223,
     e: 0.008440483786485776,
     i_deg: 100.9446259354991,
@@ -290,8 +255,6 @@ const CURIOSITY = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · MSL rover, Gale crater, since 2012',
   externalId: '-76',
-  color: '#E8441E',
-  cameraDistance: 0.6,
   labelTier: 5,
   tracking: {
     mode: 'Landing site',
@@ -300,7 +263,7 @@ const CURIOSITY = spacecraftPointMarker({
   description:
     'Curiosity is a car-sized rover exploring Gale crater on Mars. It confirmed that Mars once had conditions suitable for microbial life, including liquid water and key chemical ingredients.',
   facts: [
-    { label: 'Launch Date', value: 'Nov 26, 2011' },
+    { label: 'Launch date', value: 'Nov 26, 2011' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'Assess past habitability of Gale crater' }
@@ -316,8 +279,6 @@ const PERSEVERANCE = spacecraftPointMarker({
   parent: 'mars',
   subtitle: 'NASA · Mars 2020 rover, Jezero crater, since 2021',
   externalId: '-168',
-  color: '#CC6040',
-  cameraDistance: 0.6,
   labelTier: 5,
   tracking: {
     mode: 'Landing site',
@@ -326,7 +287,7 @@ const PERSEVERANCE = spacecraftPointMarker({
   description:
     'Perseverance searches for signs of ancient microbial life in Jezero crater, an ancient lake bed. It is collecting rock samples for future return to Earth and deployed the Ingenuity helicopter.',
   facts: [
-    { label: 'Launch Date', value: 'Jul 30, 2020' },
+    { label: 'Launch date', value: 'Jul 30, 2020' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Seek biosignatures and cache samples for return' }
@@ -346,8 +307,6 @@ const JUNO = spacecraftPointMarker({
   parent: 'jupiter',
   subtitle: 'NASA · Highly elliptical polar orbit since 2016',
   externalId: '-61',
-  color: '#A09A90',
-  cameraDistance: 30,
   tracking: {
     epoch: '2026-09-25T00:00:00.000 TDB',
     mode: 'Approximate orbit',
@@ -356,14 +315,13 @@ const JUNO = spacecraftPointMarker({
   description:
     "Juno orbits Jupiter in a highly elliptical polar orbit, studying the planet's interior structure, magnetic field, and atmosphere. It has revealed detailed views of Jupiter's polar cyclones and deep atmospheric dynamics.",
   facts: [
-    { label: 'Launch Date', value: 'Aug 5, 2011' },
+    { label: 'Launch date', value: 'Aug 5, 2011' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: "Study Jupiter's interior, magnetosphere, and atmosphere" }
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/juno/' }],
   offsetFn: orbiterOffset({
-    parentId: 'jupiter',
     a_km: 2947743.947650929,
     e: 0.9731156514920578,
     i_deg: 100.2845975364874,
@@ -384,14 +342,15 @@ const JWST = spacecraftPointMarker({
   parent: 'earth',
   subtitle: 'NASA / ESA / CSA · Earth-Sun L2 halo orbit, since 2022',
   externalId: '-170',
-  color: '#E8441E',
-  cameraDistance: 4,
   labelTier: 3,
-  tracking: { mode: 'Illustration', source: 'Approximate L2 direction; halo orbit not modeled' },
+  tracking: {
+    mode: 'Illustration',
+    source: 'Sun–Earth L2 point; the halo orbit around it is not modeled'
+  },
   description:
     'JWST is the largest and most powerful space telescope ever launched, observing the universe in infrared from the Earth-Sun L2 point. It studies the earliest galaxies, exoplanet atmospheres, and star formation.',
   facts: [
-    { label: 'Launch Date', value: 'Dec 25, 2021' },
+    { label: 'Launch date', value: 'Dec 25, 2021' },
     { label: 'Agency', value: 'NASA / ESA / CSA' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Infrared astronomy from first galaxies to exoplanets' },
@@ -413,8 +372,6 @@ const PARKER = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · Closest spacecraft to the Sun in history',
   externalId: '-96',
-  color: '#E8441E',
-  cameraDistance: 5,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -423,7 +380,7 @@ const PARKER = spacecraftPointMarker({
   description:
     'Parker Solar Probe flies closer to the Sun than any previous spacecraft, diving through the solar corona to study the solar wind and magnetic fields. It has broken speed records, becoming the fastest human-made object.',
   facts: [
-    { label: 'Launch Date', value: 'Aug 12, 2018' },
+    { label: 'Launch date', value: 'Aug 12, 2018' },
     { label: 'Agency', value: 'NASA/APL' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Study the solar corona and solar wind up close' }
@@ -443,8 +400,6 @@ const SOLAR_ORBITER = spacecraftPointMarker({
   parent: 'sun',
   subtitle: "ESA / NASA · Heliocentric, observing the Sun's poles",
   externalId: '-144',
-  color: '#E8441E',
-  cameraDistance: 5,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -453,7 +408,7 @@ const SOLAR_ORBITER = spacecraftPointMarker({
   description:
     "Solar Orbiter uses gravity assists from Venus to tilt its orbit and obtain the first direct images of the Sun's polar regions. It carries ten instruments studying the heliosphere and solar wind.",
   facts: [
-    { label: 'Launch Date', value: 'Feb 10, 2020' },
+    { label: 'Launch date', value: 'Feb 10, 2020' },
     { label: 'Agency', value: 'ESA / NASA' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: "Image the Sun's poles and study the heliosphere" }
@@ -474,8 +429,6 @@ const BEPI = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'ESA / JAXA · En route to Mercury orbit',
   externalId: '-121',
-  color: '#8A8A85',
-  cameraDistance: 5,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -484,7 +437,7 @@ const BEPI = spacecraftPointMarker({
   description:
     'BepiColombo is a joint ESA/JAXA mission carrying two orbiters to Mercury. It uses nine gravity assists (Earth, Venus, and Mercury flybys) to slow down enough to enter Mercury orbit in November 2026.',
   facts: [
-    { label: 'Launch Date', value: 'Oct 20, 2018' },
+    { label: 'Launch date', value: 'Oct 20, 2018' },
     { label: 'Agency', value: 'ESA / JAXA' },
     { label: 'Status', value: 'En route (Mercury orbit insertion Nov 2026)' },
     { label: 'Objective', value: "Study Mercury's surface, interior, and magnetosphere" }
@@ -507,8 +460,6 @@ const LUCY = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · En route to the Jupiter Trojans',
   externalId: '-49',
-  color: '#8A8A85',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -517,7 +468,7 @@ const LUCY = spacecraftPointMarker({
   description:
     "Lucy is the first mission to explore the Jupiter Trojan asteroids, primitive bodies trapped in Jupiter's orbit that are thought to be remnants of the early solar system. Its planned encounters include eleven asteroids over its twelve-year primary mission.",
   facts: [
-    { label: 'Launch Date', value: 'Oct 16, 2021' },
+    { label: 'Launch date', value: 'Oct 16, 2021' },
     { label: 'Agency', value: 'NASA/GSFC' },
     { label: 'Status', value: 'En route' },
     { label: 'Objective', value: 'Fly by Jupiter Trojan asteroids to study solar system origins' }
@@ -535,8 +486,6 @@ const PSYCHE = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · En route to the metal asteroid 16 Psyche',
   externalId: '-255',
-  color: '#787878',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -545,7 +494,7 @@ const PSYCHE = spacecraftPointMarker({
   description:
     'The Psyche mission is traveling to asteroid 16 Psyche, a metal-rich body that may be the exposed core of an early planetesimal. It will be the first mission to explore a world made largely of metal.',
   facts: [
-    { label: 'Launch Date', value: 'Oct 13, 2023' },
+    { label: 'Launch date', value: 'Oct 13, 2023' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'En route (arrival Aug 2029)' },
     { label: 'Objective', value: 'Study a metal asteroid to understand planetary cores' }
@@ -563,8 +512,6 @@ const JUICE = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'ESA · Jupiter Icy Moons Explorer, en route',
   externalId: '-28',
-  color: '#787878',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -573,7 +520,7 @@ const JUICE = spacecraftPointMarker({
   description:
     "JUICE (Jupiter Icy Moons Explorer) will study Jupiter's three large ocean-bearing moons: Ganymede, Callisto, and Europa. It will ultimately enter orbit around Ganymede, the first spacecraft to orbit a moon other than our own.",
   facts: [
-    { label: 'Launch Date', value: 'Apr 14, 2023' },
+    { label: 'Launch date', value: 'Apr 14, 2023' },
     { label: 'Agency', value: 'ESA' },
     { label: 'Status', value: 'En route (arrival Jul 2031)' },
     { label: 'Objective', value: "Characterize Jupiter's icy moons and their oceans" }
@@ -593,8 +540,6 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · En route to Jupiter system, arrival 2030',
   externalId: '-159',
-  color: '#A09A90',
-  cameraDistance: 8,
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
@@ -603,7 +548,7 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   description:
     "Europa Clipper will perform nearly 50 close flybys of Jupiter's moon Europa to investigate whether its subsurface ocean has conditions suitable for life. It is the largest spacecraft NASA has ever built for a planetary mission.",
   facts: [
-    { label: 'Launch Date', value: 'Oct 14, 2024' },
+    { label: 'Launch date', value: 'Oct 14, 2024' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'En route (arrival Apr 2030)' },
     { label: 'Objective', value: "Assess Europa's habitability and subsurface ocean" }
@@ -627,8 +572,6 @@ const VOYAGER_1 = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · Farthest human-made object, in interstellar space since 2012',
   externalId: '-31',
-  color: '#E8441E',
-  cameraDistance: 50,
   labelTier: 2,
   tracking: {
     mode: 'Snapshot',
@@ -638,7 +581,7 @@ const VOYAGER_1 = spacecraftPointMarker({
   description:
     'Voyager 1 is the farthest human-made object from Earth, now traveling through interstellar space beyond the heliopause. Launched in 1977, it flew by Jupiter and Saturn before heading out of the solar system.',
   facts: [
-    { label: 'Launch Date', value: 'Sep 5, 1977' },
+    { label: 'Launch date', value: 'Sep 5, 1977' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (interstellar space)' },
     { label: 'Objective', value: 'Fly by outer planets and explore interstellar space' }
@@ -654,8 +597,6 @@ const VOYAGER_2 = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · In interstellar space since 2018',
   externalId: '-32',
-  color: '#8A8A85',
-  cameraDistance: 50,
   labelTier: 2,
   tracking: {
     mode: 'Snapshot',
@@ -665,7 +606,7 @@ const VOYAGER_2 = spacecraftPointMarker({
   description:
     'Voyager 2 is the only spacecraft to have visited all four giant planets: Jupiter, Saturn, Uranus, and Neptune. It crossed the heliopause in 2018 and continues to return data from interstellar space.',
   facts: [
-    { label: 'Launch Date', value: 'Aug 20, 1977' },
+    { label: 'Launch date', value: 'Aug 20, 1977' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (interstellar space)' },
     { label: 'Objective', value: 'Grand tour of outer planets, now interstellar exploration' }
@@ -681,8 +622,6 @@ const NEW_HORIZONS = spacecraftPointMarker({
   parent: 'sun',
   subtitle: 'NASA · Past Pluto, into the Kuiper belt, since 2015',
   externalId: '-98',
-  color: '#A09A90',
-  cameraDistance: 30,
   labelTier: 3,
   tracking: {
     mode: 'Snapshot',
@@ -692,7 +631,7 @@ const NEW_HORIZONS = spacecraftPointMarker({
   description:
     'New Horizons performed the first flyby of Pluto in 2015, revealing a geologically active world with nitrogen glaciers and a thin atmosphere. It later flew by Kuiper Belt object Arrokoth, the most distant object ever visited.',
   facts: [
-    { label: 'Launch Date', value: 'Jan 19, 2006' },
+    { label: 'Launch date', value: 'Jan 19, 2006' },
     { label: 'Agency', value: 'NASA/APL' },
     { label: 'Status', value: 'Active (extended mission, Kuiper Belt)' },
     { label: 'Objective', value: 'Explore Pluto and Kuiper Belt objects' }

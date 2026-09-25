@@ -1,139 +1,91 @@
 <script lang="ts">
-  import { T, useTask } from '@threlte/core';
-  import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-  import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-  import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-  import { Vector3 } from 'three';
-  import { get } from 'svelte/store';
-  import { simTime } from '$stores/simTime';
-  import { getWorldPosition } from '$lib/registry/registry';
+  import { T, useTask, useThrelte } from '@threlte/core';
+  import {
+    AdditiveBlending,
+    DoubleSide,
+    MathUtils,
+    PlaneGeometry,
+    ShaderMaterial,
+    Vector3,
+    type Mesh
+  } from 'three';
+  import { AU_TO_SCENE } from '$lib/scene-config';
   import type { TrackedObject } from '$lib/registry/types';
+  import { indexOf, positions, valid } from './bodyState';
 
   /**
-   * Anti-solar tail indicator for comets. Renders a short line from
-   * the comet's current position pointing away from the Sun (the
-   * comet's ion tail direction). The line fades from the body's
-   * accent color at the head to transparent at the tip.
-   *
-   * Not a physically accurate tail simulation (no dust/ion modeling),
-   * just a visual cue that distinguishes comets from asteroids at a
-   * glance. The tail length scales with heliocentric distance: closer
-   * comets have shorter, brighter tails; distant ones have longer,
-   * fainter tails (matching the real sublimation curve qualitatively).
+   * A soft, camera-facing ion tail pointing away from the Sun. Illustrative:
+   * length grows as the inverse square of heliocentric distance and the tail
+   * fades out beyond about 5 AU, where sublimation shuts down.
    */
 
-  let { object: objectProp }: { object: TrackedObject } = $props();
-
+  let { object }: { object: TrackedObject } = $props();
   // svelte-ignore state_referenced_locally
-  const object = objectProp;
+  const index = indexOf(object.id);
 
-  const SAMPLES = 16;
-  const BASE_LENGTH = 3; // scene units at 1 AU
-  const RECOMPUTE_MS = 2000;
-
-  // Color from the body's metadata
-  const accentColor =
-    object.rendererKind === 'point-marker'
-      ? (object.metadata as { color: string }).color
-      : '#88ccff';
-
-  // Parse hex to 0..1 RGB
-  function hexToRgb(hex: string): [number, number, number] {
-    const h = hex.replace('#', '');
-    return [
-      parseInt(h.slice(0, 2), 16) / 255,
-      parseInt(h.slice(2, 4), 16) / 255,
-      parseInt(h.slice(4, 6), 16) / 255
-    ];
-  }
-  const [cr, cg, cb] = hexToRgb(accentColor);
-
-  // Vertex colors: gradient from accent (head, i=0) to dark (tail, i=N-1)
-  const colors = new Float32Array(SAMPLES * 6);
-  for (let i = 0; i < SAMPLES; i++) {
-    const t = 1 - i / (SAMPLES - 1); // 1 at head, 0 at tail
-    const k = t * t; // quadratic falloff for a brighter head
-    colors[i * 6 + 0] = cr * k;
-    colors[i * 6 + 1] = cg * k;
-    colors[i * 6 + 2] = cb * k;
-    colors[i * 6 + 3] = cr * k;
-    colors[i * 6 + 4] = cg * k;
-    colors[i * 6 + 5] = cb * k;
-  }
-
-  const positions = new Float32Array(SAMPLES * 3);
-  const geometry = new LineGeometry();
-  geometry.setPositions(positions);
-  geometry.setColors(colors);
-
-  const material = new LineMaterial({
-    color: 0xffffff,
-    linewidth: 1.8,
-    transparent: true,
-    opacity: 0.85,
-    vertexColors: true,
-    depthWrite: false,
-    depthTest: false
-  });
-  if (typeof window !== 'undefined') {
-    material.resolution.set(window.innerWidth, window.innerHeight);
-  }
-
-  const line = new Line2(geometry, material);
-  line.frustumCulled = false;
-
-  let lastBuiltAt = 0;
-  let lastResW = 0;
-  let lastResH = 0;
-  const worldPos = new Vector3();
-  const scratch = new Vector3();
-  const tailDir = new Vector3();
-
-  function rebuild(): void {
-    const pos = getWorldPosition(object.id, get(simTime), worldPos, scratch);
-    if (!pos) return;
-
-    // Anti-solar direction: normalize(body - Sun). Sun is at origin.
-    tailDir.copy(pos).normalize();
-    const distAU = pos.length() / 100; // AU_TO_SCENE = 100
-
-    // Tail length scales inversely with distance (brighter when close)
-    // but capped so it doesn't vanish at large distances.
-    const tailLength = BASE_LENGTH * Math.max(0.3, 1 / Math.max(0.1, distAU));
-
-    // Build the line: straight from the body outward along tailDir.
-    for (let i = 0; i < SAMPLES; i++) {
-      const t = i / (SAMPLES - 1);
-      const x = pos.x + tailDir.x * tailLength * t;
-      const y = pos.y + tailDir.y * tailLength * t;
-      const z = pos.z + tailDir.z * tailLength * t;
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
-    }
-
-    geometry.setPositions(positions);
-    line.computeLineDistances();
-    geometry.computeBoundingSphere();
-    lastBuiltAt = performance.now();
-  }
-
-  rebuild();
-
-  useTask(() => {
-    if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      if (w !== lastResW || h !== lastResH) {
-        material.resolution.set(w, h);
-        lastResW = w;
-        lastResH = h;
+  const geometry = new PlaneGeometry(1, 2, 24, 1).translate(0.5, 0, 0);
+  const material = new ShaderMaterial({
+    uniforms: {
+      uAxis: { value: new Vector3() },
+      uSide: { value: new Vector3() },
+      uLength: { value: 1 },
+      uIntensity: { value: 0 }
+    },
+    vertexShader: /* glsl */ `
+      #include <common>
+      #include <logdepthbuf_pars_vertex>
+      uniform vec3 uAxis;
+      uniform vec3 uSide;
+      uniform float uLength;
+      varying vec2 vTail;
+      void main() {
+        vTail = position.xy;
+        float width = uLength * (0.004 + 0.07 * position.x);
+        vec3 offset = uAxis * position.x * uLength + uSide * position.y * width;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(offset, 1.0);
+        #include <logdepthbuf_vertex>
       }
-    }
-    if (performance.now() - lastBuiltAt > RECOMPUTE_MS) {
-      rebuild();
-    }
+    `,
+    fragmentShader: /* glsl */ `
+      #include <common>
+      #include <logdepthbuf_pars_fragment>
+      uniform float uIntensity;
+      varying vec2 vTail;
+      void main() {
+        #include <logdepthbuf_fragment>
+        float along = pow(1.0 - vTail.x, 1.8);
+        float across = exp(-3.5 * vTail.y * vTail.y);
+        gl_FragColor = vec4(vec3(0.62, 0.8, 1.0) * along * across * uIntensity, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: AdditiveBlending,
+    side: DoubleSide
   });
+  let mesh: Mesh | undefined = $state();
+  const { camera } = useThrelte();
+
+  useTask(
+    () => {
+      if (!mesh) return;
+      const position = positions[index];
+      const au = position.length() / AU_TO_SCENE;
+      const intensity = valid[index] ? 1 - MathUtils.smoothstep(au, 2.5, 5) : 0;
+      mesh.visible = intensity > 0;
+      if (!mesh.visible) return;
+      mesh.position.copy(position);
+      const axis = material.uniforms.uAxis.value as Vector3;
+      axis.copy(position).normalize();
+      const side = material.uniforms.uSide.value as Vector3;
+      side.copy(position).sub(camera.current.position).cross(axis).normalize();
+      material.uniforms.uLength.value = Math.min(0.35, 0.12 / (au * au)) * AU_TO_SCENE;
+      material.uniforms.uIntensity.value = intensity * 0.9;
+    },
+    { after: 'camera' }
+  );
 </script>
 
-<T is={line} />
+<T.Mesh bind:ref={mesh} {geometry} {material} frustumCulled={false} renderOrder={4} />

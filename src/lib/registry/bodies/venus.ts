@@ -1,21 +1,11 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Venus — second planet, true scale (radius 0.95 of Earth, very nearly
- * Earth's twin in size). True heliocentric position from the Standish
- * ephemeris.
- *
- * Pole orientation from IAU 2018: RA = 272.76°, Dec = 67.16°. Venus
- * rotates RETROGRADE — its sidereal day is longer than its year! The
- * IAU pole convention places the rotation axis along the angular
- * momentum direction, so for retrograde rotation the IAU "north pole"
- * points to what would be the southern celestial hemisphere by
- * Earth-convention; in scene coordinates the pole still sits very
- * close to ecliptic north because Venus's orbit is nearly in-plane.
- *
- * Retrograde rotation is implemented via the 'iau-w' model (-243 Earth days per rotation).
+ * Venus. The IAU north pole lies on the north side of the invariable plane,
+ * so its slow retrograde spin is a negative W rate.
  */
 
 const VENUS_RADIUS_KM = 6051.8;
@@ -27,23 +17,20 @@ export const VENUS: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'venus', date),
   rendererKind: 'planet-body',
-  cameraDistance: 3,
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol II · The Morning & Evening Star',
+    subtitle: 'Second planet from the Sun',
     externalId: '299',
     radius: VENUS_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: VENUS_RADIUS_KM,
     textureUrl: '/textures/2k_venus_atmosphere.jpg',
-    poleVec: [0.0187, 0.9998, -0.0112],
+    poleVec: equatorialToScene(272.76, 67.16),
     rotationModel: 'iau-w',
     rotationW0Deg: 160.2,
     rotationRateDegPerDay: -1.4813688,
-    hasAtmosphere: true,
-    atmosphereColor: [0.95, 0.85, 0.55],
+    atmosphere: { color: [1.0, 0.86, 0.6], heightKm: 250, density: 1.1 },
     dayLength: '243 Earth days (retrograde)',
     yearLength: '224.7 Earth days',
-    orbitColor: 0xa09a90,
     description:
       'Venus is the hottest planet in the solar system due to a runaway greenhouse effect, with surface temperatures high enough to melt lead. It rotates backward compared to most planets, and its thick clouds of sulfuric acid completely obscure the surface.',
     facts: [

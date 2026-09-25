@@ -27,7 +27,8 @@
     ['Rotate', 'Drag', 'One finger'],
     ['Zoom', 'Scroll', 'Pinch'],
     ['Pan', 'Right-drag', 'Two fingers'],
-    ['Select', 'Click a body', 'Tap a body']
+    ['Select', 'Click a body', 'Tap a body'],
+    ['Recenter', 'Double-click', 'Double-tap']
   ];
   const shortcuts: [string, string[]][] = [
     ['Search', ['/', '⌘K']],

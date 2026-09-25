@@ -1,14 +1,11 @@
 import { EARTH_RADIUS_KM } from '$lib/scene-config';
 import { getPlanetScenePosition } from '$utils/helio';
+import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Jupiter — largest planet, true scale (volumetric mean radius 10.97 × Earth,
- * ~69,911 km per NASA Planetary Fact Sheet). True heliocentric position via the
- * Standish ephemeris (~5.2 AU = ~520 scene units from the Sun).
- *
- * Pole orientation from IAU 2018: RA = 268.057°, Dec = 64.495°. Obliquity just 3.13°,
- * so the pole sits very close to the orbital normal. Galilean moons tracked separately.
+ * Jupiter. Volumetric mean radius from the NASA fact sheet; System III
+ * prime meridian from the IAU rotation model.
  */
 
 const JUPITER_RADIUS_KM = 69911;
@@ -20,21 +17,19 @@ export const JUPITER: TrackedObject = {
   parent: 'sun',
   offsetFn: (date, target) => getPlanetScenePosition(target, 'jupiter', date),
   rendererKind: 'planet-body',
-  cameraDistance: 55,
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol V · The Gas Giant',
+    subtitle: 'Fifth planet from the Sun, and the largest',
     externalId: '599',
     radius: JUPITER_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: JUPITER_RADIUS_KM,
     textureUrl: '/textures/2k_jupiter.jpg',
-    poleVec: [-0.0146, 0.9992, 0.0366],
+    poleVec: equatorialToScene(268.056595, 64.495303),
     rotationModel: 'iau-w',
-    rotationW0Deg: 67.1,
+    rotationW0Deg: 284.95,
     rotationRateDegPerDay: 870.536,
     dayLength: '9h 55m',
     yearLength: '11.86 Earth years',
-    orbitColor: 0xa09a90,
     description:
       'Jupiter is the largest planet in the solar system, containing more mass than all other planets combined. Its Great Red Spot is a persistent anticyclonic storm larger than Earth that has been observed for over 350 years.',
     facts: [

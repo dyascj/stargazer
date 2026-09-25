@@ -1,7 +1,7 @@
 import { createTleStore, createTleBackedStore } from './satelliteFactory';
 
 /**
- * Tiangong (Chinese Space Station, Tianhe core module) — NORAD ID 48274.
+ * Tiangong (Chinese Space Station, Tianhe core module), NORAD ID 48274.
  *
  * Unlike the ISS, wheretheiss.at does not expose Tiangong, so we drive
  * everything from a Celestrak TLE + client-side SGP4. Same canonical

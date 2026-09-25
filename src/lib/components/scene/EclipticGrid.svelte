@@ -1,84 +1,54 @@
 <script lang="ts">
   import { T } from '@threlte/core';
   import { DoubleSide, ShaderMaterial } from 'three';
+  import { AU_TO_SCENE, SUN_RADIUS } from '$lib/scene-config';
 
   /**
-   * Faint ecliptic plane reference disc at y=0. Helps the user see
-   * which bodies are above/below the ecliptic (Pluto's 17 deg
-   * inclination, comets, etc.) and understand the 3D orientation of
-   * the solar system without explicit axis labels.
-   *
-   * Renders as a flat ring from the Sun outward to ~550 AU (past
-   * Neptune at 30 AU, well inside the far plane). The shader fades
-   * the disc radially from a soft visible center to fully transparent
-   * at the edge, so it never draws a hard boundary.
-   *
-   * Double-sided so it's visible from above and below. depthWrite
-   * off so it doesn't block other geometry.
+   * Faint reference disc in the J2000 ecliptic plane: circles every AU out to
+   * 5 AU, then every 5 AU out to 50 AU, with 30° spokes. Lines keep a constant
+   * pixel width and the disc fades toward its edge.
    */
 
-  const INNER_RADIUS = 3; // scene units; starts just outside the Sun
-  const OUTER_RADIUS = 5000; // past Pluto's aphelion (~4931 AU) — covers the full classical solar system
-  const SEGMENTS = 128;
-
-  const vertexShader = /* glsl */ `
-    #include <common>
-    #include <logdepthbuf_pars_vertex>
-
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      #include <logdepthbuf_vertex>
-    }
-  `;
-
-  const fragmentShader = /* glsl */ `
-    precision highp float;
-
-    #include <common>
-    #include <logdepthbuf_pars_fragment>
-
-    varying vec2 vUv;
-
-    void main() {
-      #include <logdepthbuf_fragment>
-
-      // u runs 0..1 radially from inner to outer. Use it to fade
-      // out toward the edge. The pow(1-u, 1.5) curve keeps the
-      // center visible and the edge fully transparent.
-      float radialFade = pow(1.0 - vUv.x, 1.5);
-
-      // Fine concentric ring lines for visual texture. The sin()
-      // on the radial coordinate produces subtle brightness
-      // variations that read as distance markers.
-      float rings = 0.5 + 0.5 * sin(vUv.x * 120.0);
-      float ringLine = mix(0.6, 1.0, rings);
-
-      // Radial grid lines (spokes). 12 lines = 30 deg each.
-      float angle = vUv.y * 6.283185;
-      float spokes = smoothstep(0.0, 0.008, abs(sin(angle * 6.0)));
-      float spokeLine = mix(1.0, 0.7, 1.0 - spokes);
-
-      float alpha = radialFade * ringLine * spokeLine * 0.06;
-      if (alpha < 0.001) discard;
-
-      gl_FragColor = vec4(0.6, 0.7, 0.85, alpha);
-    }
-  `;
-
+  const OUTER_AU = 50;
   const material = new ShaderMaterial({
-    vertexShader,
-    fragmentShader,
+    uniforms: { uAu: { value: AU_TO_SCENE } },
+    vertexShader: /* glsl */ `
+      #include <common>
+      #include <logdepthbuf_pars_vertex>
+      varying vec2 vPlane;
+      void main() {
+        vPlane = position.xy;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        #include <logdepthbuf_vertex>
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      #include <common>
+      #include <logdepthbuf_pars_fragment>
+      uniform float uAu;
+      varying vec2 vPlane;
+      float grid(float value, float spacing) {
+        float cell = value / spacing;
+        return 1.0 - smoothstep(0.0, fwidth(cell) * 1.2, abs(fract(cell - 0.5) - 0.5));
+      }
+      void main() {
+        #include <logdepthbuf_fragment>
+        float au = length(vPlane) / uAu;
+        float circles = au < 5.0 ? grid(au, 1.0) : grid(au, 5.0);
+        float angle = atan(vPlane.y, vPlane.x) / (PI / 6.0);
+        float spokes = grid(angle, 1.0) * smoothstep(0.3, 1.0, au);
+        float alpha = max(circles, spokes * 0.6) * 0.16 * (1.0 - smoothstep(20.0, ${OUTER_AU}.0, au));
+        if (alpha < 0.002) discard;
+        gl_FragColor = vec4(vec3(0.62, 0.7, 0.78), alpha);
+        #include <colorspace_fragment>
+      }
+    `,
     side: DoubleSide,
     transparent: true,
     depthWrite: false
   });
 </script>
 
-<!-- Flat ring in the XZ plane (y=0 = ecliptic). RingGeometry is
-     built in XY by default; rotation.x = PI/2 lays it flat. -->
-<T.Mesh rotation.x={Math.PI / 2}>
-  <T.RingGeometry args={[INNER_RADIUS, OUTER_RADIUS, SEGMENTS, 1]} />
-  <T is={material} />
+<T.Mesh rotation.x={-Math.PI / 2} {material} renderOrder={1}>
+  <T.RingGeometry args={[SUN_RADIUS * 2, OUTER_AU * AU_TO_SCENE, 256, 1]} />
 </T.Mesh>

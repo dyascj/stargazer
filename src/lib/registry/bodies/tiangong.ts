@@ -1,18 +1,8 @@
-import { Vector3 } from 'three';
 import { tiangong } from '$stores/tiangong';
-import { latLonAltToVec3 } from '$utils/coords';
-import { earthLocalToInertialOffset } from '$utils/earth';
-import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
+import { ecfKmToInertialOffset } from '$utils/earth';
 import type { TrackedObject } from '../types';
 
-/**
- * Tiangong space station — same position pipeline as the ISS, but
- * sourced from a TLE-backed SGP4 propagator (`tiangong` store) since
- * wheretheiss.at doesn't carry it. The store still produces the
- * canonical SatelliteState shape so the offsetFn is identical.
- */
-
-const _localTmp = new Vector3();
+/** Tiangong space station: CelesTrak elements propagated with SGP4, like the ISS. */
 
 export const TIANGONG: TrackedObject = {
   id: 'tiangong',
@@ -21,19 +11,9 @@ export const TIANGONG: TrackedObject = {
   parent: 'earth',
   offsetFn: (date, target) => {
     const data = tiangong.at(date);
-    if (!data) return null;
-    const [x, y, z] = latLonAltToVec3(
-      data.latitude,
-      data.longitude,
-      data.altitudeKm,
-      EARTH_RADIUS,
-      EARTH_RADIUS_KM
-    );
-    _localTmp.set(x, y, z);
-    return earthLocalToInertialOffset(_localTmp, target, date);
+    return data ? ecfKmToInertialOffset(data.ecfKm, target, date) : null;
   },
   rendererKind: 'satellite-marker',
-  cameraDistance: 2,
   labelTier: 5,
   metadata: {
     subtitle: 'CSS · NORAD 48274',
