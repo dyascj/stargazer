@@ -37,7 +37,7 @@
         // Fade orbits that collapse toward the Sun or leave the frame.
         visibility: Math.min(1, Math.max(0, (radius - 5) / 24)),
         labelled: labels && radius > 34 && radius < Math.max(width, height) * 0.7,
-        // Flip labels that would run off the right edge.
+        // Labels near the right edge sit above the dot instead.
         flip: x * scale > width / 2 - 96
       };
     })
@@ -75,8 +75,10 @@
         >
           <circle r={body.id === 'earth' ? 4 : 3} class="dot" />
           {#if body.labelled}
-            <text x={body.flip ? -9 : 9} y="4" text-anchor={body.flip ? 'end' : 'start'}
-              >{body.name}</text
+            <text
+              x={body.flip ? 6 : 9}
+              y={body.flip ? -9 : 4}
+              text-anchor={body.flip ? 'end' : 'start'}>{body.name}</text
             >
           {/if}
         </g>

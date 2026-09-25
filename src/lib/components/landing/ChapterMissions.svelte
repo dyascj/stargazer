@@ -92,8 +92,9 @@
     <div class="scroller">
       <div class="ruler">
         <div class="axis"></div>
-        {#each ticks as tick (tick.name)}
-          <span class="tick" style:left="{tick.x}%"><span>{tick.name}</span></span>
+        {#each ticks as tick, i (tick.name)}
+          <span class="tick" class:low={i % 2} style:left="{tick.x}%"><span>{tick.name}</span></span
+          >
         {/each}
         {#each dots as dot, i (dot.id)}
           <a
@@ -177,7 +178,7 @@
   .ruler {
     position: relative;
     min-width: 760px;
-    height: 220px;
+    height: 236px;
   }
   .axis {
     position: absolute;
@@ -194,6 +195,9 @@
     width: 1px;
     height: 14px;
     background: var(--surface-4);
+  }
+  .tick.low span {
+    top: 42px;
   }
   .tick span {
     position: absolute;
@@ -389,6 +393,9 @@
     }
   }
   @media (max-width: 720px) {
+    .scroller {
+      mask-image: linear-gradient(90deg, #000 85%, transparent);
+    }
     .missions .cards {
       display: flex;
       gap: 10px;

@@ -265,6 +265,15 @@
     animation: rise 900ms var(--ease-out) 1.4s both;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .char,
+    .lede,
+    .actions,
+    .caption {
+      animation: none;
+    }
+  }
+
   @media (max-width: 720px) {
     .content {
       bottom: max(28px, env(safe-area-inset-bottom));

@@ -239,6 +239,11 @@
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
+  @media (max-width: 560px) {
+    text {
+      font-size: 5.5px;
+    }
+  }
   figcaption {
     margin-top: 24px;
     text-align: center;

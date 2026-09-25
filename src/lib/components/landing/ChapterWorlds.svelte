@@ -70,7 +70,6 @@
   const mobile = () => matchMedia('(max-width: 720px), (pointer: coarse)').matches;
   const spec = (w: World): WorldSpec => {
     const extra = { ...look[w.id] };
-    if (mobile()) delete extra.clouds;
     if (reducedMotion()) extra.spin = 0;
     return { id: w.id, texture: w.texture, rings: w.rings, ...extra };
   };
@@ -346,6 +345,9 @@
     .worlds {
       display: flex;
       flex-direction: column;
+    }
+    header {
+      order: -2;
     }
     .stage {
       width: min(100%, 520px);
