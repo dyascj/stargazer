@@ -10,11 +10,11 @@ import type { RequestHandler } from './$types';
  */
 export const GET: RequestHandler = async ({ params, url, setHeaders }) => {
   const path = params.path ?? '';
-  if (!path) throw error(400, 'Missing NASA endpoint path');
+  if (!path) error(400, 'Missing NASA endpoint path');
 
   const upstream = await fetchNasa(path, new URLSearchParams(url.search));
   if (!upstream.ok) {
-    throw error(upstream.status, `NASA upstream error: ${upstream.statusText}`);
+    error(upstream.status, `NASA upstream error: ${upstream.statusText}`);
   }
 
   setHeaders({

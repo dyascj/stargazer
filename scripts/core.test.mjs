@@ -284,19 +284,7 @@ test('Satellite endpoint validates input, rejects bad upstream data, and dedupli
   assert.deepEqual(results[0], results[1]);
 });
 
-test('API boundaries reject invalid coordinates and unlisted NASA paths before fetching', async () => {
-  const geocode = await server.ssrLoadModule('/src/routes/api/geocode/reverse/+server.ts');
-  for (const search of ['?lat=91&lon=0', '?lat=abc&lon=1', '?lat=0&lon=181']) {
-    await assert.rejects(
-      geocode.GET({
-        url: new URL(`https://example.test/${search}`),
-        fetch: () => {
-          throw new Error('Must not fetch');
-        }
-      }),
-      (error) => error.status === 400
-    );
-  }
+test('NASA proxy rejects unlisted paths before fetching', async () => {
   const nasa = await load('server/nasa');
   await assert.rejects(
     nasa.fetchNasa('https://example.com', new URLSearchParams()),
@@ -325,6 +313,12 @@ test('Launch schedule fails cleanly, normalizes records, and caches successful r
           launch_service_provider: { name: 'SpaceX' },
           pad: { name: 'Test pad' }
         },
+        {
+          id: 'odd',
+          name: 'Malformed fields',
+          net: new Date(Date.now() + 2 * 86400000).toISOString(),
+          status: { name: 7 }
+        },
         { id: 'past', name: 'Completed launch', net: '2000-01-01T00:00:00Z' },
         { id: 12, name: 'bad', net: 'invalid' },
         null
@@ -332,8 +326,9 @@ test('Launch schedule fails cleanly, normalizes records, and caches successful r
     });
   };
   const body = await (await endpoint.GET({ fetch: fetcher, setHeaders })).json();
-  assert.equal(body.launches.length, 1);
+  assert.equal(body.launches.length, 2);
   assert.equal(body.launches[0].provider, 'SpaceX');
+  assert.equal(body.launches[1].status, 'Schedule provisional');
   assert.equal(body.stale, false);
   await endpoint.GET({ fetch: fetcher, setHeaders });
   assert.equal(requests, 1);

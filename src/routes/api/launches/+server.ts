@@ -13,6 +13,9 @@ type Schedule = { fetchedAt: number; launches: Launch[] };
 let cache: Schedule | null = null;
 let pending: Promise<Schedule> | null = null;
 
+const text = (value: unknown, fallback: string) =>
+  typeof value === 'string' && value.trim() ? value : fallback;
+
 export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
   if (!cache || Date.now() - cache.fetchedAt > 15 * 60_000) {
     pending ??= (async () => {
@@ -37,16 +40,16 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
             id: string;
             name: string;
             net: string;
-            status?: { name?: string };
-            launch_service_provider?: { name?: string };
-            pad?: { name?: string };
+            status?: { name?: unknown };
+            launch_service_provider?: { name?: unknown };
+            pad?: { name?: unknown };
           }) => ({
             id: item.id,
             name: item.name,
             date: item.net,
-            status: item.status?.name ?? 'Schedule provisional',
-            provider: item.launch_service_provider?.name ?? 'Unknown provider',
-            pad: item.pad?.name ?? 'Launch site to be confirmed'
+            status: text(item.status?.name, 'Schedule provisional'),
+            provider: text(item.launch_service_provider?.name, 'Unknown provider'),
+            pad: text(item.pad?.name, 'Launch site to be confirmed')
           })
         );
       return { fetchedAt: Date.now(), launches };
