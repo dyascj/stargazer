@@ -1,58 +1,109 @@
-# Stargazer
+<p align="center">
+  <a href="https://stargazer-lab.vercel.app"><img src=".github/assets/banner.jpg" alt="Stargazer. A clearer view of space." width="100%" /></a>
+</p>
 
-An interactive solar system explorer built with SvelteKit, Threlte, and Three.js. Explore planets, moons, spacecraft, and a curated set of satellites; change time, compare world sizes, or check upcoming launches.
+<p align="center">
+  <strong>A true-scale 3D solar system you can explore in your browser.</strong><br />
+  Planets, moons, spacecraft and live satellites, placed with public data and honest about its limits.
+</p>
 
-## Run locally
+<p align="center">
+  <a href="https://stargazer-lab.vercel.app/app"><strong>Launch explorer</strong></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://stargazer-lab.vercel.app">Website</a>
+  &nbsp;&middot;&nbsp;
+  <a href="#data-and-accuracy">Data and accuracy</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/dyascj/stargazer/issues">Report an issue</a>
+</p>
 
-Requires Node **22.12 or newer**.
+<br />
 
-```sh
-npm ci
-npm run dev
-```
+<img src=".github/assets/explorer-saturn.jpg" alt="Saturn and its moons in the explorer, with the details card open" width="100%" />
 
-Open http://localhost:5174. The landing page is prerendered and loads a small three.js hero after first paint; the 3D explorer loads on `/app`.
+## Overview
 
-```sh
-npm run check
-npm test
-npm run lint
-npm run build
-```
+Stargazer is a quieter, more beautiful take on [NASA's Eyes on the Solar System](https://eyes.nasa.gov/apps/solar-system/). Open it and you get the sky, one search field, and a clock. Everything else appears when you ask for it.
 
-An optional `NASA_API_KEY` in `.env` enables the retained NASA APOD/NEO proxy routes. The explorer does not require a key. Satellite elements and launch schedules require internet access; failed feeds show an unavailable state.
+- **True scale.** Every distance and radius is physical, from the ISS at 400 km to Voyager 1 past 170 AU. Constant-size markers keep small worlds findable.
+- **Sourced and dated.** Every object says where its position comes from and how old that data is.
+- **Search first.** Type a name, a nickname (Webb, 67P) or a NORAD number and fly there.
+- **Live satellites.** CelesTrak elements propagated with SGP4 at the time you are looking at, with pass predictions for your location.
+- **Time travel.** Scrub planets between 1800 and 2050, pause, reverse, or jump back to now.
+- **Built for phones.** A draggable details sheet, gestures that match the desktop, and a view that recenters above the sheet.
+
+<table>
+  <tr>
+    <td width="50%"><img src=".github/assets/explorer-iss.jpg" alt="The International Space Station over Earth's limb" /></td>
+    <td width="50%"><img src=".github/assets/explorer-overview.jpg" alt="The whole solar system at true scale with orbits and labels" /></td>
+  </tr>
+</table>
+
+<img src=".github/assets/mobile.jpg" alt="Stargazer on a phone: the ISS, Saturn, and the Moon" width="100%" />
 
 ## Controls
 
-- Drag to orbit; scroll or pinch to zoom; right-drag or use two fingers to pan.
-- Search with `/` or `Cmd/Ctrl K`. Arrow keys browse search results; Enter flies to a destination.
-- Space pauses time; `+` / `−` change speed; `N` returns to now.
-- `H` opens the solar system overview; `R` resets the camera; `F` toggles immersive mode.
-- Click the date to choose UTC time. “Back to now” resumes the current clock.
-- Open a world's information to compare physical sizes or explore nearby objects.
-- Share view copies a destination link, including simulated date and speed when applicable.
+| Action                  | Mouse and keyboard | Touch       |
+| ----------------------- | ------------------ | ----------- |
+| Rotate                  | Drag               | One finger  |
+| Zoom                    | Scroll             | Pinch       |
+| Pan                     | Right-drag         | Two fingers |
+| Fly to a body           | Click it           | Tap it      |
+| Recenter                | Double-click, `R`  | Double-tap  |
+| Search                  | `/` or `⌘K`        | Search icon |
+| Play or pause           | `Space`            |             |
+| Faster or slower        | `+` / `-`          |             |
+| Back to now             | `N`                |             |
+| Next or previous planet | `←` / `→`          |             |
+| Solar system overview   | `H`                |             |
+| Hide interface          | `F`                |             |
+| Close or go back        | `Esc`              |             |
+
+Settings holds layer switches, a copyable link to the current view (including the simulated date and speed), and this list.
 
 ## Data and accuracy
 
-This is an educational visualization, with explicit approximations:
+Stargazer is an educational visualization. Each model has a stated method and stated limits:
 
-| Data                         | Method and limits                                                                                                                                                       |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Planets and Pluto            | JPL approximate planetary elements, bounded to 1800–2050. Earth uses the Earth–Moon barycenter approximation.                                                           |
-| Earth's Moon                 | Truncated lunar model. Approximate phase, distance, and direction; unsuitable for eclipse timing.                                                                       |
-| Other moons and small bodies | Two-body propagation of dated JPL Horizons elements. Perturbations and maneuvers are omitted.                                                                           |
-| Planet orbiters              | Dated Horizons elements, displayed only within 30 days of their epoch.                                                                                                  |
-| Cruise spacecraft            | Fixed Horizons positions. The inspector shows the snapshot epoch.                                                                                                       |
-| Rovers                       | Landing coordinates, not current rover traverses.                                                                                                                       |
-| Webb                         | Illustrated Sun–Earth L2 neighborhood, not an operational trajectory.                                                                                                   |
-| Earth satellites             | CelesTrak TLEs propagated with satellite.js SGP4 at the selected simulation time, restricted to ±7 days of the element epoch. This window does not guarantee precision. |
-| Launches                     | The Space Devs Launch Library 2; schedules are provisional. SpaceX is included through these third-party sources.                                                       |
+| Data                         | Method and limits                                                                                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planets and Pluto            | JPL approximate planetary elements with a safeguarded Kepler solver, valid 1800 to 2050.                                                                             |
+| Earth and the Moon           | Truncated lunar model. Earth is placed at the geocenter, offset from the JPL Earth-Moon barycenter by the same model. Not suitable for eclipse timing.               |
+| Other moons and small bodies | Two-body propagation of dated JPL Horizons elements, refreshed weekly. Perturbations and maneuvers are omitted.                                                      |
+| Planet orbiters              | Dated Horizons elements, shown only within 30 days of their epoch.                                                                                                   |
+| Cruise spacecraft            | Fixed Horizons positions. The details card shows the snapshot date.                                                                                                  |
+| Rovers and landers           | Landing coordinates, not current traverses.                                                                                                                          |
+| Webb                         | Placed at the Sun-Earth L2 point, about 1.5 million km beyond Earth. Its halo orbit around L2 is not modeled.                                                        |
+| Earth satellites             | CelesTrak TLEs propagated with satellite.js SGP4 at the simulated time, limited to 7 days either side of the element epoch. The window does not guarantee precision. |
+| Launches                     | The Space Devs Launch Library 2. Schedules are provisional; SpaceX launches arrive through this feed.                                                                |
 
-The scene is true to scale everywhere. One scene unit is Earth's mean radius (6,371 km), so 1 AU is about 23,481 units; the Sun, planets, moons, and ring systems are drawn at their physical radii, moons and satellites at their true distances and altitudes, Webb at the Sun–Earth L2 point, and the ISS at its 109 m span. Earth is placed at the geocenter, offset from the JPL Earth–Moon barycenter by the lunar model. Because true-scale bodies vanish at a distance, every object also has a constant-size marker that fades out once its real shape is larger on screen. Positions are composed in double precision and shaded relative to the camera, so there is no visible jitter from the ISS out to Voyager 1. Texture clouds, city lights, atmosphere scattering, and ring shading are illustrative; they are not weather or radiative-transfer simulations.
+One scene unit is Earth's mean radius (6,371 km), so 1 AU is about 23,481 units. The Sun, planets, moons and rings are drawn at their physical radii, moons and satellites at their true distances, and the ISS at its 109 m span. Positions are composed in double precision, so there is no visible jitter from low Earth orbit out to Voyager 1. Clouds, city lights, atmospheric scattering and ring shading are illustrative, not weather or radiative-transfer simulations.
 
-Time controls display UTC. Element epochs from Horizons are TDB; the simple propagation treats UTC as TDB, introducing a roughly minute-scale time offset near the present. There are no light-time, aberration, or observer-location corrections in the planetary scene.
+Time is shown in UTC. Horizons epochs are TDB, and the simple propagation treats UTC as TDB, which introduces an offset of about a minute near the present. The planetary scene applies no light-time, aberration or observer-location corrections.
 
-### Refresh local ephemerides
+The test suite checks positions against 30 independent JPL Horizons reference vectors at three epochs, reproduces Vallado's SGP4 verification case, and covers solver edge cases, camera framing, simulation state, registry invariants, search ranking, and API and refresh failure handling.
+
+## Run locally
+
+Requires Node 22.12 or newer.
+
+```sh
+npm ci
+npm run dev        # http://localhost:5174
+```
+
+The landing page (`/`) is prerendered and loads a small three.js hero after first paint. The explorer lives at `/app` and accepts `?body=<id>`, for example `/app?body=saturn`.
+
+```sh
+npm run check      # svelte-check and TypeScript
+npm test           # accuracy and regression tests
+npm run lint       # Prettier
+npm run build      # production build (Vercel adapter)
+```
+
+No API keys are needed. An optional `NASA_API_KEY` in `.env` enables the NASA API proxy route. Satellite elements and launches need network access; unavailable feeds show an explicit state.
+
+### Refresh ephemerides
 
 ```sh
 node scripts/refresh-ephemeris.mjs --dry-run
@@ -61,35 +112,33 @@ npx prettier --write src/lib/registry/bodies
 npm test
 ```
 
-The refresh script updates each record and its epoch together. Failed objects retain their original elements and epoch; files are replaced atomically. It never commits. The existing scheduled GitHub workflow handles repository updates independently; mission descriptions and operational status still require editorial review.
+Each record and its epoch update together, failed objects keep their previous elements, and files are replaced atomically. A scheduled GitHub Action runs this weekly. Mission descriptions and operational status still need editorial review.
 
-Tests include 30 independent Horizons reference vectors at three epochs, Vallado's SGP4 verification vector, solver edge cases, simulation state transitions, registry invariants, and API/refresh failure handling.
+## Project structure
 
-## Structure
+| Path                         | Contents                                                        |
+| ---------------------------- | --------------------------------------------------------------- |
+| `src/lib/registry`           | Every object: data, parent relationships and position functions |
+| `src/lib/utils`              | Orbital math, coordinate frames, validation and camera framing  |
+| `src/lib/stores`             | Simulation clock, selection and live data feeds                 |
+| `src/lib/components/scene`   | Rendering, markers and labels, and the camera rig               |
+| `src/lib/components/layout`  | Search, details, time, settings and size comparison             |
+| `src/lib/components/landing` | Landing page chapters and their self-contained three.js scenes  |
+| `src/routes/api`             | Validated proxies for upstream data                             |
+| `scripts`                    | Ephemeris refresh and the test suite                            |
 
-- `src/lib/registry`: object data, parent relationships, and position functions.
-- `src/lib/utils`: orbital math, coordinate frames, validation, and scene interaction.
-- `src/lib/stores`: simulation, selection, and subscriber-managed data feeds.
-- `src/lib/components/scene`: 3D rendering and camera behavior.
-- `src/lib/components/layout`: search, controls, destination information, and comparisons.
-- `src/lib/components/landing`: the landing page chapters, motion primitives and its self-contained three.js scenes.
-- `src/routes/api`: validated upstream data proxies.
-- `scripts`: local data refresh and regression tests.
+Built with SvelteKit, Svelte 5, Threlte and three.js, satellite.js, and Inter. The design system is [Mizu](https://mizu-ui.com); motion takes cues from [bencho.dev](https://bencho.dev).
 
-## Sources and credits
+## Sources
 
-- [JPL approximate planetary positions](https://ssd.jpl.nasa.gov/planets/approx_pos.html)
-- [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/)
-- [CelesTrak](https://celestrak.org/) and [SGP4 verification data](https://celestrak.org/publications/AIAA/2006-6753/)
+- [JPL approximate planetary positions](https://ssd.jpl.nasa.gov/planets/approx_pos.html) and [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/)
+- [CelesTrak](https://celestrak.org/) and the [SGP4 verification data](https://celestrak.org/publications/AIAA/2006-6753/)
 - [The Space Devs Launch Library 2](https://thespacedevs.com/llapi)
-- [NASA planetary facts](https://nssdc.gsfc.nasa.gov/planetary/factsheet/)
-- [Solar System Scope textures, CC BY 4.0](https://www.solarsystemscope.com/textures/) and NASA Earth imagery
-- [NASA Eyes](https://eyes.nasa.gov/apps/solar-system/#/home), a reference for solar-system exploration
+- [NASA planetary fact sheets](https://nssdc.gsfc.nasa.gov/planetary/factsheet/)
+- [Solar System Scope textures](https://www.solarsystemscope.com/textures/) (CC BY 4.0) and NASA Earth imagery
 
-Stargazer is independent of NASA, ESA, JAXA, and SpaceX.
+Stargazer is not affiliated with NASA, JPL, ESA, JAXA or SpaceX. Agency logos in `static/logos` are trademarks of their owners, used only to credit data sources.
 
 ## License
 
-Project code is available under the [MIT license](LICENSE). Bundled third-party assets retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
-
-Typography uses Inter (SIL OFL 1.1). Agency logos in `static/logos` are trademarks of their owners, used only for source attribution; see [Third-party notices](THIRD_PARTY_NOTICES.md).
+A personal project by [Charles J. (CJ) Dyas](https://github.com/dyascj). Code is available under the [MIT license](LICENSE). Bundled third-party assets keep their own terms; see [third-party notices](THIRD_PARTY_NOTICES.md).
