@@ -33,9 +33,7 @@ The scene applies illustrative lighting, atmosphere, and display scaling. Retain
 
 ## Fonts
 
-**Geist and Geist Mono**: Copyright 2024 The Geist Project Authors. Distributed through the `@fontsource-variable/geist` and `@fontsource-variable/geist-mono` packages under the SIL Open Font License 1.1. License copies are included in [OFL-geist.txt](static/fonts/OFL-geist.txt) and [OFL-geist-mono.txt](static/fonts/OFL-geist-mono.txt).
-
-Cygnito Mono is not bundled or redistributed. A locally installed copy may be used by the browser; otherwise the display typography uses Geist Mono.
+**Inter**: Copyright 2016 The Inter Project Authors. Distributed through the `@fontsource-variable/inter` package under the SIL Open Font License 1.1. A license copy is included in [OFL-inter.txt](static/fonts/OFL-inter.txt).
 
 ## Names and data sources
 

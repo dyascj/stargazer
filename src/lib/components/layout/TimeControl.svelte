@@ -189,7 +189,7 @@
   }
   .clock-time {
     font:
-      10px 'Geist Mono Variable',
+      10px var(--font-mono),
       monospace;
     color: var(--space-muted);
   }
@@ -262,7 +262,7 @@
     border: 1px solid var(--space-line);
     padding: 10px;
     font:
-      12px 'Geist Mono Variable',
+      12px var(--font-mono),
       monospace;
     color-scheme: light;
     border-radius: 0;

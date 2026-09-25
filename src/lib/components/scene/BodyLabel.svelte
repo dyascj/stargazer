@@ -189,7 +189,7 @@
     left: 28px;
     top: -28px;
     transform: translateY(-50%);
-    font-family: 'Geist Mono Variable', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 400;
     text-transform: none;

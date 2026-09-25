@@ -92,4 +92,4 @@ Stargazer is independent of NASA, ESA, JAXA, and SpaceX.
 
 Project code is available under the [MIT license](LICENSE). Bundled third-party assets retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
 
-The default display fallback is the open-source Geist Mono font. Cygnito Mono is a separately licensed font and is not distributed here; the browser can use it if it is already installed locally. Third-party agency logos are not bundled.
+Typography uses Inter (SIL OFL 1.1). Third-party agency logos are not bundled.

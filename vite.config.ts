@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Stargazer',
         short_name: 'Stargazer',
         description: 'Explore the solar system, follow satellites, and discover space missions.',
-        theme_color: '#0a0a0a',
-        background_color: '#ffffff',
+        theme_color: '#000000',
+        background_color: '#000000',
         display: 'standalone',
         start_url: '/',
         icons: [
