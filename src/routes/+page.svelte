@@ -307,7 +307,7 @@
   }
   .hero-copy p {
     max-width: 35ch;
-    font-family: 'Geist Variable', sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.8;
     color: #66655e;
@@ -419,7 +419,7 @@
     flex-shrink: 0;
   }
   .marquee-name {
-    font-family: 'Geist Mono Variable', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 28px;
     font-weight: 500;
     line-height: 44px;

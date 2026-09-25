@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Brand from '$components/brand/Brand.svelte';
   import CompareWorlds from '$components/layout/CompareWorlds.svelte';
   import Scene from '$components/scene/Scene.svelte';
   import RightPanel from '$components/layout/RightPanel.svelte';
@@ -119,9 +120,7 @@
   <div class="scene-vignette" aria-hidden="true"></div>
   {#if !$immersive}
     <header class="observatory-header">
-      <a class="observatory-brand" href="/" aria-label="Stargazer home"
-        ><img src="/stargazer-mark.svg" width="28" height="28" alt="" /><span>STARGAZER</span></a
-      >
+      <a class="observatory-brand" href="/" aria-label="Stargazer home"><Brand size={22} /></a>
       <div class="header-actions">
         <button
           class="search-trigger"
@@ -331,7 +330,7 @@
     gap: 11px;
     align-items: center;
     font:
-      12px 'Cygnito Mono',
+      12px var(--font-sans),
       monospace;
     letter-spacing: 0.22em;
     min-height: 44px;

@@ -9,27 +9,9 @@ export default {
         foreground: 'hsl(var(--foreground) / <alpha-value>)'
       },
       fontFamily: {
-        sans: [
-          'Cygnito Mono',
-          'Geist Mono Variable',
-          'ui-monospace',
-          'SFMono-Regular',
-          'monospace'
-        ],
-        mono: [
-          'Cygnito Mono',
-          'Geist Mono Variable',
-          'ui-monospace',
-          'SFMono-Regular',
-          'monospace'
-        ],
-        display: [
-          'Cygnito Mono',
-          'Geist Mono Variable',
-          'ui-monospace',
-          'SFMono-Regular',
-          'monospace'
-        ]
+        sans: ['Inter Variable', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SF Mono', 'monospace'],
+        display: ['Inter Variable', 'system-ui', 'sans-serif']
       }
     }
   },
