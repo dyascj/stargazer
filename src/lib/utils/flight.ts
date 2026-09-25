@@ -10,8 +10,8 @@ const _radial = new Vector3();
  * about 50° off the Sun line, so the disc is mostly lit with the terminator in
  * view; ringed planets are raised toward their pole so the rings open; bodies
  * in orbit around a planet are seen from above with the day side behind them,
- * except in low orbit, where the camera looks sunward along the horizon so
- * the planet's limb curves across the frame (the classic view from the ISS);
+ * except in low orbit, where the camera looks along the horizon with the Sun
+ * to one side, so the limb curves across the frame (the classic ISS view);
  * small heliocentric bodies are seen from beyond, with the Sun in the frame.
  */
 export function framingDirection(
@@ -35,10 +35,11 @@ export function framingDirection(
     const lowOrbit = _radial.length() < 3 * parentRadius;
     _radial.normalize();
     if (lowOrbit) {
-      // Sunward along the local horizon, raised about 14° so the limb sits low in frame.
-      _side.copy(_toSun).addScaledVector(_radial, -_toSun.dot(_radial));
+      // Along the local horizon, a quarter turn from the Sun so the ground is side-lit,
+      // raised about 14° so the limb sits low in frame.
+      _side.crossVectors(_radial, _toSun);
       if (_side.lengthSq() < 0.01) _side.crossVectors(_radial, UP);
-      out.copy(_side).normalize().negate().addScaledVector(_radial, 0.25);
+      out.copy(_side).normalize().addScaledVector(_radial, 0.25);
     } else out.copy(_radial).addScaledVector(_toSun, 0.8).addScaledVector(UP, 0.2);
   } else {
     _side.crossVectors(UP, _toSun).normalize();

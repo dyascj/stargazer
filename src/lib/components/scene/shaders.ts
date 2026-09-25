@@ -101,7 +101,10 @@ export const surfaceFragment = /* glsl */ `
   }
 `;
 
-/** Atmosphere shell rendered from inside or outside; integrates density along the view ray in view space. */
+/**
+ * Atmosphere shell rendered from inside or outside; integrates density along the
+ * view ray in view space. Blend with ONE, ONE_MINUS_SRC_ALPHA (premultiplied).
+ */
 export const atmosphereVertex = /* glsl */ `
   ${common}
   varying vec3 vView;
@@ -158,11 +161,18 @@ export const atmosphereFragment = /* glsl */ `
     float scale = stride / thickness * uDensity;
     lit *= scale;
     sunset *= scale;
+    bool toGround = ground.x > 0.0;
     // Forward scattering brightens the limb when looking toward the Sun.
-    float forward = 1.0 + 1.5 * pow(max(dot(dir, uSunView), 0.0), 6.0);
-    vec3 color = uColor * (1.0 - exp(-lit * 0.9)) * forward;
+    float forward = 1.0 + (toGround ? 0.2 : 1.5) * pow(max(dot(dir, uSunView), 0.0), 6.0);
+    float haze = 1.0 - exp(-lit * 0.9);
+    vec3 color = uColor * haze * forward;
     color += vec3(1.0, 0.42, 0.16) * (1.0 - exp(-sunset * 0.5)) * 0.6;
-    gl_FragColor = vec4(color * uSunIntensity, 1.0);
+    // Premultiplied output: over the ground, haze also veils what is behind it, so
+    // long grazing paths from low orbit read as blue haze instead of washing out.
+    // Sky rays stay purely additive.
+    float veil = toGround ? haze * 0.45 : 0.0;
+    if (toGround) color *= 0.55;
+    gl_FragColor = vec4(color * uSunIntensity, veil);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
