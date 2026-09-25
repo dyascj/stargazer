@@ -5,15 +5,16 @@ import { reducedMotion } from '$stores/reducedMotion';
  * Card-to-panel morph. The source (a search result) records its rect just before it
  * disappears; the panel that appears next takes it and grows out of that rect.
  */
-let origin: DOMRect | null = null;
+let origin: { rect: DOMRect; at: number } | null = null;
 
 export function setMorphOrigin(element: Element): void {
-  origin = element.getBoundingClientRect();
+  origin = { rect: element.getBoundingClientRect(), at: performance.now() };
 }
 
 /** Morph `panel` out of the pending origin, if any. The origin is consumed either way. */
 export function morphFromOrigin(panel: HTMLElement): void {
-  const from = origin;
+  // An origin nobody claimed promptly (the phone sheet ignores it) must not replay later.
+  const from = origin && performance.now() - origin.at < 500 ? origin.rect : null;
   origin = null;
   if (!from || get(reducedMotion)) return;
   const to = panel.getBoundingClientRect();
