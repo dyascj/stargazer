@@ -1,8 +1,76 @@
 @import '@fontsource-variable/inter/opsz.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Minimal reset (replaces Tailwind Preflight). */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+}
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+img,
+video {
+  height: auto;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+:disabled {
+  cursor: default;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
 /*
  * Stargazer design tokens. Neutrals and semantics follow Mizu's dark theme
