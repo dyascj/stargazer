@@ -3,16 +3,23 @@
   import { isPlanetBody } from '$lib/registry/types';
   import { compareOpen, selectBody } from '$stores/ui';
   import { selection } from '$stores/selection';
+  import Icon from '$components/ui/Icon.svelte';
+  import { glyphColor } from '$components/ui/BodyGlyph.svelte';
+
   const worlds = TRACKED_OBJECTS.filter(isPlanetBody);
   let dialog: HTMLDialogElement;
-  let first = $state('earth'),
-    second = $state('jupiter');
+  let first = $state('earth');
+  let second = $state('jupiter');
   const left = $derived(worlds.find((body) => body.id === first)!);
   const right = $derived(worlds.find((body) => body.id === second)!);
-  const maximum = $derived(Math.max(left.metadata.radiusKm, right.metadata.radiusKm));
+  const largest = $derived(Math.max(left.metadata.radiusKm, right.metadata.radiusKm));
   const ratio = $derived(right.metadata.radiusKm / left.metadata.radiusKm);
+  const [big, small] = $derived(ratio >= 1 ? [right, left] : [left, right]);
+  const factor = $derived(
+    (ratio >= 1 ? ratio : 1 / ratio).toLocaleString('en-US', { maximumFractionDigits: 2 })
+  );
+
   $effect(() => {
-    if (!dialog) return;
     if ($compareOpen && !dialog.open) {
       const object = getById($selection);
       if (object && isPlanetBody(object)) {
@@ -22,181 +29,208 @@
       dialog.showModal();
     } else if (!$compareOpen && dialog.open) dialog.close();
   });
+
+  function explore(id: string) {
+    compareOpen.set(false);
+    selectBody(id);
+  }
+  const radiusOf = (km: number) => (100 * km) / largest;
 </script>
 
 <dialog
-  class="space-ui compare-dialog space-panel"
+  class="compare"
   bind:this={dialog}
-  aria-label="Compare world sizes"
-  oncancel={() => compareOpen.set(false)}
+  aria-labelledby="compare-title"
   onclose={() => compareOpen.set(false)}
+  onclick={(event) => event.target === dialog && compareOpen.set(false)}
 >
-  <div class="compare-heading">
-    <div>
-      <h2 class="font-display">Compare sizes</h2>
-    </div>
-    <button
-      type="button"
-      class="icon-button"
-      aria-label="Close comparison"
-      onclick={() => compareOpen.set(false)}>×</button
+  <header>
+    <h2 id="compare-title">Compare sizes</h2>
+    <button class="icon-btn" type="button" aria-label="Close" onclick={() => compareOpen.set(false)}
+      ><Icon name="close" /></button
     >
+  </header>
+
+  <div class="pickers">
+    <select aria-label="First world" bind:value={first}>
+      {#each worlds as body (body.id)}<option value={body.id}>{body.name}</option>{/each}
+    </select>
+    <span>and</span>
+    <select aria-label="Second world" bind:value={second}>
+      {#each worlds as body (body.id)}<option value={body.id}>{body.name}</option>{/each}
+    </select>
   </div>
-  <p>Compare physical sizes. The two discs below use the same scale.</p>
-  <div class="world-selectors">
-    <select aria-label="First world" bind:value={first}
-      >{#each worlds as body}<option value={body.id}>{body.name}</option>{/each}</select
-    ><span>×</span><select aria-label="Second world" bind:value={second}
-      >{#each worlds as body}<option value={body.id}>{body.name}</option>{/each}</select
-    >
-  </div>
+
   <svg
-    viewBox="0 0 560 240"
+    viewBox="0 0 560 220"
     role="img"
-    aria-label={`${right.name} has ${ratio.toFixed(2)} times the diameter of ${left.name}`}
+    aria-label="{big.name} is {factor} times the diameter of {small.name}"
   >
-    <defs
-      ><radialGradient id="compare-light" cx="30%" cy="25%" r="80%"
-        ><stop stop-color="#eee5d6" /><stop offset=".7" stop-color="#ae9d83" /><stop
-          offset="1"
-          stop-color="#34332f"
-        /></radialGradient
-      ></defs
-    >
-    <path d="M20 225H540" stroke="#20201e30" stroke-dasharray="3 5" />
-    <circle
-      cx="140"
-      cy={225 - (105 * left.metadata.radiusKm) / maximum}
-      r={(105 * left.metadata.radiusKm) / maximum}
-      fill="url(#compare-light)"
-    />
-    <circle
-      cx="420"
-      cy={225 - (105 * right.metadata.radiusKm) / maximum}
-      r={(105 * right.metadata.radiusKm) / maximum}
-      fill="url(#compare-light)"
-    />
+    <defs>
+      {#each [left, right] as body, index (index)}
+        <radialGradient id="compare-shade-{index}" cx="34%" cy="30%" r="75%">
+          <stop style:stop-color="color-mix(in oklab, {glyphColor(body)}, white 30%)" />
+          <stop offset=".55" style:stop-color={glyphColor(body)} />
+          <stop offset="1" style:stop-color="color-mix(in oklab, {glyphColor(body)}, black 70%)" />
+        </radialGradient>
+      {/each}
+    </defs>
+    {#each [left, right] as body, index (index)}
+      {@const r = Math.max(1.5, radiusOf(body.metadata.radiusKm))}
+      <circle cx={index ? 420 : 140} cy={210 - r} {r} fill="url(#compare-shade-{index})" />
+    {/each}
   </svg>
-  <div class="world-facts">
-    {#each [left, right] as body}<div>
-        <strong>{body.name}</strong><span
-          >{(body.metadata.radiusKm * 2).toLocaleString('en-US')} km diameter</span
-        ><button
-          type="button"
-          onclick={() => {
-            compareOpen.set(false);
-            selectBody(body.id);
-          }}>Explore {body.name} ↗</button
+
+  <p class="result">
+    <span class="factor tabular">{factor}×</span>
+    <span>{big.name} is {factor} times as wide as {small.name}</span>
+  </p>
+
+  <div class="worlds">
+    {#each [left, right] as body, index (index)}
+      <button type="button" class="world" onclick={() => explore(body.id)}>
+        <span class="name">{body.name}</span>
+        <span class="tabular"
+          >{(body.metadata.radiusKm * 2).toLocaleString('en-US', { maximumFractionDigits: 0 })} km across</span
         >
-      </div>{/each}
+        <span class="go">Go there <Icon name="chevron-right" size={14} /></span>
+      </button>
+    {/each}
   </div>
-  <p class="comparison-result">
-    {ratio >= 1 ? right.name : left.name} is
-    <strong
-      >{(ratio >= 1 ? ratio : 1 / ratio).toLocaleString('en-US', {
-        maximumFractionDigits: 2
-      })}×</strong
-    >
-    the diameter of {ratio >= 1 ? left.name : right.name}.
-  </p>
-  <p class="comparison-note">
-    Volumetric mean diameters. Rings and flattening are omitted. The 3D scene enlarges bodies
-    relative to orbital distances to keep them visible.
-  </p>
+  <p class="note">Mean diameters. Rings and flattening are not shown.</p>
 </dialog>
 
 <style>
-  .compare-dialog {
-    width: min(600px, calc(100vw - 24px));
+  .compare {
+    width: min(560px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
     margin: auto;
-    padding: 28px;
-    color: var(--space-text);
-    max-height: 90dvh;
+    padding: 20px;
     overflow-y: auto;
-    background: var(--space-surface);
+    border: 0;
+    border-radius: var(--radius-2xl);
+    background: var(--surface-1);
+    box-shadow: var(--shadow-xl);
+    color: var(--text-1);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 320ms var(--ease-out),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
   }
-  .compare-dialog::backdrop {
-    background: #02050bc9;
-    backdrop-filter: blur(8px);
+  .compare:not([open]) {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
   }
-  .compare-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  @starting-style {
+    .compare[open] {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
   }
-  h2 {
-    font-size: 34px;
-    text-transform: uppercase;
-    margin: 12px 0;
+  .compare::backdrop {
+    background: rgb(0 0 0 / 0.6);
   }
-  p {
-    font-size: 12px;
-    line-height: 1.7;
-    color: var(--space-muted);
-  }
-  .world-selectors {
+  header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin: 24px 0 8px;
+    justify-content: space-between;
+  }
+  h2 {
+    font-size: 20px;
+  }
+  .pickers {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .pickers span {
+    color: var(--text-3);
+    font-size: 13px;
   }
   select {
-    color-scheme: light;
-    background: var(--space-inset);
-    border: 1px solid var(--space-line);
-    padding: 12px;
-    font-size: 13px;
+    height: 40px;
     min-width: 0;
-    width: 100%;
-    border-radius: 0;
-  }
-  .world-selectors span {
-    color: var(--space-muted);
+    padding: 0 36px 0 16px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    appearance: none;
+    background: var(--surface-2)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23a3a3a3' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 8 4.5 4.5L14.5 8'/%3E%3C/svg%3E")
+      no-repeat right 12px center / 16px;
+    color: var(--text-1);
+    font: 500 14px var(--font-sans);
+    color-scheme: dark;
+    cursor: pointer;
   }
   svg {
+    display: block;
     width: 100%;
+    margin-top: 12px;
   }
-  .world-facts {
+  .result {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    padding-top: 16px;
+    gap: 4px;
+    margin-top: 8px;
     text-align: center;
   }
-  .world-facts > div {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  .factor {
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
   }
-  strong {
-    font-weight: 500;
+  .result span:last-child {
+    color: var(--text-2);
     font-size: 14px;
-    color: var(--space-text);
   }
-  .world-facts span {
-    font-size: 11px;
-    color: var(--space-muted);
+  .worlds {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 20px;
   }
-  .world-facts button {
-    font-size: 11px;
-    color: var(--space-accent);
-    min-height: 40px;
+  .world {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    text-align: left;
+    transition: background-color var(--dur-fast) ease;
   }
-  .comparison-result {
-    margin: 20px 0 12px;
-    padding-top: 20px;
-    border-top: 1px solid var(--space-line);
+  .world:hover {
+    background: var(--surface-3);
   }
-  .comparison-note {
-    font-size: 10px;
+  .name {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .world span:not(.name) {
+    color: var(--text-2);
+    font-size: 13px;
+  }
+  .go {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 6px;
   }
   @media (max-width: 639px) {
-    .compare-dialog {
-      padding: 20px;
+    .compare {
+      padding: 16px;
     }
-    select {
-      font-size: 12px;
-      padding: 10px;
+    .world {
+      padding: 12px;
     }
+  }
+  .note {
+    margin-top: 14px;
+    color: var(--text-3);
+    font-size: 12px;
+    text-align: center;
   }
 </style>

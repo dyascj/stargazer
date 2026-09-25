@@ -134,7 +134,7 @@
   --dur-base: 240ms;
   --dur-slow: 420ms;
 
-  /* Legacy aliases, removed as components migrate to the tokens above. */
+  /* Legacy aliases, still used by scene/Scene.svelte and scene/BodyLabel.svelte. */
   --space-surface: var(--glass);
   --space-inset: var(--surface-2);
   --space-hover: var(--surface-3);
@@ -308,59 +308,95 @@ kbd {
   color: var(--text-3);
 }
 
-/* Legacy classes kept until the explorer migrates. */
-.space-ui {
-  color: var(--text-1);
-  font-family: var(--font-sans);
+/* Staggered entrance. Set --i on siblings for a 70ms cascade. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }
+.rise {
+  animation: rise 620ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* Live indicator: accent dot with a slow ping. */
+.live-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: ping 2.6s var(--ease-out) infinite;
+}
+@keyframes ping {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70%,
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Delayed hover tooltip: <button class="icon-btn" data-tip="Settings">. */
+@media (hover: hover) {
+  .icon-btn[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    translate: -50% -4px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-3);
+    box-shadow: var(--shadow-md);
+    color: var(--text-1);
+    font: 500 12px/1.2 var(--font-sans);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 200ms var(--ease-out),
+      translate 200ms var(--ease-out);
+  }
+  .icon-btn[data-tip-side='top']::after {
+    top: auto;
+    bottom: calc(100% + 8px);
+    translate: -50% 4px;
+  }
+  .icon-btn[data-tip-align='end']::after {
+    left: auto;
+    right: 0;
+    translate: 0 -4px;
+  }
+  .icon-btn[data-tip]:hover::after {
+    opacity: 1;
+    translate: -50% 0;
+    transition-delay: 420ms;
+  }
+  .icon-btn[data-tip-align='end']:hover::after {
+    translate: 0 0;
+  }
+}
+
+/* Legacy panel, still used by layout/HoverTooltip.svelte. Remove once it migrates. */
 .space-panel {
   background: var(--glass);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
-}
-.space-ui .icon-button {
-  display: grid;
-  place-items: center;
-  min-width: 40px;
-  min-height: 40px;
-  font-size: 18px;
-  line-height: 1;
-  color: inherit;
-  border-radius: var(--radius-pill);
-}
-.space-ui .nav-chip {
-  min-height: 40px;
-  padding: 0 14px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--text-1);
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-}
-.space-ui button:hover {
-  background-color: var(--surface-3);
-}
-.space-ui .accent-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 16px;
-  background: var(--text-1);
-  color: var(--text-inverse);
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-}
-.space-ui button[aria-pressed='true'] {
-  color: var(--accent-strong);
 }
 
 @media (prefers-reduced-motion: reduce) {

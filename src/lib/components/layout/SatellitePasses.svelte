@@ -22,7 +22,7 @@
       return;
     }
     busy = true;
-    status = 'Waiting for your location…';
+    status = '';
     navigator.geolocation.getCurrentPosition(
       (position) => {
         if (!mounted) return;
@@ -37,8 +37,8 @@
             .slice(0, 5);
           ready = true;
           status = passes.length
-            ? 'Times in your local timezone.'
-            : 'No potentially visible passes above 10° in the prediction window.';
+            ? ''
+            : 'No visible passes above 10° in the next few days. Check back later.';
         } catch (error) {
           status = error instanceof Error ? error.message : 'Pass prediction is unavailable.';
         }
@@ -56,70 +56,89 @@
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
   }
+  const day = (date: Date) =>
+    date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const time = (date: Date) =>
+    date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 </script>
 
-<section class="passes">
-  <h3>Passes near you</h3>
-  <p>
-    Find potentially visible passes over your location, starting now. Location stays in your
-    browser.
-  </p>
-  <button class="nav-chip" type="button" disabled={busy} onclick={findPasses}
-    >{busy ? 'Finding passes…' : ready ? 'Refresh passes ↗' : 'Find passes near me ↗'}</button
-  >
-  <p aria-live="polite">{status}</p>
-  {#if passes.length}<ul>
-      {#each passes as pass}<li>
-          <time datetime={pass.startUtc.toISOString()}
-            >{pass.startUtc.toLocaleString(undefined, {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit'
-            })}</time
-          ><span
-            >{Math.round(pass.maxElevationDeg)}° peak · ~{Math.round(pass.durationSec / 60)} min</span
+<div class="passes">
+  <p>See when it crosses your sky. Your location stays in this browser.</p>
+  {#if passes.length}
+    <ol>
+      {#each passes as pass (pass.startUtc.getTime())}
+        <li>
+          <time datetime={pass.startUtc.toISOString()}>
+            <strong>{day(pass.startUtc)}</strong>
+            <span class="tabular">{time(pass.startUtc)}</span>
+          </time>
+          <span class="detail tabular"
+            >{Math.round(pass.maxElevationDeg)}° high · {Math.max(
+              1,
+              Math.round(pass.durationSec / 60)
+            )} min</span
           >
-        </li>{/each}
-    </ul>{/if}
+        </li>
+      {/each}
+    </ol>
+  {/if}
+  {#if status}<p class="status" aria-live="polite">{status}</p>{/if}
+  <button class="btn" type="button" disabled={busy} onclick={findPasses}
+    >{busy ? 'Finding passes' : ready ? 'Refresh' : 'Find passes near me'}</button
+  >
   <p class="fine-print">
-    Approximate 20-second sampling, up to 5 days ahead, limited by element age. Sunlight and
-    twilight are estimates; weather, terrain, and brightness affect visibility.
+    Up to 5 days ahead in local time. Weather, terrain, and brightness affect what you see.
   </p>
-</section>
+</div>
 
 <style>
-  .passes {
-    padding: 20px 0 0;
-    border-top: 1px solid var(--space-line);
-  }
   p {
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--space-muted);
-    margin: 12px 0;
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.6;
   }
-  button {
-    width: 100%;
-    justify-content: center;
-  }
-  button:disabled {
-    opacity: 0.5;
+  ol {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
   }
   li {
-    padding: 12px 0;
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border-bottom: 1px solid var(--space-line);
-    font-size: 11px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: rgb(245 245 245 / 0.05);
+    font-size: 13px;
   }
-  li span {
-    color: var(--space-muted);
-    font-size: 10px;
+  time {
+    display: flex;
+    gap: 8px;
+  }
+  strong {
+    font-weight: 500;
+  }
+  time span,
+  .detail {
+    color: var(--text-2);
+  }
+  .status {
+    margin-top: 12px;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+  .btn {
+    margin-top: 12px;
+    height: 36px;
+    font-size: 13px;
+  }
+  .btn:disabled {
+    opacity: 0.5;
   }
   .fine-print {
-    font-size: 9px;
+    margin-top: 10px;
+    color: var(--text-3);
+    font-size: 12px;
   }
 </style>
