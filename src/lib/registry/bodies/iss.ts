@@ -1,5 +1,4 @@
 import { Vector3 } from 'three';
-import { get } from 'svelte/store';
 import { iss } from '$stores/iss';
 import { latLonAltToVec3 } from '$utils/coords';
 import { earthLocalToInertialOffset } from '$utils/earth';
@@ -31,7 +30,7 @@ export const ISS: TrackedObject = {
   type: 'earth-satellite',
   parent: 'earth',
   offsetFn: (date, target) => {
-    const data = get(iss.data);
+    const data = iss.at(date);
     if (!data) return null;
     const [x, y, z] = latLonAltToVec3(
       data.latitude,
@@ -52,8 +51,9 @@ export const ISS: TrackedObject = {
     noradId: 25544,
     liveStoreKey: 'iss',
     satelliteCategory: 'space-station',
-    tracking: { mode: 'Live', source: 'wheretheiss.at API, polled at 1 Hz' },
-    description: "The International Space Station — humanity's largest structure in orbit. A collaboration between NASA, Roscosmos, JAXA, ESA, and CSA. Continuously inhabited since November 2, 2000 — the longest unbroken human presence in space.",
+    tracking: { mode: 'TLE prediction', source: 'CelesTrak orbital elements + SGP4' },
+    description:
+      "The International Space Station — humanity's largest structure in orbit. A collaboration between NASA, Roscosmos, JAXA, ESA, and CSA. Continuously inhabited since November 2, 2000 — the longest unbroken human presence in space.",
     facts: [
       { label: 'Orbital altitude', value: '~408 km' },
       { label: 'Speed', value: '~27,600 km/h' },
@@ -62,12 +62,15 @@ export const ISS: TrackedObject = {
       { label: 'Pressurized volume', value: '916 m³' },
       { label: 'Crew capacity', value: '6–7' },
       { label: 'First module launched', value: '1998 (Zarya)' },
-      { label: 'Orbits per day', value: '~15.5' },
+      { label: 'Orbits per day', value: '~15.5' }
     ],
     sources: [
-      { name: 'NASA ISS Reference Guide', url: 'https://www.nasa.gov/international-space-station/' },
+      {
+        name: 'NASA ISS Reference Guide',
+        url: 'https://www.nasa.gov/international-space-station/'
+      },
       { name: 'wheretheiss.at', url: 'https://wheretheiss.at/' },
-      { name: 'Celestrak', url: 'https://celestrak.org/' },
-    ],
+      { name: 'Celestrak', url: 'https://celestrak.org/' }
+    ]
   }
 };

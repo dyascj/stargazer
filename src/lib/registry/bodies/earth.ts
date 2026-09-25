@@ -25,16 +25,14 @@ export const EARTH: TrackedObject = {
     radius: EARTH_RADIUS,
     radiusKm: EARTH_RADIUS_KM,
     textureUrl: '/textures/earth_albedo_2k.webp',
-    geometryDetail: 7,
     obliquityRad: EARTH_OBLIQUITY_RAD,
     rotationModel: 'gmst',
     hasAtmosphere: true,
-    shaderAmbient: 0.07,
-    shaderBrightness: 1.75,
     dayLength: '23h 56m 04s',
     yearLength: '365.25 days',
-    orbitColor: 0xE8441E,
-    description: 'Third planet from the Sun. The only known world with liquid surface water, a nitrogen-oxygen atmosphere, and confirmed life. Orbits at 1 AU — the baseline distance used to measure the rest of the solar system.',
+    orbitColor: 0xe8441e,
+    description:
+      'Third planet from the Sun. The only known world with liquid surface water, a nitrogen-oxygen atmosphere, and confirmed life. Orbits at 1 AU — the baseline distance used to measure the rest of the solar system.',
     facts: [
       { label: 'Mass', value: '5.972 × 10²⁴ kg' },
       { label: 'Diameter', value: '12,742 km' },
@@ -43,11 +41,14 @@ export const EARTH: TrackedObject = {
       { label: 'Axial tilt', value: '23.44°' },
       { label: 'Day length', value: '23h 56m 04s (sidereal)' },
       { label: 'Year length', value: '365.25 days' },
-      { label: 'Distance from Sun', value: '1 AU (149.6M km)' },
+      { label: 'Distance from Sun', value: '1 AU (149.6M km)' }
     ],
     sources: [
-      { name: 'NASA Planetary Fact Sheet', url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html' },
-      { name: 'NASA Earth Observatory', url: 'https://science.nasa.gov/earth/earth-observatory/' },
-    ],
+      {
+        name: 'NASA Planetary Fact Sheet',
+        url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html'
+      },
+      { name: 'NASA Earth Observatory', url: 'https://science.nasa.gov/earth/earth-observatory/' }
+    ]
   }
 };

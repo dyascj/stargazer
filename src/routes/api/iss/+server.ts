@@ -21,11 +21,21 @@ interface WheretheissResponse {
 
 export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
   try {
-    const res = await fetch(ISS_URL);
+    const res = await fetch(ISS_URL, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) {
       throw error(502, `Upstream ISS API returned ${res.status}`);
     }
     const data = (await res.json()) as WheretheissResponse;
+
+    if (
+      ![data.latitude, data.longitude, data.altitude, data.velocity, data.timestamp].every(
+        Number.isFinite
+      ) ||
+      Math.abs(data.latitude) > 90 ||
+      Math.abs(data.longitude) > 180 ||
+      data.altitude < 0
+    )
+      throw error(502, 'Invalid ISS telemetry');
 
     setHeaders({
       // Match the 1 Hz client polling — anything longer would deliver
@@ -48,6 +58,6 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
     });
   } catch (err) {
     if ((err as { status?: number }).status) throw err;
-    throw error(500, (err as Error).message);
+    throw error(502, 'ISS telemetry is unavailable');
   }
 };

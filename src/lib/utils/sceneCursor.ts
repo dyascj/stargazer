@@ -32,14 +32,8 @@ export function leaveBody(): void {
   }
 }
 
-/**
- * Backwards-compatible boolean variant. Prefer `enterBody(name)` /
- * `leaveBody()` so the tooltip gets the correct label.
- */
-export function setBodyCursor(hovering: boolean): void {
-  if (hovering) {
-    enterBody('');
-  } else {
-    leaveBody();
-  }
+export function resetBodyCursor(): void {
+  hoverCount = 0;
+  hoveredBody.set(null);
+  if (typeof document !== 'undefined') document.body.style.cursor = '';
 }

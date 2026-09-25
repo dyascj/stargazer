@@ -31,13 +31,12 @@ export const SATURN: TrackedObject = {
     externalId: '699',
     radius: SATURN_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: SATURN_RADIUS_KM,
-    geometryDetail: 6,
     textureUrl: '/textures/2k_saturn.jpg',
     poleVec: [0.0855, 0.8825, -0.4624],
     rotationModel: 'iau-w',
     rotationW0Deg: 38.9,
     rotationRateDegPerDay: 810.7939024,
-    // Main ring system A through G: ~74,500 km inner edge to ~140,180 km
+    // Stylized main ring disc: ~74,500 km inner edge to ~140,180 km
     // outer edge of the A ring. In Earth radii (= scene units): 11.69 to
     // 22.00, which puts the inner edge ~28% beyond Saturn's 9.14-radius
     // surface and the outer edge ~2.4 Saturn radii.
@@ -47,11 +46,9 @@ export const SATURN: TrackedObject = {
       textureUrl: '/textures/2k_saturn_ring_alpha.png',
       color: '#ffffff'
     },
-    shaderAmbient: 0.04,
-    shaderBrightness: 1.9,
     dayLength: '10h 33m',
     yearLength: '29.46 Earth years',
-    orbitColor: 0x8A8A85,
+    orbitColor: 0x8a8a85,
     description:
       'Saturn is best known for its extensive ring system, made primarily of ice particles with some rocky debris and dust. It is the least dense planet in the solar system and would float in water if a basin large enough existed.',
     facts: [
@@ -59,8 +56,10 @@ export const SATURN: TrackedObject = {
       { label: 'Surface gravity', value: '10.44 m/s²' },
       { label: 'Mean temperature', value: '134 K (cloud tops)' },
       { label: 'Atmosphere', value: '~96% H₂, ~3% He, traces of CH₄, NH₃' },
-      { label: 'Known moons', value: '146' },
-      { label: 'Magnetic field', value: 'Yes, ~580× Earth\'s, nearly aligned with rotation axis' }
+      {
+        label: 'Magnetic field',
+        value: 'Nearly aligned with the rotation axis; equatorial strength ~21 μT'
+      }
     ],
     sources: [
       {
@@ -68,6 +67,9 @@ export const SATURN: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };

@@ -12,6 +12,8 @@ export type SelectionId = string | null;
 export const SOLAR_SYSTEM_VIEW = 'solarSystem';
 
 /** Camera distance used by the special `'solarSystem'` overview view. */
-export const SOLAR_SYSTEM_CAMERA_DISTANCE = 90;
+export const SOLAR_SYSTEM_CAMERA_DISTANCE = 9000;
 
 export const selection = writable<SelectionId>(SOLAR_SYSTEM_VIEW);
+
+export const overviewDistance = writable(SOLAR_SYSTEM_CAMERA_DISTANCE);

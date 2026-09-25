@@ -1,99 +1,58 @@
 <script lang="ts">
-  import { T, useTask } from '@threlte/core';
+  import { T, useTask, useThrelte } from '@threlte/core';
   import { Line2 } from 'three/examples/jsm/lines/Line2.js';
   import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
   import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-  import type { Readable } from 'svelte/store';
+  import { get, type Readable } from 'svelte/store';
   import type { TleData } from '$stores/satelliteFactory';
+  import { simTime } from '$stores/simTime';
   import { computeIssOrbit } from '$utils/issOrbit';
-
-  /**
-   * Generic forward-orbit line. Takes any TLE store and renders ~one full
-   * orbital period (auto-detected: 92 min default if no period override
-   * is provided) as a fat-line polyline with a vertex-color fade so the
-   * head sits brighter than the tail.
-   */
-
-  let {
-    tleStore,
-    durationMinutes = 92
-  }: { tleStore: Readable<TleData | null>; durationMinutes?: number } = $props();
-
-  const RECOMPUTE_MS = 30_000;
-  const SAMPLES = 240;
-
+  let { tleStore, trailMinutes }: { tleStore: Readable<TleData | null>; trailMinutes?: number } =
+    $props();
+  const { size } = useThrelte();
   const geometry = new LineGeometry();
-  geometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
-
-  const colors = new Float32Array(SAMPLES * 6);
-  for (let i = 0; i < SAMPLES; i++) {
-    const t = 1 - i / (SAMPLES - 1);
-    const intensity = 0.25 + 0.75 * t;
-    colors[i * 6] = 1;
-    colors[i * 6 + 1] = 1;
-    colors[i * 6 + 2] = 1;
-    colors[i * 6 + 3] = intensity;
-    colors[i * 6 + 4] = intensity;
-    colors[i * 6 + 5] = intensity;
-  }
-  geometry.setColors(colors);
-
   const material = new LineMaterial({
-    color: 0xffffff,
-    linewidth: 2.5,
+    color: 0xb6cadb,
+    linewidth: 1.2,
     transparent: true,
-    opacity: 0.9,
-    vertexColors: true,
-    depthWrite: false,
-    dashed: false
+    opacity: 0.45,
+    depthWrite: false
   });
-  if (typeof window !== 'undefined') {
-    material.resolution.set(window.innerWidth, window.innerHeight);
-  }
-
   const line = new Line2(geometry, material);
   line.frustumCulled = false;
-  line.computeLineDistances();
-
-  let lastBuiltAt = 0;
-  let lastResW = 0;
-  let lastResH = 0;
-
+  line.visible = false;
+  let lastTime = NaN;
+  let lastBuild = 0;
   function rebuild() {
-    const tle = $tleStore;
-    if (!tle) return;
-    const positions = computeIssOrbit(tle, {
-      start: new Date(),
-      durationMinutes,
-      samples: SAMPLES
+    const date = get(simTime);
+    lastTime = date.getTime();
+    lastBuild = performance.now();
+    if (!$tleStore) {
+      line.visible = false;
+      return;
+    }
+    const positions = computeIssOrbit($tleStore, {
+      start: new Date(lastTime - (trailMinutes ?? 0) * 60000),
+      frameDate: date,
+      durationMinutes: trailMinutes,
+      samples: trailMinutes ? 80 : 180
     });
-    geometry.setPositions(positions);
-    line.computeLineDistances();
-    geometry.computeBoundingSphere();
-    lastBuiltAt = performance.now();
+    line.visible = positions.length >= 6;
+    if (line.visible) {
+      geometry.setPositions(positions);
+      geometry.computeBoundingSphere();
+    }
   }
-
   $effect(() => {
     void $tleStore;
     rebuild();
   });
-
   useTask(() => {
-    if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      if (w !== lastResW || h !== lastResH) {
-        material.resolution.set(w, h);
-        lastResW = w;
-        lastResH = h;
-      }
-    }
-    if (performance.now() - lastBuiltAt > RECOMPUTE_MS) {
+    material.resolution.set($size.width, $size.height);
+    const elapsed = Math.abs(get(simTime).getTime() - lastTime);
+    if (!Number.isFinite(elapsed) || (elapsed > 500 && performance.now() - lastBuild > 100))
       rebuild();
-    }
   });
 </script>
 
-{#if $tleStore}
-  <T is={line} />
-{/if}
+<T is={line} />

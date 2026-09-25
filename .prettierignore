@@ -1,0 +1,8 @@
+node_modules
+.svelte-kit
+.vercel
+build
+dist
+dev-dist
+package-lock.json
+static

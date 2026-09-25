@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from 'three';
-import { EARTH_RADIUS_KM } from '../scene-config';
+import { poleQuaternion } from './pole';
 import { getById } from '../registry/registry';
 import { isPlanetBody } from '../registry/types';
 import { latLonAltToVec3 } from './coords';
@@ -46,14 +46,7 @@ function getParentPoleQuat(parentId: string): Quaternion | null {
     _quatCache.set(parentId, null);
     return null;
   }
-  const q = new Quaternion().setFromUnitVectors(
-    new Vector3(0, 1, 0),
-    new Vector3(
-      parent.metadata.poleVec[0],
-      parent.metadata.poleVec[1],
-      parent.metadata.poleVec[2]
-    )
-  );
+  const q = poleQuaternion(parent.metadata.poleVec);
   _quatCache.set(parentId, q);
   return q;
 }
@@ -88,13 +81,7 @@ export function planetSurfaceToInertialOffset(
   // the right scale.
   const planetRadiusKm = parent.metadata.radiusKm;
   const planetRadiusScene = parent.metadata.radius;
-  const [lx, ly, lz] = latLonAltToVec3(
-    latDeg,
-    lonDeg,
-    altKm,
-    planetRadiusScene,
-    planetRadiusKm
-  );
+  const [lx, ly, lz] = latLonAltToVec3(latDeg, lonDeg, altKm, planetRadiusScene, planetRadiusKm);
 
   // Step 2: rotate by the planet's IAU W-formula spin around local +Y.
   // The W angle is the same one PlanetBody uses each frame, so the
@@ -109,7 +96,7 @@ export function planetSurfaceToInertialOffset(
   ) {
     const days = (date.getTime() - J2000_MS) / 86_400_000;
     const wDeg = parent.metadata.rotationW0Deg + parent.metadata.rotationRateDegPerDay * days;
-    const wRad = ((wDeg % 360) + 360) % 360 * DEG_TO_RAD;
+    const wRad = (((wDeg % 360) + 360) % 360) * DEG_TO_RAD;
     const cosW = Math.cos(wRad);
     const sinW = Math.sin(wRad);
     postSpinX = cosW * lx + sinW * lz;

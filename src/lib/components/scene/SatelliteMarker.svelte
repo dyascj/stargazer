@@ -1,14 +1,9 @@
 <script lang="ts">
   import { T, useTask, useThrelte } from '@threlte/core';
-  import {
-    MathUtils,
-    Matrix4,
-    PerspectiveCamera,
-    Vector3,
-    type Group,
-    type Mesh
-  } from 'three';
+  import { MathUtils, Matrix4, PerspectiveCamera, Vector3, type Group, type Mesh } from 'three';
   import type { SatelliteStore } from '$stores/satelliteFactory';
+  import { get } from 'svelte/store';
+  import { simTime } from '$stores/simTime';
   import { latLonAltToVec3 } from '$utils/coords';
   import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
   import { enterBody, leaveBody } from '$utils/sceneCursor';
@@ -34,10 +29,7 @@
    * models later if we want station-specific shapes.
    */
 
-  let {
-    store,
-    bodyId
-  }: { store: SatelliteStore; bodyId: string } = $props();
+  let { store, bodyId }: { store: SatelliteStore; bodyId: string } = $props();
 
   function handlePointerDown(event: { stopPropagation: () => void }): void {
     event.stopPropagation();
@@ -56,8 +48,7 @@
 
   const target = new Vector3();
   const current = new Vector3();
-  const previous = new Vector3();
-  let initialized = false;
+  const future = new Vector3();
 
   // Orientation basis vectors. The marker is mounted as a child of the
   // rotating Earth group, so all positions and orientations live in
@@ -78,36 +69,43 @@
   // screen-space click sphere rescale.
   const { camera, size } = useThrelte();
 
-  useTask((dt) => {
-    if (!$data || !groupRef) return;
+  useTask(() => {
+    if (!groupRef) return;
+    const state = store.at(get(simTime));
+    groupRef.visible = !!state;
+    if (!state) return;
 
     // Earth-fixed lat/lon converted to local Earth-relative Cartesian.
     // The parent group's GMST rotation transforms this into inertial
     // space automatically.
     const [x, y, z] = latLonAltToVec3(
-      $data.latitude,
-      $data.longitude,
-      $data.altitudeKm,
+      state.latitude,
+      state.longitude,
+      state.altitudeKm,
       EARTH_RADIUS,
       EARTH_RADIUS_KM
     );
     target.set(x, y, z);
 
-    if (!initialized) {
-      current.copy(target);
-      previous.copy(target);
-      initialized = true;
-    } else {
-      previous.copy(current);
-      const lambda = 1 - Math.pow(0.0001, dt);
-      current.lerp(target, Math.min(1, lambda));
-    }
+    current.copy(target);
     groupRef.position.copy(current);
 
     // Velocity-aligned orientation, computed in local Earth frame.
     // The parent rotation will compose this with Earth's GMST rotation
     // to give the right world-space orientation.
-    forward.copy(current).sub(previous);
+    const next = store.at(new Date(get(simTime).getTime() + 1000));
+    if (next) {
+      future.set(
+        ...latLonAltToVec3(
+          next.latitude,
+          next.longitude,
+          next.altitudeKm,
+          EARTH_RADIUS,
+          EARTH_RADIUS_KM
+        )
+      );
+      forward.copy(future).sub(current);
+    } else forward.set(0, 0, 0);
     if (forward.lengthSq() > 1e-12) {
       forward.normalize();
       radialUp.copy(current).normalize();

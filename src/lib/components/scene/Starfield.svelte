@@ -54,11 +54,11 @@
     side: BackSide,
     uniforms: {
       uMap: { value: null },
-      uBrightness: { value: 2.0 },
+      uBrightness: { value: 0.9 },
       // Faint near-white lift with the smallest hint of cool blue.
       // RGB in [0,1]. Same colour also applied as scene.background in
       // World.svelte for consistency.
-      uAmbientCast: { value: new Vector3(0.075, 0.08, 0.09) }
+      uAmbientCast: { value: new Vector3(0.004, 0.006, 0.012) }
     }
   });
 

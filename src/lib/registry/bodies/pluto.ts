@@ -33,19 +33,16 @@ export const PLUTO: TrackedObject = {
     externalId: '999',
     radius: PLUTO_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: PLUTO_RADIUS_KM,
-    geometryDetail: 5,
     solidColor: '#b89b7a',
-    poleVec: [-0.6780, -0.3878, -0.6245],
+    poleVec: [-0.678, -0.3878, -0.6245],
     rotationModel: 'iau-w',
     rotationW0Deg: 302.695,
     rotationRateDegPerDay: -56.3625225,
-    shaderAmbient: 0.025,
-    shaderBrightness: 1.9,
     dayLength: '6.39 Earth days (retrograde)',
     yearLength: '248.0 Earth years',
     orbitColor: 0x585858,
     description:
-      'Pluto is a dwarf planet in the Kuiper Belt, reclassified from full planet status in 2006. NASA\'s New Horizons flyby in 2015 revealed a complex surface with nitrogen ice glaciers, mountains of water ice, and a thin atmosphere.',
+      "Pluto is a dwarf planet in the Kuiper Belt, reclassified from full planet status in 2006. NASA's New Horizons flyby in 2015 revealed a complex surface with nitrogen ice glaciers, mountains of water ice, and a thin atmosphere.",
     facts: [
       { label: 'Mass', value: '1.303 × 10²² kg' },
       { label: 'Surface gravity', value: '0.62 m/s²' },
@@ -60,6 +57,9 @@ export const PLUTO: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };

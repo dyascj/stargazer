@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { T, useTask } from '@threlte/core';
+  import { T, useTask, useThrelte } from '@threlte/core';
   import { Line2 } from 'three/examples/jsm/lines/Line2.js';
   import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
   import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
   import { get } from 'svelte/store';
+  import { simTime } from '$stores/simTime';
+  import { reducedMotion } from '$stores/reducedMotion';
   import { selection } from '$lib/stores/selection';
   import { getOrbitEllipsePoints, PLANETS } from '$utils/helio';
 
@@ -39,8 +41,8 @@
     );
   }
 
+  const { size } = useThrelte();
   const SAMPLES = 256;
-  const REFRESH_MS = 60_000; // recompute once a minute (orbits precess slowly)
 
   // Props are fixed for the lifetime of an OrbitEllipse instance — each
   // is mounted with one specific planet and never re-keyed.
@@ -51,12 +53,12 @@
   const initialOpacity = opacity;
 
   const geometry = new LineGeometry();
-  geometry.setPositions(getOrbitEllipsePoints(initialPlanet, SAMPLES));
+  geometry.setPositions(getOrbitEllipsePoints(initialPlanet, SAMPLES, get(simTime)));
 
   // Inner orbits slightly thicker for readability at solar system zoom;
   // outer orbits thinner so they don't dominate the scene.
   const semiMajorAU = (PLANETS[planetKeyStable] as { a: number[] }).a[0];
-  const lineWidth = Math.max(0.8, 2.0 - semiMajorAU * 0.035);
+  const lineWidth = Math.max(0.65, 1.15 - semiMajorAU * 0.01);
 
   const material = new LineMaterial({
     color: initialColor,
@@ -73,7 +75,7 @@
   line.frustumCulled = false;
   line.computeLineDistances();
 
-  let lastBuiltAt = performance.now();
+  let lastBuiltAt = get(simTime).getTime();
   let lastResW = 0;
   let lastResH = 0;
 
@@ -93,23 +95,24 @@
   let drawAnimStart = 0;
   let drawAnimActive = false;
   let prevSelected = false;
-  const instanceCount = (geometry as unknown as { instanceCount?: number }).instanceCount ?? SAMPLES;
+  const instanceCount =
+    (geometry as unknown as { instanceCount?: number }).instanceCount ?? SAMPLES;
 
   useTask(() => {
     if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = size.current.width;
+      const h = size.current.height;
       if (w !== lastResW || h !== lastResH) {
         material.resolution.set(w, h);
         lastResW = w;
         lastResH = h;
       }
     }
-    if (performance.now() - lastBuiltAt > REFRESH_MS) {
-      geometry.setPositions(getOrbitEllipsePoints(initialPlanet, SAMPLES));
+    if (Math.abs(get(simTime).getTime() - lastBuiltAt) > 86400000 * 30) {
+      geometry.setPositions(getOrbitEllipsePoints(initialPlanet, SAMPLES, get(simTime)));
       line.computeLineDistances();
       geometry.computeBoundingSphere();
-      lastBuiltAt = performance.now();
+      lastBuiltAt = get(simTime).getTime();
     }
 
     // Selection-aware emphasis. Compare against the body id; the
@@ -128,7 +131,7 @@
 
     // Orbit draw animation: when this body is newly selected, animate
     // the line from 0 segments to full over DRAW_DURATION_MS.
-    if (isSelected && !prevSelected) {
+    if (isSelected && !prevSelected && !get(reducedMotion)) {
       drawAnimActive = true;
       drawAnimStart = performance.now();
     }

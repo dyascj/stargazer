@@ -1,5 +1,4 @@
 import { Vector3 } from 'three';
-import { get } from 'svelte/store';
 import { tiangong } from '$stores/tiangong';
 import { latLonAltToVec3 } from '$utils/coords';
 import { earthLocalToInertialOffset } from '$utils/earth';
@@ -21,7 +20,7 @@ export const TIANGONG: TrackedObject = {
   type: 'earth-satellite',
   parent: 'earth',
   offsetFn: (date, target) => {
-    const data = get(tiangong.data);
+    const data = tiangong.at(date);
     if (!data) return null;
     const [x, y, z] = latLonAltToVec3(
       data.latitude,
@@ -42,20 +41,21 @@ export const TIANGONG: TrackedObject = {
     noradId: 48274,
     liveStoreKey: 'tiangong',
     satelliteCategory: 'space-station',
-    tracking: { mode: 'Live', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
-    description: "China's modular space station, operational since 2022. Built from three modules: the Tianhe core, Wentian laboratory, and Mengtian experiment module. Supports a permanent crew of three taikonauts.",
+    tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
+    description:
+      "China's modular space station, operational since 2022. Built from three modules: the Tianhe core, Wentian laboratory, and Mengtian experiment module. Supports a permanent crew of three taikonauts.",
     facts: [
       { label: 'Orbital altitude', value: '~390 km' },
       { label: 'Mass', value: '~66,000 kg (three-module)' },
       { label: 'Modules', value: '3 (Tianhe, Wentian, Mengtian)' },
       { label: 'Crew capacity', value: '3 (up to 6 during handover)' },
       { label: 'Core module launched', value: 'April 29, 2021' },
-      { label: 'Orbit type', value: 'LEO, 41.5° inclination' },
+      { label: 'Orbit type', value: 'LEO, 41.5° inclination' }
     ],
     sources: [
       { name: 'CMSA', url: 'http://www.cmsa.gov.cn/' },
       { name: 'Celestrak TLE', url: 'https://celestrak.org/NORAD/elements/gp.php?CATNR=48274' },
-      { name: 'open-notify', url: 'http://open-notify.org/' },
-    ],
+      { name: 'open-notify', url: 'http://open-notify.org/' }
+    ]
   }
 };

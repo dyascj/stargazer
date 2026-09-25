@@ -1,8 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-const BIGDATACLOUD_BASE =
-  'https://api.bigdatacloud.net/data/reverse-geocode-client';
+const BIGDATACLOUD_BASE = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
 
 /**
  * Reverse-geocode a lat/lon to a friendly description (country, ocean, or
@@ -12,11 +11,21 @@ const BIGDATACLOUD_BASE =
 export const GET: RequestHandler = async ({ fetch, url, setHeaders }) => {
   const lat = url.searchParams.get('lat');
   const lon = url.searchParams.get('lon');
-  if (!lat || !lon) throw error(400, 'lat and lon are required');
+  if (
+    lat === null ||
+    lon === null ||
+    !lat.trim() ||
+    !lon.trim() ||
+    !Number.isFinite(Number(lat)) ||
+    !Number.isFinite(Number(lon)) ||
+    Math.abs(Number(lat)) > 90 ||
+    Math.abs(Number(lon)) > 180
+  )
+    throw error(400, 'Valid latitude and longitude are required');
 
   const upstream = `${BIGDATACLOUD_BASE}?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&localityLanguage=en`;
 
-  const res = await fetch(upstream);
+  const res = await fetch(upstream, { signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw error(502, `BigDataCloud returned ${res.status}`);
 
   const data = (await res.json()) as {

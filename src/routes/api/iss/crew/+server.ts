@@ -23,12 +23,21 @@ interface AstrosResponse {
  */
 export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
   try {
-    const res = await fetch(ASTROS_URL);
+    const res = await fetch(ASTROS_URL, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) throw error(502, `open-notify returned ${res.status}`);
     const data = (await res.json()) as AstrosResponse;
 
+    if (
+      data.message !== 'success' ||
+      !Array.isArray(data.people) ||
+      data.people.some(
+        (person) => typeof person.name !== 'string' || typeof person.craft !== 'string'
+      )
+    )
+      throw error(502, 'Invalid crew roster');
+
     // Group by craft for easy per-vehicle filtering on the client
-    const byCraft: Record<string, string[]> = {};
+    const byCraft: Record<string, string[]> = Object.create(null);
     for (const person of data.people) {
       if (!byCraft[person.craft]) byCraft[person.craft] = [];
       byCraft[person.craft].push(person.name);
@@ -42,11 +51,11 @@ export const GET: RequestHandler = async ({ fetch, setHeaders }) => {
 
     return json({
       byCraft,
-      total: data.number,
+      total: data.people.length,
       fetchedAt: Date.now()
     });
   } catch (err) {
     if ((err as { status?: number }).status) throw err;
-    throw error(500, (err as Error).message);
+    throw error(502, 'Crew roster is unavailable');
   }
 };

@@ -1,14 +1,14 @@
 import { Vector3 } from 'three';
-import { EARTH_RADIUS_KM } from '$lib/scene-config';
+import { AU_TO_SCENE } from '$lib/scene-config';
 import { computeMoonOffset, type MoonOrbitalElements } from '$utils/moons';
 import { planetSurfaceToInertialOffset } from '$utils/planetSurface';
 import { getById } from '../registry';
 import type { TrackedObject } from '../types';
 
 /**
- * Active spacecraft and surface landers. Positions from JPL HORIZONS at epoch 2026-04-08.
+ * Spacecraft and landing sites. Each orbital record carries its own source epoch.
  * Planet orbiters use live Keplerian propagation; en-route and outer-solar-system
- * spacecraft use static snapshots (their motion is negligible at visualization timescales).
+ * spacecraft use dated snapshots. These do not predict their current positions.
  */
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ function staticOffset(scenePos: [number, number, number]): TrackedObject['offset
 
 /**
  * Convert HORIZONS heliocentric ECLIPTIC J2000 Cartesian (in AU) to
- * scene-frame Cartesian (in scene units = Earth radii). Used for the
+ * scene-frame Cartesian (100 scene units per AU). Used for the
  * static spacecraft snapshots fetched from HORIZONS.
  *
  * helio.ts maps ecliptic axes (x, y, z) → scene axes (x, z, -y), with
@@ -70,12 +70,17 @@ function helioAuToScene(
   ecl_y_au: number,
   ecl_z_au: number
 ): [number, number, number] {
-  return [ecl_x_au * 100, ecl_z_au * 100, -ecl_y_au * 100];
+  return [ecl_x_au * AU_TO_SCENE, ecl_z_au * AU_TO_SCENE, -ecl_y_au * AU_TO_SCENE];
 }
 
 /** Build a planet-orbiter offsetFn via the moon Keplerian helper. */
 function orbiterOffset(elements: MoonOrbitalElements): TrackedObject['offsetFn'] {
-  return (date, target) => computeMoonOffset(elements, date, target);
+  return (date, target) => {
+    const jd = date.getTime() / 86400000 + 2440587.5;
+    return Math.abs(jd - elements.epoch_jd) <= 30
+      ? computeMoonOffset(elements, date, target)
+      : null;
+  };
 }
 
 /** Build a surface-lander offsetFn via the planet surface helper. */
@@ -94,8 +99,8 @@ function landerOffset(
  * anti-Sun direction. Computed each frame from Earth's current
  * heliocentric position.
  */
-const L2_DISTANCE_KM = 1_500_000;
-const L2_DISTANCE_SCENE = L2_DISTANCE_KM / EARTH_RADIUS_KM;
+// Illustrative local offset: L2 would sit at Earth's enlarged surface at AU scale.
+const L2_DISTANCE_SCENE = 8;
 function l2Offset(): TrackedObject['offsetFn'] {
   return (date, target) => {
     const earth = getById('earth');
@@ -110,14 +115,6 @@ function l2Offset(): TrackedObject['offsetFn'] {
 }
 const _l2Tmp = new Vector3();
 
-// Wave-3 element epoch — All Keplerian element sets below use this
-// epoch for their reference mean anomaly.
-const EPOCH_JD = 2461305; // JD TDB at 2026-09-21 00:00 UTC
-// MAVEN's HORIZONS ephemeris extends only to 2026-03-01, so its element
-// set is captured at that earlier epoch. Forward propagation handles the
-// difference automatically via the period.
-const MAVEN_EPOCH_JD = 2461100.5;
-
 // ── Mars orbiters (real Keplerian elements from JPL HORIZONS) ───────────
 
 const MRO = spacecraftPointMarker({
@@ -129,7 +126,11 @@ const MRO = spacecraftPointMarker({
   externalId: '-74',
   color: '#E8441E',
   cameraDistance: 1.0,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    epoch: '2026-09-06T00:00:00.000 TDB',
+    mode: 'Approximate orbit',
+    source: 'Two-body model; maneuvers and perturbations omitted'
+  },
   description:
     'MRO studies Mars from orbit with the most powerful camera ever sent to another planet. It has returned more data about Mars than all other orbital missions combined.',
   facts: [
@@ -139,18 +140,21 @@ const MRO = spacecraftPointMarker({
     { label: 'Objective', value: 'High-resolution imaging and climate monitoring of Mars' }
   ],
   sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/mars-reconnaissance-orbiter/' }
+    {
+      name: 'NASA Mission Page',
+      url: 'https://science.nasa.gov/mission/mars-reconnaissance-orbiter/'
+    }
   ],
   offsetFn: orbiterOffset({
     parentId: 'mars',
-    a_km: 3658.840,
-    e: 0.009169,
-    i_deg: 70.93490,
-    Omega_deg: 299.9141,
-    omega_deg: 246.3695,
-    M_deg: 57.5094,
-    period_days: 0.077771,
-    epoch_jd: EPOCH_JD
+    a_km: 3666.366841982969,
+    e: 0.009248259126813945,
+    i_deg: 68.9478735995148,
+    Omega_deg: 291.5168269529451,
+    omega_deg: 263.5165057963207,
+    M_deg: 73.83394314400293,
+    period_days: 0.07801070507071697,
+    epoch_jd: 2461289.5
   })
 });
 
@@ -159,21 +163,28 @@ const MAVEN = spacecraftPointMarker({
   name: 'MAVEN',
   type: 'spacecraft',
   parent: 'mars',
-  subtitle: 'NASA · Mars Atmosphere & Volatile Evolution',
+  subtitle: 'NASA · Mars atmosphere mission, 2013–2026',
   externalId: '-202',
   color: '#8A8A85',
   cameraDistance: 1.2,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    epoch: '2026-03-01T00:00:00 TDB',
+    mode: 'Historical orbit',
+    source: 'Archived JPL elements; current trajectory unavailable'
+  },
   description:
-    'MAVEN studies how Mars lost its atmosphere and water over billions of years by measuring the current rate of atmospheric escape. It also serves as a telecommunications relay for surface rovers.',
+    'MAVEN revealed how Mars lost much of its atmosphere to space and relayed rover communications. Contact was lost on December 6, 2025; NASA announced the mission’s end on June 3, 2026. The archived orbit shown here is not a current position.',
   facts: [
     { label: 'Launch Date', value: 'Nov 18, 2013' },
     { label: 'Agency', value: 'NASA/GSFC' },
-    { label: 'Status', value: 'Active (extended mission)' },
+    { label: 'Status', value: 'Mission ended June 3, 2026' },
     { label: 'Objective', value: 'Study Mars upper atmosphere and atmospheric loss' }
   ],
   sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/maven/' }
+    {
+      name: 'NASA mission conclusion',
+      url: 'https://www.nasa.gov/news-release/nasa-says-farewell-to-maven-mars-mission-hosts-media-call-today/'
+    }
   ],
   offsetFn: orbiterOffset({
     parentId: 'mars',
@@ -184,7 +195,7 @@ const MAVEN = spacecraftPointMarker({
     omega_deg: 26.8032,
     M_deg: 117.7429,
     period_days: 0.152717,
-    epoch_jd: MAVEN_EPOCH_JD
+    epoch_jd: 2461100.5
   })
 });
 
@@ -197,9 +208,13 @@ const MARS_EXPRESS = spacecraftPointMarker({
   externalId: '-41',
   color: '#787878',
   cameraDistance: 1.4,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    epoch: '2026-09-06T00:00:00.000 TDB',
+    mode: 'Approximate orbit',
+    source: 'Two-body model; maneuvers and perturbations omitted'
+  },
   description:
-    'Mars Express is ESA\'s first planetary mission, studying the Martian surface, subsurface, and atmosphere. Its MARSIS radar confirmed the presence of subsurface water ice deposits.',
+    "Mars Express is ESA's first planetary mission, studying the Martian surface, subsurface, and atmosphere. Its MARSIS radar confirmed the presence of subsurface water ice deposits.",
   facts: [
     { label: 'Launch Date', value: 'Jun 2, 2003' },
     { label: 'Agency', value: 'ESA' },
@@ -207,18 +222,21 @@ const MARS_EXPRESS = spacecraftPointMarker({
     { label: 'Objective', value: 'Global imaging and subsurface radar of Mars' }
   ],
   sources: [
-    { name: 'ESA Mission Page', url: 'https://www.esa.int/Science_Exploration/Space_Science/Mars_Express' }
+    {
+      name: 'ESA Mission Page',
+      url: 'https://www.esa.int/Science_Exploration/Space_Science/Mars_Express'
+    }
   ],
   offsetFn: orbiterOffset({
     parentId: 'mars',
-    a_km: 8817.359,
-    e: 0.568472,
-    i_deg: 113.72720,
-    Omega_deg: 89.5405,
-    omega_deg: 98.0949,
-    M_deg: 104.7071,
-    period_days: 0.290943,
-    epoch_jd: EPOCH_JD
+    a_km: 8813.804007592702,
+    e: 0.5683019864612752,
+    i_deg: 113.6887752080507,
+    Omega_deg: 90.5158208008366,
+    omega_deg: 107.5269992595181,
+    M_deg: 8.358808838043343,
+    period_days: 0.29076719815847374,
+    epoch_jd: 2461289.5
   })
 });
 
@@ -231,7 +249,11 @@ const TGO = spacecraftPointMarker({
   externalId: '-143',
   color: '#787878',
   cameraDistance: 1.0,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    epoch: '2026-09-06T00:00:00.000 TDB',
+    mode: 'Approximate orbit',
+    source: 'Two-body model; maneuvers and perturbations omitted'
+  },
   description:
     'The Trace Gas Orbiter searches for methane and other trace gases in the Martian atmosphere that could indicate biological or geological activity. It also serves as a data relay for surface missions.',
   facts: [
@@ -241,18 +263,21 @@ const TGO = spacecraftPointMarker({
     { label: 'Objective', value: 'Detect trace gases and relay surface data' }
   ],
   sources: [
-    { name: 'ESA Mission Page', url: 'https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/Exploration/ExoMars' }
+    {
+      name: 'ESA Mission Page',
+      url: 'https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/Exploration/ExoMars'
+    }
   ],
   offsetFn: orbiterOffset({
     parentId: 'mars',
-    a_km: 3786.903,
-    e: 0.006260,
-    i_deg: 99.26737,
-    Omega_deg: 112.2111,
-    omega_deg: 281.1029,
-    M_deg: 244.8372,
-    period_days: 0.081889,
-    epoch_jd: EPOCH_JD
+    a_km: 3781.450563866031,
+    e: 0.007626330092980428,
+    i_deg: 86.6157133881136,
+    Omega_deg: 147.6965138928658,
+    omega_deg: 283.9563136998439,
+    M_deg: 145.024440897344,
+    period_days: 0.0817124004589512,
+    epoch_jd: 2461289.5
   })
 });
 
@@ -268,7 +293,10 @@ const CURIOSITY = spacecraftPointMarker({
   color: '#E8441E',
   cameraDistance: 0.6,
   labelTier: 5,
-  tracking: { mode: 'Live', source: 'Published landing coordinates + IAU Mars rotation model' },
+  tracking: {
+    mode: 'Landing site',
+    source: 'Landing coordinates; current rover traverse not modeled'
+  },
   description:
     'Curiosity is a car-sized rover exploring Gale crater on Mars. It confirmed that Mars once had conditions suitable for microbial life, including liquid water and key chemical ingredients.',
   facts: [
@@ -277,9 +305,7 @@ const CURIOSITY = spacecraftPointMarker({
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'Assess past habitability of Gale crater' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/msl-curiosity/' }
-  ],
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/msl-curiosity/' }],
   offsetFn: landerOffset('mars', -4.59, 137.44)
 });
 
@@ -293,7 +319,10 @@ const PERSEVERANCE = spacecraftPointMarker({
   color: '#CC6040',
   cameraDistance: 0.6,
   labelTier: 5,
-  tracking: { mode: 'Live', source: 'Published landing coordinates + IAU Mars rotation model' },
+  tracking: {
+    mode: 'Landing site',
+    source: 'Landing coordinates; current rover traverse not modeled'
+  },
   description:
     'Perseverance searches for signs of ancient microbial life in Jezero crater, an ancient lake bed. It is collecting rock samples for future return to Earth and deployed the Ingenuity helicopter.',
   facts: [
@@ -319,28 +348,30 @@ const JUNO = spacecraftPointMarker({
   externalId: '-61',
   color: '#A09A90',
   cameraDistance: 30,
-  tracking: { mode: 'Live', source: 'Keplerian propagation from JPL HORIZONS elements' },
+  tracking: {
+    epoch: '2026-09-06T00:00:00.000 TDB',
+    mode: 'Approximate orbit',
+    source: 'Two-body model; maneuvers and perturbations omitted'
+  },
   description:
-    'Juno orbits Jupiter in a highly elliptical polar orbit, studying the planet\'s interior structure, magnetic field, and atmosphere. It has revealed detailed views of Jupiter\'s polar cyclones and deep atmospheric dynamics.',
+    "Juno orbits Jupiter in a highly elliptical polar orbit, studying the planet's interior structure, magnetic field, and atmosphere. It has revealed detailed views of Jupiter's polar cyclones and deep atmospheric dynamics.",
   facts: [
     { label: 'Launch Date', value: 'Aug 5, 2011' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
-    { label: 'Objective', value: 'Study Jupiter\'s interior, magnetosphere, and atmosphere' }
+    { label: 'Objective', value: "Study Jupiter's interior, magnetosphere, and atmosphere" }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/juno/' }
-  ],
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/juno/' }],
   offsetFn: orbiterOffset({
     parentId: 'jupiter',
-    a_km: 2947826.09,
-    e: 0.973141,
-    i_deg: 100.25696,
-    Omega_deg: 293.0932,
-    omega_deg: 104.0503,
-    M_deg: 134.6906,
-    period_days: 32.700447,
-    epoch_jd: EPOCH_JD
+    a_km: 2945959.538531495,
+    e: 0.9730932068690359,
+    i_deg: 100.2867735252098,
+    Omega_deg: 292.6714821462257,
+    omega_deg: 104.739819598398,
+    M_deg: 324.000557272754,
+    period_days: 32.669393260069235,
+    epoch_jd: 2461289.5
   })
 });
 
@@ -356,18 +387,17 @@ const JWST = spacecraftPointMarker({
   color: '#E8441E',
   cameraDistance: 4,
   labelTier: 3,
-  tracking: { mode: 'Live', source: 'Earth-Sun L2 offset recomputed from Earth ephemeris each frame' },
+  tracking: { mode: 'Illustration', source: 'Approximate L2 direction; halo orbit not modeled' },
   description:
     'JWST is the largest and most powerful space telescope ever launched, observing the universe in infrared from the Earth-Sun L2 point. It studies the earliest galaxies, exoplanet atmospheres, and star formation.',
   facts: [
     { label: 'Launch Date', value: 'Dec 25, 2021' },
     { label: 'Agency', value: 'NASA / ESA / CSA' },
     { label: 'Status', value: 'Active' },
-    { label: 'Objective', value: 'Infrared astronomy from first galaxies to exoplanets' }
+    { label: 'Objective', value: 'Infrared astronomy from first galaxies to exoplanets' },
+    { label: 'L2 distance from Earth', value: '~1.5 million km' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/webb/' }
-  ],
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/webb/' }],
   offsetFn: l2Offset()
 });
 
@@ -385,7 +415,11 @@ const PARKER = spacecraftPointMarker({
   externalId: '-96',
   color: '#E8441E',
   cameraDistance: 5,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
     'Parker Solar Probe flies closer to the Sun than any previous spacecraft, diving through the solar corona to study the solar wind and magnetic fields. It has broken speed records, becoming the fastest human-made object.',
   facts: [
@@ -397,7 +431,9 @@ const PARKER = spacecraftPointMarker({
   sources: [
     { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/parker-solar-probe/' }
   ],
-  offsetFn: staticOffset(helioAuToScene(0.31839239, -0.42495479, -0.02422949))
+  offsetFn: staticOffset(
+    helioAuToScene(-0.04201764645654524, -0.09462028737411272, 0.001110365247759253)
+  )
 });
 
 const SOLAR_ORBITER = spacecraftPointMarker({
@@ -405,23 +441,32 @@ const SOLAR_ORBITER = spacecraftPointMarker({
   name: 'Solar Orbiter',
   type: 'spacecraft',
   parent: 'sun',
-  subtitle: 'ESA / NASA · Heliocentric, observing the Sun\'s poles',
+  subtitle: "ESA / NASA · Heliocentric, observing the Sun's poles",
   externalId: '-144',
   color: '#E8441E',
   cameraDistance: 5,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
-    'Solar Orbiter uses gravity assists from Venus to tilt its orbit and obtain the first direct images of the Sun\'s polar regions. It carries ten instruments studying the heliosphere and solar wind.',
+    "Solar Orbiter uses gravity assists from Venus to tilt its orbit and obtain the first direct images of the Sun's polar regions. It carries ten instruments studying the heliosphere and solar wind.",
   facts: [
     { label: 'Launch Date', value: 'Feb 10, 2020' },
     { label: 'Agency', value: 'ESA / NASA' },
     { label: 'Status', value: 'Active' },
-    { label: 'Objective', value: 'Image the Sun\'s poles and study the heliosphere' }
+    { label: 'Objective', value: "Image the Sun's poles and study the heliosphere" }
   ],
   sources: [
-    { name: 'ESA Mission Page', url: 'https://www.esa.int/Science_Exploration/Space_Science/Solar_Orbiter' }
+    {
+      name: 'ESA Mission Page',
+      url: 'https://www.esa.int/Science_Exploration/Space_Science/Solar_Orbiter'
+    }
   ],
-  offsetFn: staticOffset(helioAuToScene(0.50648364, 0.38172056, 0.13691205))
+  offsetFn: staticOffset(
+    helioAuToScene(0.4597990983308619, 0.02760312453835497, 0.06776854108725179)
+  )
 });
 
 const BEPI = spacecraftPointMarker({
@@ -433,19 +478,28 @@ const BEPI = spacecraftPointMarker({
   externalId: '-121',
   color: '#8A8A85',
   cameraDistance: 5,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
-    'BepiColombo is a joint ESA/JAXA mission carrying two orbiters to Mercury. It uses nine gravity assists (Earth, Venus, and Mercury flybys) to slow down enough to enter Mercury orbit in late 2025.',
+    'BepiColombo is a joint ESA/JAXA mission carrying two orbiters to Mercury. It uses nine gravity assists (Earth, Venus, and Mercury flybys) to slow down enough to enter Mercury orbit in November 2026.',
   facts: [
     { label: 'Launch Date', value: 'Oct 20, 2018' },
     { label: 'Agency', value: 'ESA / JAXA' },
-    { label: 'Status', value: 'En route (Mercury orbit insertion 2025)' },
-    { label: 'Objective', value: 'Study Mercury\'s surface, interior, and magnetosphere' }
+    { label: 'Status', value: 'En route (Mercury orbit insertion Nov 2026)' },
+    { label: 'Objective', value: "Study Mercury's surface, interior, and magnetosphere" }
   ],
   sources: [
-    { name: 'ESA Mission Page', url: 'https://www.esa.int/Science_Exploration/Space_Science/BepiColombo' }
+    {
+      name: 'ESA Mission Page',
+      url: 'https://www.esa.int/Science_Exploration/Space_Science/BepiColombo'
+    }
   ],
-  offsetFn: staticOffset(helioAuToScene(-0.22330255, -0.41044604, -0.01296199))
+  offsetFn: staticOffset(
+    helioAuToScene(-0.4039700779999102, -0.1058981877383437, 0.02835215867312124)
+  )
 });
 
 const LUCY = spacecraftPointMarker({
@@ -457,19 +511,23 @@ const LUCY = spacecraftPointMarker({
   externalId: '-49',
   color: '#8A8A85',
   cameraDistance: 8,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
-    'Lucy is the first mission to explore the Jupiter Trojan asteroids, primitive bodies trapped in Jupiter\'s orbit that are thought to be remnants of the early solar system. It will visit eight asteroids over 12 years.',
+    "Lucy is the first mission to explore the Jupiter Trojan asteroids, primitive bodies trapped in Jupiter's orbit that are thought to be remnants of the early solar system. Its planned encounters include eleven asteroids over its twelve-year primary mission.",
   facts: [
     { label: 'Launch Date', value: 'Oct 16, 2021' },
     { label: 'Agency', value: 'NASA/GSFC' },
     { label: 'Status', value: 'En route' },
     { label: 'Objective', value: 'Fly by Jupiter Trojan asteroids to study solar system origins' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/lucy/' }
-  ],
-  offsetFn: staticOffset(helioAuToScene(-3.71555303, -3.40938676, -0.24368459))
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/lucy/' }],
+  offsetFn: staticOffset(
+    helioAuToScene(-3.724250313455452, -3.325556285975688, -0.2453369783964399)
+  )
 });
 
 const PSYCHE = spacecraftPointMarker({
@@ -481,7 +539,11 @@ const PSYCHE = spacecraftPointMarker({
   externalId: '-255',
   color: '#787878',
   cameraDistance: 8,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
     'The Psyche mission is traveling to asteroid 16 Psyche, a metal-rich body that may be the exposed core of an early planetesimal. It will be the first mission to explore a world made largely of metal.',
   facts: [
@@ -490,10 +552,10 @@ const PSYCHE = spacecraftPointMarker({
     { label: 'Status', value: 'En route (arrival Aug 2029)' },
     { label: 'Objective', value: 'Study a metal asteroid to understand planetary cores' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/psyche/' }
-  ],
-  offsetFn: staticOffset(helioAuToScene(0.02729416, 1.63585523, -0.07089969))
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/psyche/' }],
+  offsetFn: staticOffset(
+    helioAuToScene(0.2468091653183093, 1.558635752977187, -0.07100053884292332)
+  )
 });
 
 const JUICE = spacecraftPointMarker({
@@ -505,19 +567,25 @@ const JUICE = spacecraftPointMarker({
   externalId: '-28',
   color: '#787878',
   cameraDistance: 8,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
-    'JUICE (Jupiter Icy Moons Explorer) will study Jupiter\'s three large ocean-bearing moons: Ganymede, Callisto, and Europa. It will ultimately enter orbit around Ganymede, the first spacecraft to orbit a moon other than our own.',
+    "JUICE (Jupiter Icy Moons Explorer) will study Jupiter's three large ocean-bearing moons: Ganymede, Callisto, and Europa. It will ultimately enter orbit around Ganymede, the first spacecraft to orbit a moon other than our own.",
   facts: [
     { label: 'Launch Date', value: 'Apr 14, 2023' },
     { label: 'Agency', value: 'ESA' },
     { label: 'Status', value: 'En route (arrival Jul 2031)' },
-    { label: 'Objective', value: 'Characterize Jupiter\'s icy moons and their oceans' }
+    { label: 'Objective', value: "Characterize Jupiter's icy moons and their oceans" }
   ],
   sources: [
     { name: 'ESA Mission Page', url: 'https://www.esa.int/Science_Exploration/Space_Science/Juice' }
   ],
-  offsetFn: staticOffset(helioAuToScene(1.04754885, -0.02724819, -0.00034024))
+  offsetFn: staticOffset(
+    helioAuToScene(1.111367565608323, -0.2783441268286004, -0.001047643252088193)
+  )
 });
 
 const EUROPA_CLIPPER = spacecraftPointMarker({
@@ -529,19 +597,23 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   externalId: '-159',
   color: '#A09A90',
   cameraDistance: 8,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
-    'Europa Clipper will perform nearly 50 close flybys of Jupiter\'s moon Europa to investigate whether its subsurface ocean has conditions suitable for life. It is the largest spacecraft NASA has ever built for a planetary mission.',
+    "Europa Clipper will perform nearly 50 close flybys of Jupiter's moon Europa to investigate whether its subsurface ocean has conditions suitable for life. It is the largest spacecraft NASA has ever built for a planetary mission.",
   facts: [
     { label: 'Launch Date', value: 'Oct 14, 2024' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'En route (arrival Apr 2030)' },
-    { label: 'Objective', value: 'Assess Europa\'s habitability and subsurface ocean' }
+    { label: 'Objective', value: "Assess Europa's habitability and subsurface ocean" }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/europa-clipper/' }
-  ],
-  offsetFn: staticOffset(helioAuToScene(0.78453415, -0.50288296, -0.03229733))
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/europa-clipper/' }],
+  offsetFn: staticOffset(
+    helioAuToScene(0.6525425151224767, -0.7913415859434472, -0.03110847086586124)
+  )
 });
 
 // ── Interstellar / outer solar system ───────────────────────────────────
@@ -560,7 +632,11 @@ const VOYAGER_1 = spacecraftPointMarker({
   color: '#E8441E',
   cameraDistance: 50,
   labelTier: 2,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
     'Voyager 1 is the farthest human-made object from Earth, now traveling through interstellar space beyond the heliopause. Launched in 1977, it flew by Jupiter and Saturn before heading out of the solar system.',
   facts: [
@@ -569,10 +645,8 @@ const VOYAGER_1 = spacecraftPointMarker({
     { label: 'Status', value: 'Active (interstellar space)' },
     { label: 'Objective', value: 'Fly by outer planets and explore interstellar space' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/voyager/' }
-  ],
-  offsetFn: staticOffset(helioAuToScene(-32.15166534, -136.74991709, 98.94128711))
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/voyager/' }],
+  offsetFn: staticOffset(helioAuToScene(-32.13313396310912, -136.6280685490722, 98.85326993344566))
 });
 
 const VOYAGER_2 = spacecraftPointMarker({
@@ -585,7 +659,11 @@ const VOYAGER_2 = spacecraftPointMarker({
   color: '#8A8A85',
   cameraDistance: 50,
   labelTier: 2,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
     'Voyager 2 is the only spacecraft to have visited all four giant planets: Jupiter, Saturn, Uranus, and Neptune. It crossed the heliopause in 2018 and continues to return data from interstellar space.',
   facts: [
@@ -594,10 +672,8 @@ const VOYAGER_2 = spacecraftPointMarker({
     { label: 'Status', value: 'Active (interstellar space)' },
     { label: 'Objective', value: 'Grand tour of outer planets, now interstellar exploration' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/voyager/' }
-  ],
-  offsetFn: staticOffset(helioAuToScene(39.86720934, -105.41310070, -89.64122037))
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/voyager/' }],
+  offsetFn: staticOffset(helioAuToScene(39.82958024438035, -105.329485300838, -89.53991014402757))
 });
 
 const NEW_HORIZONS = spacecraftPointMarker({
@@ -610,7 +686,11 @@ const NEW_HORIZONS = spacecraftPointMarker({
   color: '#A09A90',
   cameraDistance: 30,
   labelTier: 3,
-  tracking: { mode: 'Snapshot', source: 'JPL HORIZONS heliocentric ecliptic Cartesian', epoch: 'Sep 21, 2026' },
+  tracking: {
+    mode: 'Snapshot',
+    source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
+    epoch: '2026-09-06T00:00:00.000 TDB'
+  },
   description:
     'New Horizons performed the first flyby of Pluto in 2015, revealing a geologically active world with nitrogen glaciers and a thin atmosphere. It later flew by Kuiper Belt object Arrokoth, the most distant object ever visited.',
   facts: [
@@ -619,10 +699,8 @@ const NEW_HORIZONS = spacecraftPointMarker({
     { label: 'Status', value: 'Active (extended mission, Kuiper Belt)' },
     { label: 'Objective', value: 'Explore Pluto and Kuiper Belt objects' }
   ],
-  sources: [
-    { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/new-horizons/' }
-  ],
-  offsetFn: staticOffset(helioAuToScene(20.81804842, -62.20732174, 2.28782288))
+  sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/new-horizons/' }],
+  offsetFn: staticOffset(helioAuToScene(20.77052844849516, -62.09550124964671, 2.283422192604087))
 });
 
 // ── Aggregate export ────────────────────────────────────────────────────

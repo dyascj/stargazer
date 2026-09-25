@@ -31,17 +31,14 @@ export const MERCURY: TrackedObject = {
     externalId: '199',
     radius: MERCURY_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: MERCURY_RADIUS_KM,
-    geometryDetail: 5,
     textureUrl: '/textures/2k_mercury.jpg',
     poleVec: [0.0913, 0.9925, 0.0816],
     rotationModel: 'iau-w',
     rotationW0Deg: 329.5469,
     rotationRateDegPerDay: 6.1385025,
-    shaderAmbient: 0.02,
-    shaderBrightness: 1.85,
     dayLength: '58.65 Earth days',
     yearLength: '87.97 Earth days',
-    orbitColor: 0x8A8A85,
+    orbitColor: 0x8a8a85,
     description:
       'Mercury is the smallest and innermost planet in the solar system, with virtually no atmosphere and extreme temperature swings between day and night. Its surface is heavily cratered and resembles the Moon.',
     facts: [
@@ -50,7 +47,7 @@ export const MERCURY: TrackedObject = {
       { label: 'Mean temperature', value: '440 K (day) / 100 K (night)' },
       { label: 'Atmosphere', value: 'Trace exosphere (O₂, Na, H₂, He, K)' },
       { label: 'Known moons', value: '0' },
-      { label: 'Magnetic field', value: 'Yes, weak (~1% of Earth\'s)' }
+      { label: 'Magnetic field', value: "Yes, weak (~1% of Earth's)" }
     ],
     sources: [
       {
@@ -58,6 +55,9 @@ export const MERCURY: TrackedObject = {
         url: 'https://nssdc.gsfc.nasa.gov/planetary/factsheet/'
       }
     ],
-    tracking: { mode: 'Live', source: 'Standish/Meeus ephemeris (NASA JPL Approximate Positions)' }
+    tracking: {
+      mode: 'Approximate orbit',
+      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+    }
   }
 };

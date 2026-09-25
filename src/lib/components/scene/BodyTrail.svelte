@@ -115,7 +115,6 @@
   const probeA = new Vector3();
   const probeB = new Vector3();
   const scratchA = new Vector3();
-  const scratchB = new Vector3();
 
   /**
    * Sample a position for the trail at the given date. For parent-
@@ -148,30 +147,47 @@
   // ── Sampling ────────────────────────────────────────────────────────
   let lastDurationCheck = 0;
   const tmpPos = new Vector3();
-  const scratch = new Vector3();
 
   function rebuild(): void {
     if (duration <= 0) return;
     const nowMs = get(simTime).getTime();
     let valid = true;
-    let firstX = 0, firstY = 0, firstZ = 0;
-    let lastX = 0, lastY = 0, lastZ = 0;
+    let firstX = 0,
+      firstY = 0,
+      firstZ = 0;
+    let lastX = 0,
+      lastY = 0,
+      lastZ = 0;
 
     for (let i = 0; i < SAMPLES; i++) {
       const t = i / (SAMPLES - 1);
       const sampleMs = nowMs - (1 - t) * duration * 1000;
       const result = samplePosition(new Date(sampleMs), tmpPos);
-      if (!result) { valid = false; break; }
+      if (!result) {
+        valid = false;
+        break;
+      }
       positions[i * 3] = tmpPos.x;
       positions[i * 3 + 1] = tmpPos.y;
       positions[i * 3 + 2] = tmpPos.z;
-      if (i === 0) { firstX = tmpPos.x; firstY = tmpPos.y; firstZ = tmpPos.z; }
-      if (i === SAMPLES - 1) { lastX = tmpPos.x; lastY = tmpPos.y; lastZ = tmpPos.z; }
+      if (i === 0) {
+        firstX = tmpPos.x;
+        firstY = tmpPos.y;
+        firstZ = tmpPos.z;
+      }
+      if (i === SAMPLES - 1) {
+        lastX = tmpPos.x;
+        lastY = tmpPos.y;
+        lastZ = tmpPos.z;
+      }
     }
     if (!valid) return;
 
     const motion = Math.hypot(firstX - lastX, firstY - lastY, firstZ - lastZ);
-    if (motion < STATIC_THRESHOLD) { isStatic = true; return; }
+    if (motion < STATIC_THRESHOLD) {
+      isStatic = true;
+      return;
+    }
     isStatic = false;
 
     posAttr.needsUpdate = true;

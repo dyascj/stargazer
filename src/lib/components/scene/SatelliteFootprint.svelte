@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { T, useTask } from '@threlte/core';
+  import { T, useTask, useThrelte } from '@threlte/core';
   import { Line2 } from 'three/examples/jsm/lines/Line2.js';
   import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
   import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+  import { get } from 'svelte/store';
+  import { simTime } from '$stores/simTime';
   import type { SatelliteStore } from '$stores/satelliteFactory';
   import { EARTH_RADIUS, EARTH_RADIUS_KM } from '$lib/scene-config';
 
@@ -17,6 +19,7 @@
 
   let { store }: { store: SatelliteStore } = $props();
 
+  const { size } = useThrelte();
   const SAMPLES = 96;
   const SURFACE_OFFSET = 1.001;
 
@@ -30,9 +33,6 @@
     opacity: 0.6,
     depthWrite: false
   });
-  if (typeof window !== 'undefined') {
-    material.resolution.set(window.innerWidth, window.innerHeight);
-  }
 
   const line = new Line2(geometry, material);
   line.frustumCulled = false;
@@ -66,27 +66,17 @@
     geometry.computeBoundingSphere();
   }
 
-  // svelte-ignore state_referenced_locally
-  const data = store.data;
-  let lastResW = 0;
-  let lastResH = 0;
-
+  let lastTime = NaN;
   useTask(() => {
-    if ($data) {
-      rebuild($data.latitude, $data.longitude, $data.footprintKm);
+    const date = get(simTime);
+    const data = store.at(date);
+    line.visible = !!data;
+    if (data && (!Number.isFinite(lastTime) || Math.abs(date.getTime() - lastTime) > 100)) {
+      rebuild(data.latitude, data.longitude, data.footprintKm);
+      lastTime = date.getTime();
     }
-    if (typeof window !== 'undefined') {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      if (w !== lastResW || h !== lastResH) {
-        material.resolution.set(w, h);
-        lastResW = w;
-        lastResH = h;
-      }
-    }
+    material.resolution.set($size.width, $size.height);
   });
 </script>
 
-{#if $data}
-  <T is={line} />
-{/if}
+<T is={line} />

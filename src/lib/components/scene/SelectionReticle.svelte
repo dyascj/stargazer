@@ -1,12 +1,7 @@
 <script lang="ts">
   import { T, useTask, useThrelte } from '@threlte/core';
   import { HTML } from '@threlte/extras';
-  import {
-    MathUtils,
-    PerspectiveCamera,
-    Vector3,
-    type Group
-  } from 'three';
+  import { MathUtils, PerspectiveCamera, Vector3, type Group } from 'three';
   import { get } from 'svelte/store';
   import { simTime } from '$stores/simTime';
   import { selection, SOLAR_SYSTEM_VIEW } from '$lib/stores/selection';
@@ -95,8 +90,7 @@
       const tanHalfFov = Math.tan(MathUtils.degToRad(cam.fov) / 2);
       const pixelHeight = size.current.height || 1;
       // pixels = (worldRadius / distance) × (height / (2 × tan(fov/2)))
-      projectedPixelRadius =
-        (obj.metadata.radius / distance) * (pixelHeight / (2 * tanHalfFov));
+      projectedPixelRadius = (obj.metadata.radius / distance) * (pixelHeight / (2 * tanHalfFov));
     } else {
       projectedPixelRadius = POINT_MARKER_PIXEL_RADIUS;
     }
@@ -134,11 +128,7 @@
       style="width: {svgSize}px; height: {svgSize}px;"
       aria-hidden="true"
     >
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="reticle-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="1.4" result="blur" />

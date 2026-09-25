@@ -1,4 +1,4 @@
-import * as satellite from '$lib/satellite-shim';
+import * as satellite from 'satellite.js';
 import { getSunElevationAt } from './solar';
 import { EARTH_RADIUS_KM } from '../scene-config';
 
@@ -24,7 +24,7 @@ export interface PassEvent {
   maxElevationTime: Date;
   /**
    * True if this pass would be visually observable: ISS sunlit *and*
-   * observer in nautical darkness or deeper. Daytime passes are still
+   * observer in civil twilight or darker. Daytime passes are still
    * returned but with `visible = false`.
    */
   visible: boolean;
@@ -34,18 +34,37 @@ const DEG = Math.PI / 180;
 
 /**
  * Compute upcoming passes of a satellite over an observer's location.
- * Uses SGP4 propagation with coarse time-stepping + refinement.
- * Defaults: 5 days ahead, 1-min steps, 10° minimum elevation.
+ * Uses SGP4 propagation with 20-second time sampling; approximate rise/set and peak times.
+ * Defaults: 5 days ahead, 20-second steps, 10° minimum elevation.
  */
 export function computePasses(
   tle: { line1: string; line2: string },
   observer: Observer,
-  options: { daysAhead?: number; minElevationDeg?: number; stepSeconds?: number } = {}
+  options: { daysAhead?: number; minElevationDeg?: number; stepSeconds?: number; start?: Date } = {}
 ): PassEvent[] {
   const daysAhead = options.daysAhead ?? 5;
   const minElevationDeg = options.minElevationDeg ?? 10;
-  const stepSeconds = options.stepSeconds ?? 60;
+  const stepSeconds = options.stepSeconds ?? 20;
 
+  if (
+    ![
+      observer.latitude,
+      observer.longitude,
+      observer.height ?? 0,
+      daysAhead,
+      minElevationDeg,
+      stepSeconds
+    ].every(Number.isFinite) ||
+    Math.abs(observer.latitude) > 90 ||
+    Math.abs(observer.longitude) > 180 ||
+    daysAhead <= 0 ||
+    daysAhead > 7 ||
+    stepSeconds < 5 ||
+    stepSeconds > 60 ||
+    minElevationDeg < 0 ||
+    minElevationDeg >= 90
+  )
+    throw new RangeError('Invalid pass prediction parameters');
   const satrec = satellite.twoline2satrec(tle.line1, tle.line2);
   const observerGd = {
     latitude: observer.latitude * DEG,
@@ -53,8 +72,11 @@ export function computePasses(
     height: observer.height ?? 0
   };
 
-  const start = new Date();
-  const end = new Date(start.getTime() + daysAhead * 86400 * 1000);
+  const start = options.start ?? new Date();
+  const epoch = (satrec.jdsatepoch - 2440587.5) * 86400000;
+  if (!Number.isFinite(start.getTime()) || Math.abs(start.getTime() - epoch) > 7 * 86400000)
+    throw new Error('Current orbital elements are needed to predict passes.');
+  const end = new Date(Math.min(start.getTime() + daysAhead * 86400000, epoch + 7 * 86400000));
   const stepMs = stepSeconds * 1000;
 
   const passes: PassEvent[] = [];
@@ -65,7 +87,7 @@ export function computePasses(
   for (let t = start.getTime(); t <= end.getTime(); t += stepMs) {
     const date = new Date(t);
     const result = satellite.propagate(satrec, date);
-    if (!result.position || typeof result.position === 'boolean') continue;
+    if (!result?.position || typeof result.position === 'boolean') continue;
 
     const gmst = satellite.gstime(date);
     const positionEcf = satellite.eciToEcf(
@@ -98,7 +120,7 @@ export function computePasses(
       const midResult = satellite.propagate(satrec, midTime);
       let sunAtSatNadir = 90;
       let satIsSunlit = false;
-      if (midResult.position && typeof midResult.position !== 'boolean') {
+      if (midResult?.position && typeof midResult.position !== 'boolean') {
         const midGeo = satellite.eciToGeodetic(
           midResult.position as satellite.EciVec3<satellite.Kilometer>,
           satellite.gstime(midTime)
@@ -107,8 +129,7 @@ export function computePasses(
         const satLon = (midGeo.longitude * 180) / Math.PI;
         const satAltKm = midGeo.height;
         sunAtSatNadir = getSunElevationAt(satLat, satLon, midTime);
-        const dipDeg =
-          Math.acos(EARTH_RADIUS_KM / (EARTH_RADIUS_KM + satAltKm)) * (180 / Math.PI);
+        const dipDeg = Math.acos(EARTH_RADIUS_KM / (EARTH_RADIUS_KM + satAltKm)) * (180 / Math.PI);
         satIsSunlit = sunAtSatNadir > -dipDeg;
       }
 

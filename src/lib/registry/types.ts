@@ -4,7 +4,8 @@ import type { Vector3 } from 'three';
 export type ObjectType =
   | 'star' // Sun
   | 'planet' // Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune
-  | 'dwarf-planet' // Pluto, Ceres, Eris, Haumea, Makemake, etc.
+  | 'dwarf-planet' // Pluto, Ceres, Eris, Haumea, Makemake
+  | 'trans-neptunian' // Other objects beyond Neptune; includes dwarf planet candidates
   | 'moon' // Earth's Moon, Phobos, Deimos, Galilean moons, Titan, etc.
   | 'asteroid' // Vesta, Pallas, 16 Psyche, Eros, Bennu, Ryugu, Apophis, etc.
   | 'comet' // Halley, 67P/Churyumov-Gerasimenko, Tempel 1, etc.
@@ -47,8 +48,6 @@ export interface PlanetBodyMetadata extends BaseObjectMetadata {
   textureUrl?: string;
   /** Fallback solid color when no texture is available. */
   solidColor?: string;
-  /** Icosphere subdivision level (5 ≈ 20k tris, 6 ≈ 80k, 7 ≈ 320k). */
-  geometryDetail: number;
   /**
    * Axial obliquity (radians) or IAU pole vector in scene coordinates.
    * obliquityRad → simple rotation.x; poleVec → quaternion alignment.
@@ -76,10 +75,6 @@ export interface PlanetBodyMetadata extends BaseObjectMetadata {
    * Used by the Moon because the Earth-Moon distance is exaggerated in scene scale.
    */
   lightingFromParent?: boolean;
-  /** Lambert ambient term — keeps the night side from being pure black. */
-  shaderAmbient: number;
-  /** Lambert brightness multiplier — compensates for no PBR/tonemapping. */
-  shaderBrightness: number;
   /** Length-of-day string for the info panel (e.g. "23h 56m 04s"). */
   dayLength?: string;
   /** Year length string for the info panel (e.g. "365.25 days"). */
@@ -132,10 +127,7 @@ export interface StarMetadata extends BaseObjectMetadata {
 }
 
 export type ObjectMetadata =
-  | PlanetBodyMetadata
-  | SatelliteMarkerMetadata
-  | PointMarkerMetadata
-  | StarMetadata;
+  PlanetBodyMetadata | SatelliteMarkerMetadata | PointMarkerMetadata | StarMetadata;
 
 /**
  * Returns the body's offset from its parent in scene-space Cartesian, written
@@ -196,8 +188,6 @@ export function isPointMarker(
   return obj.rendererKind === 'point-marker';
 }
 
-export function isStar(
-  obj: TrackedObject
-): obj is TrackedObject & { metadata: StarMetadata } {
+export function isStar(obj: TrackedObject): obj is TrackedObject & { metadata: StarMetadata } {
   return obj.rendererKind === 'star';
 }
