@@ -1,313 +1,314 @@
 <script lang="ts">
-  import { get } from 'svelte/store';
   import {
     displayTime,
     simRate,
+    isLive,
     setSimTime,
     setSimRate,
-    resyncSimTimeToNow,
-    isLive,
     togglePause,
     reverseTime,
+    resyncSimTimeToNow,
+    RATE_STEPS,
     MIN_SIM_TIME,
     MAX_SIM_TIME
   } from '$stores/simTime';
-  import { timeExpanded } from '$stores/ui';
-  const presets = [
-    { value: 1, label: 'Real time' },
-    { value: 60, label: '1 min / sec' },
-    { value: 3600, label: '1 hour / sec' },
-    { value: 86400, label: '1 day / sec' },
-    { value: 2592000, label: '1 month / sec' },
-    { value: 31536000, label: '1 year / sec' }
-  ];
+  import Icon from '$components/ui/Icon.svelte';
+  import Segmented from '$components/ui/Segmented.svelte';
+
+  const SPEED_LABELS = ['Real', '1 min', '1 hr', '1 day', '1 mo', '1 yr'];
+  const speeds = RATE_STEPS.map((value, index) => ({ value, label: SPEED_LABELS[index] }));
+
+  let sheet: HTMLElement;
   let draft = $state('');
   let dateError = $state('');
+  // Remembered so the direction control still reads correctly while paused.
+  let direction = $state(1);
   $effect(() => {
-    if ($timeExpanded) draft = get(displayTime).toISOString().slice(0, 16);
+    if ($simRate !== 0) direction = Math.sign($simRate);
   });
+
+  const date = $derived(
+    $displayTime.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC'
+    })
+  );
+  const clock = $derived($displayTime.toISOString().slice(11, 19));
+  const rateLabel = $derived.by(() => {
+    if ($simRate === 0) return 'Paused';
+    const index = RATE_STEPS.indexOf(Math.abs($simRate));
+    const label = index === 0 ? '1×' : `${SPEED_LABELS[index] ?? `${Math.abs($simRate)}×`}/s`;
+    return $simRate < 0 ? `−${label}` : label;
+  });
+
+  function toggled(event: ToggleEvent) {
+    if (event.newState !== 'open') return;
+    draft = $displayTime.toISOString().slice(0, 16);
+    dateError = '';
+  }
+
   function jump(event: SubmitEvent) {
     event.preventDefault();
-    const date = new Date(draft + ':00Z');
-    if (
-      !Number.isFinite(date.getTime()) ||
-      date.getTime() < MIN_SIM_TIME ||
-      date.getTime() > MAX_SIM_TIME
-    ) {
+    const time = Date.parse(`${draft}:00Z`);
+    if (!Number.isFinite(time) || time < MIN_SIM_TIME || time > MAX_SIM_TIME) {
       dateError = 'Choose a date from 1800 through 2049.';
       return;
     }
-    dateError = '';
-    setSimTime(date);
+    setSimTime(new Date(time));
     setSimRate(0);
-    timeExpanded.set(false);
+    sheet.hidePopover();
+  }
+
+  function backToNow() {
+    resyncSimTimeToNow();
+    sheet.hidePopover();
   }
 </script>
 
-<div class="time-control space-panel">
-  {#if $timeExpanded}
-    <form class="time-details" onsubmit={jump}>
-      <div class="section-heading">
-        <label for="simulation-date">Travel through time</label><button
-          type="button"
-          class="icon-button"
-          aria-label="Close date controls"
-          onclick={() => timeExpanded.set(false)}>×</button
-        >
-      </div>
-      <p>Choose a date and time in UTC. Planet model: 1800–2050.</p>
-      <div class="date-row">
-        <input
-          id="simulation-date"
-          type="datetime-local"
-          bind:value={draft}
-          min="1800-01-01T00:00"
-          max="2050-01-01T00:00"
-          required
-        /><button class="accent-button" type="submit">Go to date →</button>
-      </div>
-      {#if dateError}<p role="alert">{dateError}</p>{/if}
-      <div class="time-steps">
-        {#each [-30, -1, 1, 30] as days}<button
-            type="button"
-            onclick={() => {
-              const date = new Date($displayTime.getTime() + days * 86400000);
-              setSimTime(date);
-              draft = get(displayTime).toISOString().slice(0, 16);
-            }}
-            >{days > 0 ? '+' : '−'}{Math.abs(days)} {Math.abs(days) === 1 ? 'day' : 'days'}</button
-          >{/each}
-      </div>
-      <button class="reverse-expanded" type="button" onclick={reverseTime}
-        >↶ Reverse direction</button
-      >
-      <p>
-        Satellite predictions are available only near their orbital-data epoch. Dated spacecraft
-        snapshots remain fixed.
-      </p>
-    </form>
-  {/if}
-  <div class="transport">
-    <button
-      class="icon-button play-button"
-      type="button"
-      onclick={togglePause}
-      aria-label={$simRate === 0 ? 'Resume time' : 'Pause time'}
-      title="Pause / play (Space)"
+<div class="pill glass">
+  <button
+    class="icon-btn play"
+    type="button"
+    onclick={togglePause}
+    aria-label={$simRate === 0 ? 'Play' : 'Pause'}
+    data-tip={$simRate === 0 ? 'Play' : 'Pause'}
+    data-tip-side="top"><Icon name={$simRate === 0 ? 'play' : 'pause'} size={18} /></button
+  >
+  <button class="readout" type="button" popovertarget="time-sheet">
+    <span class="when tabular"
+      ><span class="date">{date}</span><span class="clock">{clock} UTC</span></span
     >
-      {#if $simRate === 0}<svg viewBox="0 0 16 16" aria-hidden="true"
-          ><path d="M5 3 13 8 5 13Z" fill="currentColor" /></svg
-        >{:else}<svg viewBox="0 0 16 16" aria-hidden="true"
-          ><path d="M5 3v10M11 3v10" stroke="currentColor" stroke-width="2.5" /></svg
-        >{/if}
-    </button>
-    <button
-      type="button"
-      class="date-button"
-      aria-expanded={$timeExpanded}
-      onclick={() => timeExpanded.update((value) => !value)}
-      title="Change simulation date"
-    >
-      <span class="clock-date"
-        >{$displayTime.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          timeZone: 'UTC'
-        })}</span
-      >
-      <span class="clock-time">{$displayTime.toISOString().slice(11, 19)} <span>UTC</span></span>
-    </button>
-    <span class="transport-divider"></span>
-    <button
-      class="icon-button reverse-button"
-      type="button"
-      aria-label="Reverse time"
-      aria-pressed={$simRate < 0}
-      onclick={reverseTime}
-      title="Reverse time">↶</button
-    >
-    <select
-      aria-label="Simulation speed"
-      value={Math.abs($simRate)}
-      onchange={(event) => setSimRate(Number(event.currentTarget.value) * ($simRate < 0 ? -1 : 1))}
-    >
-      <option value={0} disabled>Paused</option>
-      {#each presets as preset}<option value={preset.value}>{preset.label}</option>{/each}
-    </select>
-    <button
-      class="now-button"
-      class:live={$isLive}
-      type="button"
-      onclick={resyncSimTimeToNow}
-      title="Return to the current time (N)"><span></span>{$isLive ? 'Now' : 'Back to now'}</button
-    >
+    {#if !$isLive}<span class="rate tabular">{rateLabel}</span>{/if}
+  </button>
+  <button
+    class="live"
+    class:on={$isLive}
+    type="button"
+    onclick={resyncSimTimeToNow}
+    aria-label={$isLive ? 'Showing live time' : 'Return to live time'}
+    aria-pressed={$isLive}
+  >
+    <span class={$isLive ? 'live-dot' : 'dot'}></span>Live
+  </button>
+</div>
+
+<div id="time-sheet" class="sheet glass" popover bind:this={sheet} ontoggle={toggled}>
+  <div class="section">
+    <h2 class="heading">Speed</h2>
+    <Segmented
+      label="Direction"
+      fill
+      options={[
+        { value: -1, label: 'Reverse' },
+        { value: 1, label: 'Forward' }
+      ]}
+      value={direction}
+      onchange={(value) => {
+        if (value !== direction) reverseTime();
+        direction = value;
+      }}
+    />
+    <Segmented
+      label="Simulated time per second"
+      fill
+      options={speeds}
+      value={$simRate === 0 ? null : Math.abs($simRate)}
+      onchange={(value) => setSimRate(value * direction)}
+    />
+    <p class="hint">Simulated time per real second</p>
   </div>
+  <form class="section" onsubmit={jump}>
+    <label class="heading" for="time-sheet-date">Date and time, UTC</label>
+    <div class="date-row">
+      <input
+        id="time-sheet-date"
+        class="tabular"
+        type="datetime-local"
+        bind:value={draft}
+        min="1800-01-01T00:00"
+        max="2049-12-31T23:59"
+        required
+      />
+      <button class="btn" type="submit">Go</button>
+    </div>
+    {#if dateError}<p class="error" role="alert">{dateError}</p>{/if}
+  </form>
+  {#if !$isLive}
+    <button class="btn btn-primary now" type="button" onclick={backToNow}>Back to now</button>
+  {/if}
 </div>
 
 <style>
-  .reverse-expanded {
-    display: none;
-    min-height: 40px;
-    font-size: 11px;
-    color: var(--space-accent);
-  }
-  .time-control {
-    width: max-content;
-    max-width: calc(100vw - 24px);
-  }
-  .transport {
+  .pill {
     display: flex;
     align-items: center;
-    padding: 7px;
-    gap: 6px;
+    gap: 2px;
+    height: 52px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
   }
-  .play-button {
-    background: var(--space-action);
-    color: #fff;
-    border-radius: 0;
+  .play {
+    width: 40px;
+    height: 40px;
+    color: var(--text-1);
   }
-  .play-button:hover {
-    background: var(--space-accent);
-    color: #fff;
-  }
-  .icon-button svg {
-    width: 16px;
-    height: 16px;
-  }
-  .date-button {
-    padding: 0 16px;
+  .readout {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
     text-align: left;
-    min-height: 44px;
-    justify-content: center;
-    gap: 3px;
+    transition: background-color var(--dur-fast) ease;
   }
-  .clock-date {
+  .readout:hover,
+  .readout:focus-visible {
+    background: rgb(245 245 245 / 0.08);
+  }
+  .when {
+    display: grid;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .date {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .clock {
+    color: var(--text-2);
     font-size: 12px;
   }
-  .clock-time {
-    font:
-      10px var(--font-mono),
-      monospace;
-    color: var(--space-muted);
-  }
-  .clock-time span {
-    font-size: 8px;
-    opacity: 0.7;
-  }
-  .transport-divider {
-    height: 24px;
-    width: 1px;
-    background: var(--space-line);
-  }
-  select {
-    color: var(--space-text);
-    background: transparent;
-    border: 0;
-    font-size: 11px;
-    min-height: 44px;
-    max-width: 130px;
-    padding: 0 4px;
-    cursor: pointer;
-    color-scheme: light;
-  }
-  .now-button {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 11px;
-    min-height: 44px;
-    padding: 0 12px;
-    color: var(--space-accent);
+  .rate {
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: rgb(245 245 245 / 0.08);
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 500;
     white-space: nowrap;
   }
-  .now-button span {
-    height: 5px;
-    width: 5px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-  .now-button.live {
-    color: var(--space-positive);
-  }
-  .time-details {
-    padding: 18px;
-    border-bottom: 1px solid var(--space-line);
-    width: 490px;
-    max-width: calc(100vw - 26px);
-  }
-  .time-details p {
-    font-size: 11px;
-    color: var(--space-muted);
-    line-height: 1.7;
-    margin: 10px 0;
-  }
-  .section-heading {
-    display: flex;
+  .live {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    font-size: 14px;
+    gap: 8px;
+    height: 40px;
+    padding: 0 14px 0 12px;
+    border-radius: var(--radius-pill);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 500;
+    transition:
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease;
+  }
+  .live:hover {
+    background: rgb(245 245 245 / 0.08);
+    color: var(--text-1);
+  }
+  .live.on {
+    color: var(--accent-strong);
+    pointer-events: none;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+  }
+
+  .sheet {
+    position: fixed;
+    inset: auto 0 calc(var(--dock-bottom, 24px) + 60px);
+    width: min(400px, calc(100vw - 24px));
+    margin: 0 auto;
+    padding: 8px;
+    border: 0;
+    border-radius: var(--radius-2xl);
+    color: var(--text-1);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 320ms var(--ease-out),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
+  .sheet:not(:popover-open) {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  @starting-style {
+    .sheet:popover-open {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+  .section {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--radius-xl);
+    background: rgb(245 245 245 / 0.04);
+  }
+  .section + .section {
+    margin-top: 8px;
+  }
+  .heading {
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  .hint {
+    color: var(--text-3);
+    font-size: 12px;
   }
   .date-row {
     display: flex;
     gap: 8px;
   }
   input {
+    flex: 1;
     min-width: 0;
-    flex: 1;
-    background: var(--space-inset);
-    color: var(--space-text);
-    border: 1px solid var(--space-line);
-    padding: 10px;
-    font:
-      12px var(--font-mono),
-      monospace;
-    color-scheme: light;
-    border-radius: 0;
+    height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: rgb(245 245 245 / 0.08);
+    color: var(--text-1);
+    font: 500 14px var(--font-sans);
+    color-scheme: dark;
   }
-  .time-steps {
-    display: flex;
-    gap: 6px;
-    margin-top: 12px;
+  .error {
+    color: var(--danger);
+    font-size: 13px;
   }
-  .time-steps button {
-    min-height: 40px;
-    flex: 1;
-    border: 1px solid var(--space-line);
-    font-size: 11px;
-    border-radius: 0;
+  .now {
+    width: 100%;
+    margin-top: 8px;
   }
-  @media (max-width: 560px) {
-    .transport {
-      gap: 0;
+
+  @media (max-width: 639px) {
+    .pill {
+      height: 52px;
     }
-    .date-button {
-      padding: 0 9px;
+    .readout {
+      padding: 0 10px;
+      gap: 8px;
     }
-    .clock-date {
-      font-size: 10px;
+    .live {
+      padding: 0 12px 0 10px;
     }
-    .clock-time {
-      font-size: 9px;
+    .play,
+    .readout,
+    .live {
+      height: 44px;
     }
-    .reverse-button {
-      display: none;
-    }
-    .reverse-expanded {
-      display: block;
-    }
-    select {
-      width: 102px;
-      font-size: 10px;
-    }
-    .now-button {
-      padding: 0 8px;
-      font-size: 10px;
-    }
-    .date-row {
-      flex-direction: column;
+    .play {
+      width: 44px;
     }
   }
 </style>

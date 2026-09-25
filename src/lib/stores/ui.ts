@@ -1,8 +1,9 @@
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { selection, SOLAR_SYSTEM_VIEW } from './selection';
 
-export const timeExpanded = writable(false);
+/** Search dialog visibility. */
 export const paletteOpen = writable(false);
+export const compareOpen = writable(false);
 export const immersive = writable(false);
 export const showOrbits = writable(true);
 export const showLabels = writable(true);
@@ -19,8 +20,7 @@ export const infoPanelOpen = derived(
   ([id, closed, hidden]) => !!id && id !== SOLAR_SYSTEM_VIEW && id !== closed && !hidden
 );
 export function closeInfoPanel(): void {
-  const unsubscribe = selection.subscribe((id) => dismissedSelection.set(id));
-  unsubscribe();
+  dismissedSelection.set(get(selection));
 }
 export function openInfoPanel(): void {
   dismissedSelection.set(null);
@@ -31,5 +31,3 @@ export function selectBody(id: string): void {
   selection.set(id);
   cameraCommand.set('reset');
 }
-
-export const compareOpen = writable(false);
