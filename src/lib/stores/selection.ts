@@ -2,7 +2,7 @@ import { writable } from 'svelte/store';
 import { AU_TO_SCENE } from '$lib/scene-config';
 
 /**
- * Active selection — drives the camera target and info panel.
+ * Active selection: drives the camera target and info panel.
  * Can be any registry body id, the special 'solarSystem' overview mode, or null.
  */
 

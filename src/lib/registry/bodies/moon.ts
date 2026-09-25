@@ -3,7 +3,7 @@ import { getMoonInertialOffset } from '$utils/moon';
 import type { TrackedObject } from '../types';
 
 /**
- * Earth's Moon — true geocentric position from the main periodic terms
+ * Earth's Moon: true geocentric position from the main periodic terms
  * of Meeus's lunar theory. The 'tidal-lock' rotation model keeps the
  * selenographic prime meridian (local +X) pointed at Earth's center.
  */
@@ -26,14 +26,14 @@ export const MOON: TrackedObject = {
     yearLength: '27.32 Earth days (sidereal)',
     orbitalPeriodDays: 27.32166,
     description:
-      "Earth's only natural satellite and the fifth-largest moon in the solar system. Tidally locked — the same face always points toward Earth. Its gravitational pull drives Earth's ocean tides.",
+      "Earth's only natural satellite and the fifth-largest moon in the solar system. Tidally locked, it always turns the same face toward Earth. Its gravitational pull drives Earth's ocean tides.",
     facts: [
       { label: 'Diameter', value: '3,474.8 km' },
       { label: 'Mass', value: '7.342 × 10²² kg' },
       { label: 'Surface gravity', value: '1.62 m/s²' },
       { label: 'Orbital period', value: '27.32 days (sidereal)' },
       { label: 'Distance from Earth', value: '384,400 km' },
-      { label: 'Surface temp', value: '−173 to 127 °C' },
+      { label: 'Surface temperature', value: '−173 to 127 °C' },
       { label: 'Age', value: '~4.51 billion years' }
     ],
     sources: [

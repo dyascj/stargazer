@@ -3,12 +3,8 @@ import { getEarthScenePosition } from '$utils/earth';
 import type { TrackedObject } from '../types';
 
 /**
- * Earth — true heliocentric position via the Standish/Meeus ephemeris.
- *
- * Earth's parent is the Sun (at world origin), so "offset from Sun" is
- * exactly Earth's heliocentric position. The Moon and all Earth-orbit
- * satellites have `parent: 'earth'` and the registry's parent walk
- * stacks their offsets onto this one to compose their world position.
+ * Earth. Heliocentric position from the JPL approximate elements, corrected
+ * from the Earth–Moon barycenter to the geocenter; orientation from GMST.
  */
 
 export const EARTH: TrackedObject = {
@@ -20,7 +16,7 @@ export const EARTH: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol III',
+    subtitle: 'Third planet from the Sun',
     radius: EARTH_RADIUS,
     radiusKm: EARTH_RADIUS_KM,
     textureUrl: '/textures/earth_albedo_2k.webp',
@@ -30,7 +26,7 @@ export const EARTH: TrackedObject = {
     dayLength: '23h 56m 04s',
     yearLength: '365.25 days',
     description:
-      'Third planet from the Sun. The only known world with liquid surface water, a nitrogen-oxygen atmosphere, and confirmed life. Orbits at 1 AU — the baseline distance used to measure the rest of the solar system.',
+      'Third planet from the Sun. The only known world with liquid surface water, a nitrogen-oxygen atmosphere, and confirmed life. Orbits at 1 AU, the baseline distance used to measure the rest of the solar system.',
     facts: [
       { label: 'Mass', value: '5.972 × 10²⁴ kg' },
       { label: 'Diameter', value: '12,742 km' },

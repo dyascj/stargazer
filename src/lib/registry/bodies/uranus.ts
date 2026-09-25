@@ -4,16 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Uranus — ice giant, volumetric mean radius (3.98 × Earth, ~25,362 km per NASA
- * Planetary Fact Sheet). True
- * heliocentric position from the Standish ephemeris (~19.19 AU from the Sun).
- *
- * Pole orientation from IAU 2018: RA = 257.31°, Dec = -15.18°. Uranus's
- * obliquity is 97.77° — its rotation axis lies almost in its orbital
- * plane, so Uranus is "rolling" along its orbit. The IAU pole vector
- * captures this directly: in scene coordinates the pole is at
- * (-0.21, 0.13, 0.97), tilted 82° from ecliptic north — visible in
- * the static body orientation as a planet rotated almost on its side.
+ * Uranus. Its IAU pole is tilted 98° from its orbit, so it rolls along its
+ * path; the negative W rate is its retrograde spin.
  */
 
 const URANUS_RADIUS_KM = 25362;
@@ -27,7 +19,7 @@ export const URANUS: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol VII · The Tilted Ice Giant',
+    subtitle: 'Seventh planet from the Sun',
     externalId: '799',
     radius: URANUS_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: URANUS_RADIUS_KM,

@@ -2,12 +2,7 @@ import { tiangong } from '$stores/tiangong';
 import { ecfKmToInertialOffset } from '$utils/earth';
 import type { TrackedObject } from '../types';
 
-/**
- * Tiangong space station — same position pipeline as the ISS, but
- * sourced from a TLE-backed SGP4 propagator (`tiangong` store) since
- * wheretheiss.at doesn't carry it. The store still produces the
- * canonical SatelliteState shape so the offsetFn is identical.
- */
+/** Tiangong space station: CelesTrak elements propagated with SGP4, like the ISS. */
 
 export const TIANGONG: TrackedObject = {
   id: 'tiangong',

@@ -4,16 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Mercury — innermost planet, true scale (radius 0.383 of Earth) at its
- * true heliocentric position. Orbital period 88 days, sidereal day
- * 58.65 Earth days, so a Mercury day is two-thirds of a Mercury year
- * (a 3:2 spin-orbit resonance).
- *
- * Pole orientation from IAU 2018: RA = 281.01°, Dec = 61.42°. Mercury's
- * axial obliquity to its own orbit is essentially zero (0.034°), so its
- * pole sits very close to its orbital normal — the small tilt visible
- * in scene coordinates comes from Mercury's 7° orbital inclination to
- * the ecliptic.
+ * Mercury. Pole and prime meridian from the IAU rotation model; a 3:2
+ * spin-orbit resonance makes its solar day last two Mercury years.
  */
 
 const MERCURY_RADIUS_KM = 2439.7;
@@ -27,7 +19,7 @@ export const MERCURY: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol I · The Swift Planet',
+    subtitle: 'Closest planet to the Sun',
     externalId: '199',
     radius: MERCURY_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: MERCURY_RADIUS_KM,

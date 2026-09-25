@@ -235,19 +235,6 @@ menu {
   --dur-fast: 150ms;
   --dur-base: 240ms;
   --dur-slow: 420ms;
-
-  /* Legacy aliases, still used by scene/Scene.svelte and scene/BodyLabel.svelte. */
-  --space-surface: var(--glass);
-  --space-inset: var(--surface-2);
-  --space-hover: var(--surface-3);
-  --space-text: var(--text-1);
-  --space-muted: var(--text-2);
-  --space-accent: var(--accent-strong);
-  --space-action: var(--accent);
-  --space-line: var(--hairline);
-  --space-positive: var(--success);
-  --space-warning: var(--warning);
-  --space-scrollbar: var(--surface-4);
 }
 
 html,
@@ -490,15 +477,6 @@ kbd {
   .icon-btn[data-tip-align='end']:hover::after {
     translate: 0 0;
   }
-}
-
-/* Legacy panel, still used by layout/HoverTooltip.svelte. Remove once it migrates. */
-.space-panel {
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,12 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Jupiter — largest planet, true scale (volumetric mean radius 10.97 × Earth,
- * ~69,911 km per NASA Planetary Fact Sheet). True heliocentric position via the
- * Standish ephemeris (~5.2 AU from the Sun).
- *
- * Pole orientation from IAU 2018: RA = 268.057°, Dec = 64.495°. Obliquity just 3.13°,
- * so the pole sits very close to the orbital normal. Galilean moons tracked separately.
+ * Jupiter. Volumetric mean radius from the NASA fact sheet; System III
+ * prime meridian from the IAU rotation model.
  */
 
 const JUPITER_RADIUS_KM = 69911;
@@ -23,7 +19,7 @@ export const JUPITER: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol V · The Gas Giant',
+    subtitle: 'Fifth planet from the Sun, and the largest',
     externalId: '599',
     radius: JUPITER_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: JUPITER_RADIUS_KM,

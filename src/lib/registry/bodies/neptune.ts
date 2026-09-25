@@ -4,15 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Neptune — outermost classical planet, volumetric mean radius (3.86 × Earth,
- * ~24,622 km per NASA Planetary Fact Sheet). True heliocentric position from the
- * Standish ephemeris (~30.07 AU from the Sun).
- *
- * Pole orientation from IAU 2018: RA = 299.36°, Dec = 43.46°. Neptune's
- * obliquity is 28.32° (similar to Earth's), giving it pronounced seasons
- * — though each season lasts ~41 Earth years.
- *
- * Triton (Neptune's largest moon, retrograde) is tracked separately.
+ * Neptune. Volumetric mean radius from the NASA fact sheet; pole and prime
+ * meridian from the IAU rotation model, without its small periodic terms.
  */
 
 const NEPTUNE_RADIUS_KM = 24622;
@@ -26,7 +19,7 @@ export const NEPTUNE: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol VIII · The Distant Ice Giant',
+    subtitle: 'Eighth planet from the Sun',
     externalId: '899',
     radius: NEPTUNE_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: NEPTUNE_RADIUS_KM,

@@ -50,7 +50,7 @@ export function computeMoonOffset(
   const t_jd = date.getTime() / 86_400_000 + UNIX_EPOCH_JD;
   const days = t_jd - elements.epoch_jd;
 
-  // Mean motion (deg/day) — derived from period to avoid having to
+  // Mean motion (deg/day), derived from period to avoid having to
   // store it separately. (HORIZONS publishes both; period is rounder.)
   const n = 360 / elements.period_days;
 

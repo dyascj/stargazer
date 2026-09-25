@@ -109,7 +109,7 @@ const MRO = spacecraftPointMarker({
   description:
     'MRO studies Mars from orbit with the most powerful camera ever sent to another planet. It has returned more data about Mars than all other orbital missions combined.',
   facts: [
-    { label: 'Launch Date', value: 'Aug 12, 2005' },
+    { label: 'Launch date', value: 'Aug 12, 2005' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'High-resolution imaging and climate monitoring of Mars' }
@@ -147,7 +147,7 @@ const MAVEN = spacecraftPointMarker({
   description:
     'MAVEN revealed how Mars lost much of its atmosphere to space and relayed rover communications. Contact was lost on December 6, 2025; NASA announced the mission’s end on June 3, 2026. The archived orbit shown here is not a current position.',
   facts: [
-    { label: 'Launch Date', value: 'Nov 18, 2013' },
+    { label: 'Launch date', value: 'Nov 18, 2013' },
     { label: 'Agency', value: 'NASA/GSFC' },
     { label: 'Status', value: 'Mission ended June 3, 2026' },
     { label: 'Objective', value: 'Study Mars upper atmosphere and atmospheric loss' }
@@ -185,7 +185,7 @@ const MARS_EXPRESS = spacecraftPointMarker({
   description:
     "Mars Express is ESA's first planetary mission, studying the Martian surface, subsurface, and atmosphere. Its MARSIS radar confirmed the presence of subsurface water ice deposits.",
   facts: [
-    { label: 'Launch Date', value: 'Jun 2, 2003' },
+    { label: 'Launch date', value: 'Jun 2, 2003' },
     { label: 'Agency', value: 'ESA' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'Global imaging and subsurface radar of Mars' }
@@ -223,7 +223,7 @@ const TGO = spacecraftPointMarker({
   description:
     'The Trace Gas Orbiter searches for methane and other trace gases in the Martian atmosphere that could indicate biological or geological activity. It also serves as a data relay for surface missions.',
   facts: [
-    { label: 'Launch Date', value: 'Mar 14, 2016' },
+    { label: 'Launch date', value: 'Mar 14, 2016' },
     { label: 'Agency', value: 'ESA / Roscosmos' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Detect trace gases and relay surface data' }
@@ -263,7 +263,7 @@ const CURIOSITY = spacecraftPointMarker({
   description:
     'Curiosity is a car-sized rover exploring Gale crater on Mars. It confirmed that Mars once had conditions suitable for microbial life, including liquid water and key chemical ingredients.',
   facts: [
-    { label: 'Launch Date', value: 'Nov 26, 2011' },
+    { label: 'Launch date', value: 'Nov 26, 2011' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: 'Assess past habitability of Gale crater' }
@@ -287,7 +287,7 @@ const PERSEVERANCE = spacecraftPointMarker({
   description:
     'Perseverance searches for signs of ancient microbial life in Jezero crater, an ancient lake bed. It is collecting rock samples for future return to Earth and deployed the Ingenuity helicopter.',
   facts: [
-    { label: 'Launch Date', value: 'Jul 30, 2020' },
+    { label: 'Launch date', value: 'Jul 30, 2020' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Seek biosignatures and cache samples for return' }
@@ -315,7 +315,7 @@ const JUNO = spacecraftPointMarker({
   description:
     "Juno orbits Jupiter in a highly elliptical polar orbit, studying the planet's interior structure, magnetic field, and atmosphere. It has revealed detailed views of Jupiter's polar cyclones and deep atmospheric dynamics.",
   facts: [
-    { label: 'Launch Date', value: 'Aug 5, 2011' },
+    { label: 'Launch date', value: 'Aug 5, 2011' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (extended mission)' },
     { label: 'Objective', value: "Study Jupiter's interior, magnetosphere, and atmosphere" }
@@ -343,11 +343,14 @@ const JWST = spacecraftPointMarker({
   subtitle: 'NASA / ESA / CSA · Earth-Sun L2 halo orbit, since 2022',
   externalId: '-170',
   labelTier: 3,
-  tracking: { mode: 'Illustration', source: 'Approximate L2 direction; halo orbit not modeled' },
+  tracking: {
+    mode: 'Illustration',
+    source: 'Sun–Earth L2 point; the halo orbit around it is not modeled'
+  },
   description:
     'JWST is the largest and most powerful space telescope ever launched, observing the universe in infrared from the Earth-Sun L2 point. It studies the earliest galaxies, exoplanet atmospheres, and star formation.',
   facts: [
-    { label: 'Launch Date', value: 'Dec 25, 2021' },
+    { label: 'Launch date', value: 'Dec 25, 2021' },
     { label: 'Agency', value: 'NASA / ESA / CSA' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Infrared astronomy from first galaxies to exoplanets' },
@@ -377,7 +380,7 @@ const PARKER = spacecraftPointMarker({
   description:
     'Parker Solar Probe flies closer to the Sun than any previous spacecraft, diving through the solar corona to study the solar wind and magnetic fields. It has broken speed records, becoming the fastest human-made object.',
   facts: [
-    { label: 'Launch Date', value: 'Aug 12, 2018' },
+    { label: 'Launch date', value: 'Aug 12, 2018' },
     { label: 'Agency', value: 'NASA/APL' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: 'Study the solar corona and solar wind up close' }
@@ -405,7 +408,7 @@ const SOLAR_ORBITER = spacecraftPointMarker({
   description:
     "Solar Orbiter uses gravity assists from Venus to tilt its orbit and obtain the first direct images of the Sun's polar regions. It carries ten instruments studying the heliosphere and solar wind.",
   facts: [
-    { label: 'Launch Date', value: 'Feb 10, 2020' },
+    { label: 'Launch date', value: 'Feb 10, 2020' },
     { label: 'Agency', value: 'ESA / NASA' },
     { label: 'Status', value: 'Active' },
     { label: 'Objective', value: "Image the Sun's poles and study the heliosphere" }
@@ -434,7 +437,7 @@ const BEPI = spacecraftPointMarker({
   description:
     'BepiColombo is a joint ESA/JAXA mission carrying two orbiters to Mercury. It uses nine gravity assists (Earth, Venus, and Mercury flybys) to slow down enough to enter Mercury orbit in November 2026.',
   facts: [
-    { label: 'Launch Date', value: 'Oct 20, 2018' },
+    { label: 'Launch date', value: 'Oct 20, 2018' },
     { label: 'Agency', value: 'ESA / JAXA' },
     { label: 'Status', value: 'En route (Mercury orbit insertion Nov 2026)' },
     { label: 'Objective', value: "Study Mercury's surface, interior, and magnetosphere" }
@@ -465,7 +468,7 @@ const LUCY = spacecraftPointMarker({
   description:
     "Lucy is the first mission to explore the Jupiter Trojan asteroids, primitive bodies trapped in Jupiter's orbit that are thought to be remnants of the early solar system. Its planned encounters include eleven asteroids over its twelve-year primary mission.",
   facts: [
-    { label: 'Launch Date', value: 'Oct 16, 2021' },
+    { label: 'Launch date', value: 'Oct 16, 2021' },
     { label: 'Agency', value: 'NASA/GSFC' },
     { label: 'Status', value: 'En route' },
     { label: 'Objective', value: 'Fly by Jupiter Trojan asteroids to study solar system origins' }
@@ -491,7 +494,7 @@ const PSYCHE = spacecraftPointMarker({
   description:
     'The Psyche mission is traveling to asteroid 16 Psyche, a metal-rich body that may be the exposed core of an early planetesimal. It will be the first mission to explore a world made largely of metal.',
   facts: [
-    { label: 'Launch Date', value: 'Oct 13, 2023' },
+    { label: 'Launch date', value: 'Oct 13, 2023' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'En route (arrival Aug 2029)' },
     { label: 'Objective', value: 'Study a metal asteroid to understand planetary cores' }
@@ -517,7 +520,7 @@ const JUICE = spacecraftPointMarker({
   description:
     "JUICE (Jupiter Icy Moons Explorer) will study Jupiter's three large ocean-bearing moons: Ganymede, Callisto, and Europa. It will ultimately enter orbit around Ganymede, the first spacecraft to orbit a moon other than our own.",
   facts: [
-    { label: 'Launch Date', value: 'Apr 14, 2023' },
+    { label: 'Launch date', value: 'Apr 14, 2023' },
     { label: 'Agency', value: 'ESA' },
     { label: 'Status', value: 'En route (arrival Jul 2031)' },
     { label: 'Objective', value: "Characterize Jupiter's icy moons and their oceans" }
@@ -545,7 +548,7 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   description:
     "Europa Clipper will perform nearly 50 close flybys of Jupiter's moon Europa to investigate whether its subsurface ocean has conditions suitable for life. It is the largest spacecraft NASA has ever built for a planetary mission.",
   facts: [
-    { label: 'Launch Date', value: 'Oct 14, 2024' },
+    { label: 'Launch date', value: 'Oct 14, 2024' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'En route (arrival Apr 2030)' },
     { label: 'Objective', value: "Assess Europa's habitability and subsurface ocean" }
@@ -578,7 +581,7 @@ const VOYAGER_1 = spacecraftPointMarker({
   description:
     'Voyager 1 is the farthest human-made object from Earth, now traveling through interstellar space beyond the heliopause. Launched in 1977, it flew by Jupiter and Saturn before heading out of the solar system.',
   facts: [
-    { label: 'Launch Date', value: 'Sep 5, 1977' },
+    { label: 'Launch date', value: 'Sep 5, 1977' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (interstellar space)' },
     { label: 'Objective', value: 'Fly by outer planets and explore interstellar space' }
@@ -603,7 +606,7 @@ const VOYAGER_2 = spacecraftPointMarker({
   description:
     'Voyager 2 is the only spacecraft to have visited all four giant planets: Jupiter, Saturn, Uranus, and Neptune. It crossed the heliopause in 2018 and continues to return data from interstellar space.',
   facts: [
-    { label: 'Launch Date', value: 'Aug 20, 1977' },
+    { label: 'Launch date', value: 'Aug 20, 1977' },
     { label: 'Agency', value: 'NASA/JPL' },
     { label: 'Status', value: 'Active (interstellar space)' },
     { label: 'Objective', value: 'Grand tour of outer planets, now interstellar exploration' }
@@ -628,7 +631,7 @@ const NEW_HORIZONS = spacecraftPointMarker({
   description:
     'New Horizons performed the first flyby of Pluto in 2015, revealing a geologically active world with nitrogen glaciers and a thin atmosphere. It later flew by Kuiper Belt object Arrokoth, the most distant object ever visited.',
   facts: [
-    { label: 'Launch Date', value: 'Jan 19, 2006' },
+    { label: 'Launch date', value: 'Jan 19, 2006' },
     { label: 'Agency', value: 'NASA/APL' },
     { label: 'Status', value: 'Active (extended mission, Kuiper Belt)' },
     { label: 'Objective', value: 'Explore Pluto and Kuiper Belt objects' }

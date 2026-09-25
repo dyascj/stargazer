@@ -1,30 +1,39 @@
 <script lang="ts">
   import { hoveredBody, cursorPosition } from '$lib/stores/sceneHover';
-
-  let visible = $derived($hoveredBody !== null);
 </script>
 
 <div
-  class="hover-tooltip pointer-events-none fixed z-[55] text-[12px]"
-  class:visible
-  style="left: {$cursorPosition.x}px; top: {$cursorPosition.y}px"
+  class="hover-tooltip"
+  class:visible={$hoveredBody !== null}
+  style:transform="translate3d({$cursorPosition.x + 14}px, {$cursorPosition.y}px, 0)"
   aria-hidden="true"
 >
-  <div class="space-panel ml-3 -translate-y-1/2 px-3 py-1">
-    {$hoveredBody ?? ''}
-  </div>
+  <span>{$hoveredBody ?? ''}</span>
 </div>
 
 <style>
   .hover-tooltip {
-    opacity: 0;
-    transform: translateY(2px);
-    transition-property: opacity, transform;
-    transition-duration: 140ms;
-    transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 55;
+    pointer-events: none;
   }
-  .hover-tooltip.visible {
+  span {
+    display: block;
+    transform: translateY(-50%);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    color: var(--text-1);
+    font: 500 12px/18px var(--font-sans);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .visible span {
     opacity: 1;
-    transform: translateY(0);
   }
 </style>

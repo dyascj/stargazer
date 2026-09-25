@@ -4,18 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Pluto — dwarf planet, true body radius (0.186 × Earth, ~1188.3 km per NASA
- * Planetary Fact Sheet, smaller
- * than the Moon). True heliocentric position from the JPL simplified
- * Keplerian fit (~39.48 AU mean from the Sun, but
- * Pluto's eccentric orbit takes it between ~30 and ~49 AU).
- *
- * Pluto was reclassified as a dwarf planet in 2006. Charon is tracked separately.
- *
- * Pole orientation from IAU 2018: RA = 132.99°, Dec = -6.16°. Pluto's
- * obliquity is 122.5° — significantly tilted AND retrograde. The IAU
- * pole vector points BELOW the ecliptic in scene coordinates because of
- * the retrograde rotation: scene.y = -0.388.
+ * Pluto. IAU 2015 pole convention: the positive pole points below the
+ * ecliptic, and the planet spins prograde about it (122.5° obliquity).
  */
 
 const PLUTO_RADIUS_KM = 1188.3;

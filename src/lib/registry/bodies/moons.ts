@@ -17,7 +17,7 @@ function moon(opts: {
   radiusKm: number;
   color: string;
   subtitle?: string;
-  /** Label visibility tier — defaults to 4 for ordinary moons. */
+  /** Label priority; defaults to 4 for ordinary moons. */
   labelTier?: number;
   /** Full Keplerian elements (parent's ecliptic J2000 frame, km, deg). */
   elements: MoonOrbitalElements;

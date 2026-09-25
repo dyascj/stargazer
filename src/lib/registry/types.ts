@@ -42,7 +42,7 @@ export interface BaseObjectMetadata {
 export interface PlanetBodyMetadata extends BaseObjectMetadata {
   /** Body radius in scene units (1 unit = Earth radius). */
   radius: number;
-  /** Body radius in km — for the info panel display. */
+  /** Body radius in km, for the info panel. */
   radiusKm: number;
   /** Equirectangular albedo texture URL. Takes precedence over solidColor. */
   textureUrl?: string;
@@ -56,10 +56,10 @@ export interface PlanetBodyMetadata extends BaseObjectMetadata {
   poleVec?: readonly [number, number, number];
   /**
    * Rotation model for the body's daily spin:
-   *  - 'gmst'       — Earth's Greenwich Mean Sidereal Time (Earth only).
-   *  - 'tidal-lock' — always faces parent (tidally locked moons).
-   *  - 'iau-w'      — IAU 2018 W-formula; requires rotationW0Deg and rotationRateDegPerDay.
-   *  - 'none'       — static (default).
+   *  - 'gmst': Earth's Greenwich Mean Sidereal Time (Earth only).
+   *  - 'tidal-lock': always faces the parent (synchronous moons).
+   *  - 'iau-w': IAU W formula; requires rotationW0Deg and rotationRateDegPerDay.
+   *  - 'none': static (default).
    */
   rotationModel?: 'gmst' | 'tidal-lock' | 'iau-w' | 'none';
   /** IAU 2018 prime-meridian angle at J2000 (degrees). Required for 'iau-w'. */

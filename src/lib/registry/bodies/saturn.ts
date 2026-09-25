@@ -4,15 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Saturn — second largest planet, volumetric mean radius (9.15 × Earth, ~58,232 km
- * per NASA Planetary Fact Sheet).
- * True heliocentric position from the Standish ephemeris (~9.54 AU from the Sun).
- *
- * Pole orientation from IAU 2018: RA = 40.589°, Dec = 83.537°. Saturn's
- * obliquity is 26.73° (similar to Earth's), giving the planet recognizable
- * seasons and the iconic rings their visible tilt as Saturn orbits the Sun.
- *
- * Rings: already implemented via the hasRings metadata field — see PlanetBody.svelte.
+ * Saturn. Volumetric mean radius from the NASA fact sheet. The rings lie in
+ * the equatorial plane of the IAU pole, 26.7° from its orbit.
  */
 
 const SATURN_RADIUS_KM = 58232;
@@ -26,7 +19,7 @@ export const SATURN: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol VI · The Ringed Planet',
+    subtitle: 'Sixth planet from the Sun',
     externalId: '699',
     radius: SATURN_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: SATURN_RADIUS_KM,

@@ -18,7 +18,7 @@ import { SPACECRAFT } from './bodies/spacecraft';
 import { SMALL_BODIES } from './bodies/smallBodies';
 import { CURATED_SATELLITES } from './bodies/satellites';
 
-/** Central registry — all tracked bodies. Add a bodies/<id>.ts entry and import it here. */
+/** Central registry of all tracked bodies. Add a bodies/<id>.ts entry and import it here. */
 export const TRACKED_OBJECTS: TrackedObject[] = [
   SUN,
   // Inner planets

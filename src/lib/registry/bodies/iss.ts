@@ -27,7 +27,7 @@ export const ISS: TrackedObject = {
     satelliteCategory: 'space-station',
     tracking: { mode: 'TLE prediction', source: 'CelesTrak orbital elements + SGP4' },
     description:
-      "The International Space Station — humanity's largest structure in orbit. A collaboration between NASA, Roscosmos, JAXA, ESA, and CSA. Continuously inhabited since November 2, 2000 — the longest unbroken human presence in space.",
+      "The International Space Station is humanity's largest structure in orbit. A collaboration between NASA, Roscosmos, JAXA, ESA, and CSA. Continuously inhabited since November 2, 2000: the longest unbroken human presence in space.",
     facts: [
       { label: 'Orbital altitude', value: '~408 km' },
       { label: 'Speed', value: '~27,600 km/h' },

@@ -4,7 +4,7 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Mars — true heliocentric position via the JPL approximate planetary
+ * Mars: true heliocentric position via the JPL approximate planetary
  * element model. Pole and prime meridian follow the IAU 2009 Mars rotation
  * model (RA = 317.68°, Dec = 52.89°), so the lit hemisphere shows the
  * correct seasonal lean.
@@ -19,7 +19,7 @@ export const MARS: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol IV · The Red Planet',
+    subtitle: 'Fourth planet from the Sun',
     externalId: '499',
     radius: MARS_RADIUS_KM * KM_TO_SCENE,
     radiusKm: MARS_RADIUS_KM,

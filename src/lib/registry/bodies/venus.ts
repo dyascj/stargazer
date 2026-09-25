@@ -4,19 +4,8 @@ import { equatorialToScene } from '$utils/frames';
 import type { TrackedObject } from '../types';
 
 /**
- * Venus — second planet, true scale (radius 0.95 of Earth, very nearly
- * Earth's twin in size). True heliocentric position from the Standish
- * ephemeris.
- *
- * Pole orientation from IAU 2018: RA = 272.76°, Dec = 67.16°. Venus
- * rotates RETROGRADE — its sidereal day is longer than its year! The
- * IAU pole convention places the rotation axis along the angular
- * momentum direction, so for retrograde rotation the IAU "north pole"
- * points to what would be the southern celestial hemisphere by
- * Earth-convention; in scene coordinates the pole still sits very
- * close to ecliptic north because Venus's orbit is nearly in-plane.
- *
- * Retrograde rotation is implemented via the 'iau-w' model (-243 Earth days per rotation).
+ * Venus. The IAU north pole lies on the north side of the invariable plane,
+ * so its slow retrograde spin is a negative W rate.
  */
 
 const VENUS_RADIUS_KM = 6051.8;
@@ -30,7 +19,7 @@ export const VENUS: TrackedObject = {
   rendererKind: 'planet-body',
   labelTier: 1,
   metadata: {
-    subtitle: 'Sol II · The Morning & Evening Star',
+    subtitle: 'Second planet from the Sun',
     externalId: '299',
     radius: VENUS_RADIUS_KM / EARTH_RADIUS_KM,
     radiusKm: VENUS_RADIUS_KM,
