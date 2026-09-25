@@ -62,11 +62,12 @@
 </script>
 
 <svelte:head>
-  <title>Stargazer · Explore the solar system</title>
+  <title>{getById($selection)?.name ?? 'Solar system'} · Stargazer</title>
   <meta
     name="description"
-    content="Explore planets, moons, spacecraft, and satellite predictions in an interactive 3D solar system."
+    content="Explore planets, moons, spacecraft and live satellites in an interactive 3D solar system."
   />
+  <link rel="canonical" href="https://stargazer-lab.vercel.app/app" />
 </svelte:head>
 
 <main
