@@ -3,19 +3,89 @@ on:
   pull_request:
   push:
     branches: [master]
+  workflow_dispatch:
+
 permissions:
   contents: read
+
+# One run per branch; a new push supersedes the old one. Runs on master always finish.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   check:
+    name: Lint, types, unit tests, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm run check
       - run: npm test
-      - run: npm run lint
       - run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  e2e:
+    name: E2E (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Browsers and system libraries come from the image; its tag must match @playwright/test.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop-chrome, iphone-safari, iphone-landscape, android-chrome]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check the Playwright image matches the installed version
+        run: |
+          installed=$(npx playwright --version | awk '{print $2}')
+          if [ "$installed" != "1.63.0" ]; then
+            echo "::error::@playwright/test is $installed; update the container image tag in check.yml to match."
+            exit 1
+          fi
+      - run: npx playwright test --project=${{ matrix.project }}
+        env:
+          HOME: /root
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # A single required check for branch rules, whatever the matrix becomes.
+  ci:
+    name: CI
+    if: ${{ always() }}
+    needs: [check, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: All checks passed
+        run: |
+          if [ "${{ needs.check.result }}" != "success" ] || [ "${{ needs.e2e.result }}" != "success" ]; then
+            echo "::error::check: ${{ needs.check.result }}, e2e: ${{ needs.e2e.result }}"
+            exit 1
+          fi

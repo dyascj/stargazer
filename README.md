@@ -99,6 +99,19 @@ npm run lint       # Prettier
 npm run build      # production build (Vercel adapter)
 ```
 
+### End-to-end tests
+
+Playwright drives the production build on desktop Chrome, iPhone Safari (portrait and landscape) and Android Chrome, including touch gestures and axe accessibility scans.
+
+```sh
+npx playwright install chromium webkit
+npm run test:e2e              # all devices
+npm run test:e2e -- --project=iphone-safari
+npm run test:e2e:docker       # same run in the CI image, for hosts WebKit does not support
+```
+
+CI runs lint, types, unit tests, the build, a dependency audit and every device project on each pull request.
+
 No API keys are needed. An optional `NASA_API_KEY` in `.env` enables the NASA API proxy route. Satellite elements and launches need network access; unavailable feeds show an explicit state.
 
 ### Refresh ephemerides
@@ -123,7 +136,8 @@ Each record and its epoch update together, failed objects keep their previous el
 | `src/lib/components/layout`  | Search, details, time, settings and size comparison             |
 | `src/lib/components/landing` | Landing page chapters and their self-contained three.js scenes  |
 | `src/routes/api`             | Validated proxies for upstream data                             |
-| `scripts`                    | Ephemeris refresh and the test suite                            |
+| `scripts`                    | Ephemeris refresh and the unit test suite                       |
+| `e2e`                        | Playwright end-to-end tests across desktop and phones           |
 
 Built with SvelteKit, Svelte 5, Threlte and three.js, satellite.js, and Inter. The design system is [Mizu](https://mizu-ui.com); motion takes cues from [bencho.dev](https://bencho.dev).
 

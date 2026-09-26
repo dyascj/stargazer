@@ -13,9 +13,13 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
     "lint": "prettier --check .",
-    "test": "node --test scripts/core.test.mjs scripts/landing.test.mjs"
+    "test": "node --test scripts/core.test.mjs scripts/landing.test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:docker": "docker run --rm --ipc=host --user \"$(id -u):$(id -g)\" -e HOME=/tmp -v \"$PWD\":/work -w /work mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
     "@sveltejs/adapter-vercel": "^6.3.4",
     "@sveltejs/kit": "^2.70.3",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
