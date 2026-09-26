@@ -33,6 +33,7 @@
     position: fixed;
     inset: 0 0 auto;
     z-index: 10;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
     transition:
       translate 520ms var(--ease-out),
       background-color 320ms ease;

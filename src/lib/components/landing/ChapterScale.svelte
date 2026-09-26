@@ -90,7 +90,7 @@
     grid-area: 1 / 1;
     opacity: 0;
     translate: 0 18px;
-    filter: blur(6px);
+    filter: var(--enter-blur, blur(6px));
     transition:
       opacity 500ms var(--ease-out),
       translate 700ms var(--ease-out),

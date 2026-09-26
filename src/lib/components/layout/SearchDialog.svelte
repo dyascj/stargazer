@@ -97,7 +97,7 @@
     id={optionId(index)}
     tabindex="-1"
     aria-selected={index === active}
-    onpointermove={() => (active = index)}
+    onpointermove={(event) => event.pointerType === 'mouse' && (active = index)}
     onclick={() => choose(body, index)}
   >
     <BodyGlyph {body} />
@@ -165,7 +165,9 @@
     </div>
   {/if}
 
-  <div class="scroll" bind:this={list}>
+  <!-- Focusable so keyboards can scroll the launch list, which has no options to move through. -->
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+  <div class="scroll" bind:this={list} tabindex="0" role="region" aria-label="Search results">
     {#if results}
       {#if results.length}
         <div id="search-options" role="listbox" aria-label="Results" class="rows">
@@ -180,7 +182,7 @@
     {:else if view === 'explore'}
       <div id="search-options" role="listbox" aria-label="Destinations">
         <div class="rise group" role="group" aria-labelledby="group-0">
-          <h3 id="group-0">{tiles.label}</h3>
+          <h3 id="group-0" role="presentation">{tiles.label}</h3>
           <div class="tiles">
             {#each tiles.bodies as body, index (body.id)}
               <button
@@ -190,7 +192,7 @@
                 id={optionId(index)}
                 tabindex="-1"
                 aria-selected={index === active}
-                onpointermove={() => (active = index)}
+                onpointermove={(event) => event.pointerType === 'mouse' && (active = index)}
                 onclick={() => choose(body, index)}
                 ><BodyGlyph {body} size={body.id === 'sun' ? 26 : 22} /><span>{body.name}</span
                 ></button
@@ -205,7 +207,7 @@
             role="group"
             aria-labelledby="group-{groupIndex + 1}"
           >
-            <h3 id="group-{groupIndex + 1}">{group.label}</h3>
+            <h3 id="group-{groupIndex + 1}" role="presentation">{group.label}</h3>
             <div class="rows">
               {#each group.bodies as body, index (body.id)}{@render row(
                   body,
@@ -325,6 +327,9 @@
     overscroll-behavior: contain;
     padding: 4px 0 8px;
   }
+  .scroll:focus-visible {
+    outline-offset: -2px;
+  }
   .group + .group {
     margin-top: 12px;
   }
@@ -342,6 +347,7 @@
     gap: 2px;
     padding: 0 8px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     scrollbar-width: none;
   }
   .tile {
@@ -428,6 +434,12 @@
   footer[hidden] {
     display: none;
   }
+  /* Keyboard hints mean nothing to a finger. */
+  @media (pointer: coarse) {
+    footer {
+      display: none;
+    }
+  }
   footer span {
     display: inline-flex;
     align-items: center;
@@ -462,8 +474,15 @@
       grid-auto-flow: column;
       grid-auto-columns: 1fr;
     }
+    /* Two rows instead of a sideways scroller: every planet in reach without a swipe. */
     .tiles {
-      grid-template-columns: repeat(9, 72px);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px 2px;
+      overflow: visible;
+    }
+    .tile {
+      height: 76px;
+      gap: 8px;
     }
     .row {
       min-height: 56px;

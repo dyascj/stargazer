@@ -170,6 +170,10 @@
     position: absolute;
     inset: 0;
     z-index: 0;
+    /* Long presses while orbiting should not select label text or open the iOS callout. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 
   /* Shown while the first view's textures load; dissolves as the scene fades up. */
@@ -215,7 +219,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 16px;
-    padding: 16px 16px 0 20px;
+    padding: 16px max(16px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
     pointer-events: none;
   }
   .topbar > * {
@@ -260,6 +264,11 @@
     scale: 0.98;
     transition-duration: 90ms;
   }
+  @media (pointer: coarse) {
+    .search-field kbd {
+      display: none;
+    }
+  }
   .placeholder {
     flex: 1;
     overflow: hidden;
@@ -272,7 +281,7 @@
     transition: opacity 600ms var(--ease-out);
     position: absolute;
     top: 76px;
-    left: 20px;
+    left: max(20px, env(safe-area-inset-left));
     z-index: 30;
     padding: 4px;
     border-radius: var(--radius-pill);
@@ -299,7 +308,7 @@
 
   .exit-immersive {
     position: absolute;
-    right: 16px;
+    right: max(16px, env(safe-area-inset-right));
     bottom: max(16px, env(safe-area-inset-bottom));
     z-index: 30;
     display: inline-flex;
@@ -322,7 +331,8 @@
   @media (max-width: 639px) {
     .topbar {
       gap: 8px;
-      padding: max(8px, env(safe-area-inset-top)) 8px 0 12px;
+      padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 0
+        max(12px, env(safe-area-inset-left));
     }
     .lead {
       gap: 0;
@@ -342,7 +352,24 @@
     }
     .framing {
       top: calc(max(8px, env(safe-area-inset-top)) + 52px);
-      left: 12px;
+      left: max(12px, env(safe-area-inset-left));
+    }
+  }
+
+  /* Phones on their side: the details card takes the right, so time moves to the left. */
+  @media (max-height: 500px) and (min-width: 640px) {
+    .topbar {
+      padding-top: 12px;
+    }
+    .framing {
+      top: 68px;
+    }
+    .time-dock {
+      left: max(16px, env(safe-area-inset-left));
+      translate: 0 0;
+    }
+    .intro .time-dock {
+      translate: 0 12px;
     }
   }
 </style>

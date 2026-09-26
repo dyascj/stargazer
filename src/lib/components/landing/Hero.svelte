@@ -199,7 +199,7 @@
     from {
       opacity: 0;
       translate: 0 16px;
-      filter: blur(4px);
+      filter: var(--enter-blur, blur(4px));
     }
   }
 

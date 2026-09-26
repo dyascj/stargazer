@@ -218,6 +218,13 @@
     gap: 2px;
     margin-top: 6px;
   }
+  @media (pointer: coarse) {
+    /* Below 16px, iOS Safari zooms the page when the picker takes focus. */
+    select {
+      height: 44px;
+      font-size: 16px;
+    }
+  }
   @media (max-width: 639px) {
     .compare {
       padding: 16px;

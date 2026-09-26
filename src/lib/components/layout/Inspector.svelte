@@ -323,7 +323,9 @@
     margin: 10px -20px 0;
     padding: 0 20px 2px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     scrollbar-width: none;
+    /* Vertical drags on the row move the phone sheet, until the sheet itself scrolls. */
     touch-action: pan-x;
     mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 28px), transparent);
   }
@@ -348,6 +350,9 @@
   .chip:active {
     scale: 0.96;
     transition-duration: 90ms;
+  }
+  :global(.scrolls) .chips {
+    touch-action: pan-x pan-y;
   }
 
   .disclosures {
@@ -445,5 +450,24 @@
   }
   .sources a:hover {
     color: var(--text-1);
+  }
+
+  /* Fingers need bigger targets than the pointer-sized defaults. */
+  @media (pointer: coarse) {
+    .close {
+      width: 44px;
+      height: 44px;
+      top: -10px;
+      right: -12px;
+    }
+    .status,
+    .sources a {
+      min-height: 44px;
+    }
+    .chip,
+    .actions .btn,
+    .content .btn {
+      height: 40px;
+    }
   }
 </style>
