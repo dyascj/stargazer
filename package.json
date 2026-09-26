@@ -23,7 +23,7 @@
     "@sveltejs/adapter-vercel": "^6.3.4",
     "@sveltejs/kit": "^2.70.3",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
-    "@types/three": "^0.170.0",
+    "@types/three": "^0.186.0",
     "prettier": "^3.3.3",
     "prettier-plugin-svelte": "^4.1.1",
     "svelte": "^5.57.0",
@@ -36,7 +36,7 @@
     "@threlte/core": "^8.0.0",
     "@threlte/extras": "^9.0.0",
     "satellite.js": "^6.0.2",
-    "three": "^0.170.0"
+    "three": "^0.186.0"
   },
   "engines": {
     "node": ">=22.12.0"
