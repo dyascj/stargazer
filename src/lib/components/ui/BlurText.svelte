@@ -35,7 +35,7 @@
   @keyframes blur-in {
     from {
       opacity: 0;
-      filter: blur(5px);
+      filter: var(--enter-blur, blur(5px));
       transform: translateY(-0.5em);
     }
   }

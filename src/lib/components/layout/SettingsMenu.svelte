@@ -167,7 +167,7 @@
   }
   .menu {
     position: fixed;
-    inset: 72px 16px auto auto;
+    inset: 72px max(16px, env(safe-area-inset-right)) auto auto;
     width: 300px;
     max-height: calc(100dvh - 96px);
     margin: 0;
@@ -307,7 +307,7 @@
 
   @media (max-width: 639px) {
     .menu {
-      inset: calc(env(safe-area-inset-top) + 64px) 12px auto auto;
+      inset: calc(env(safe-area-inset-top) + 64px) max(12px, env(safe-area-inset-right)) auto auto;
       width: min(320px, calc(100vw - 24px));
     }
   }

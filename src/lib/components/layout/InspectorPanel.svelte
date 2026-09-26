@@ -52,7 +52,7 @@
     position: absolute;
     z-index: 40;
     top: 76px;
-    right: 16px;
+    right: max(16px, env(safe-area-inset-right));
     width: 360px;
     max-height: calc(100dvh - 76px - 96px);
     overflow-y: auto;
@@ -67,6 +67,14 @@
     .card {
       opacity: 0;
       translate: 12px 0;
+    }
+  }
+  /* Phones on their side: use the full height; the time control moves out of the way. */
+  @media (max-height: 500px) {
+    .card {
+      top: 68px;
+      width: min(360px, 46vw);
+      max-height: calc(100dvh - 68px - max(12px, env(safe-area-inset-bottom)));
     }
   }
 </style>

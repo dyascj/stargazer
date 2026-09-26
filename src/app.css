@@ -197,6 +197,14 @@ menu {
   --dur-slow: 420ms;
 }
 
+/* Blur-in entrances stack large filter layers that phone GPUs struggle with (they crashed
+   WebKit in testing). Touch screens keep the fade and rise without the blur. */
+@media (pointer: coarse) {
+  :root {
+    --enter-blur: none;
+  }
+}
+
 html,
 body {
   height: 100%;
@@ -213,6 +221,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Taps on controls never wait for, or trigger, double-tap zoom. */
+a,
+button,
+summary,
+label,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 h1,
@@ -343,7 +360,8 @@ kbd {
   font: 500 11px/1 var(--font-sans);
 }
 
-/* Staggered entrance. Set --i on siblings for a 70ms cascade. */
+/* Staggered entrance. Set --i on siblings for a 70ms cascade. Fills backwards only, so no
+   animated transform lingers after the entrance around scrollers inside (iOS Safari). */
 @keyframes rise {
   from {
     opacity: 0;
@@ -351,7 +369,7 @@ kbd {
   }
 }
 .rise {
-  animation: rise 620ms var(--ease-out) both;
+  animation: rise 620ms var(--ease-out) backwards;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
 

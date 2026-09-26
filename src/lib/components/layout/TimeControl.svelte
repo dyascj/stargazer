@@ -223,8 +223,11 @@
     position: fixed;
     inset: auto 0 calc(var(--dock-bottom, 24px) + 60px);
     width: min(400px, calc(100vw - 24px));
+    max-height: calc(100dvh - var(--dock-bottom, 24px) - 72px);
     margin: 0 auto;
     padding: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border: 0;
     border-radius: var(--radius-2xl);
     color: var(--text-1);
@@ -291,7 +294,8 @@
     margin-top: 8px;
   }
 
-  @media (max-width: 639px) {
+  /* Phones in either orientation. */
+  @media (max-width: 639px), (pointer: coarse) {
     .pill {
       height: 52px;
     }
@@ -309,6 +313,16 @@
     }
     .play {
       width: 44px;
+    }
+  }
+  @media (pointer: coarse) {
+    /* Below 16px, iOS Safari zooms the page when the field takes focus. */
+    input {
+      height: 44px;
+      font-size: 16px;
+    }
+    .date-row .btn {
+      height: 44px;
     }
   }
 </style>

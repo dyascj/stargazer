@@ -121,4 +121,12 @@
     outline-offset: 1px;
     border-radius: var(--radius-xs);
   }
+  /* Labels stay compact on screen but take a finger-sized tap. */
+  @media (pointer: coarse) {
+    .label::before {
+      content: '';
+      position: absolute;
+      inset: -11px -4px;
+    }
+  }
 </style>

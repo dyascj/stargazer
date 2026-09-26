@@ -89,7 +89,7 @@
   .landing :global([data-reveal][data-armed]:not([data-in])) {
     opacity: 0;
     translate: 0 28px;
-    filter: blur(6px);
+    filter: var(--enter-blur, blur(6px));
   }
   @media (prefers-reduced-motion: reduce) {
     .landing :global([data-reveal][data-armed]:not([data-in])) {

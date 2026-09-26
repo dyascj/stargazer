@@ -57,6 +57,7 @@
 
   // Drag physics from Bencho: start after 6px, dismiss past 108px or a fast 34px flick.
   let gesture: {
+    x: number;
     y: number;
     height: number;
     lastY: number;
@@ -70,6 +71,7 @@
     // At full height the content scrolls; only the header grip drags.
     if (snap === 'full' && !(event.target as Element).closest('[data-sheet-grip]')) return;
     gesture = {
+      x: event.clientX,
       y: event.clientY,
       height,
       lastY: event.clientY,
@@ -84,6 +86,11 @@
     const dy = event.clientY - gesture.y;
     if (!gesture.active) {
       if (Math.abs(dy) < 6) return;
+      // A sideways swipe belongs to the row under the finger, not the sheet.
+      if (Math.abs(event.clientX - gesture.x) > Math.abs(dy)) {
+        gesture = null;
+        return;
+      }
       gesture.active = true;
       sheet.setPointerCapture(event.pointerId);
     }
@@ -179,11 +186,18 @@
   .dragging {
     transition: none;
   }
+  /* The handle reads as a small bar but takes a finger-sized band at the top. */
   .grip {
     flex: none;
     height: 22px;
     display: grid;
     place-items: center;
+    position: relative;
+  }
+  .grip::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 -10px;
   }
   .grip::before {
     content: '';

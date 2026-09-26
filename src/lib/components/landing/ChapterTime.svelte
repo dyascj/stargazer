@@ -197,6 +197,15 @@
     border-radius: 50%;
     background: var(--text-3);
   }
+  /* A taller strip is easier to grab with a thumb; the marks follow the centred track. */
+  @media (pointer: coarse) {
+    input {
+      height: 44px;
+    }
+    .marks {
+      top: 30px;
+    }
+  }
   .bounds {
     display: flex;
     justify-content: space-between;

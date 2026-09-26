@@ -294,7 +294,7 @@
     from {
       opacity: 0;
       translate: 0 10px;
-      filter: blur(4px);
+      filter: var(--enter-blur, blur(4px));
     }
   }
   h3 {
