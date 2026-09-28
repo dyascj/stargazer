@@ -125,6 +125,17 @@ npm test
 
 Each record and its epoch update together, failed objects keep their previous elements, and files are replaced atomically. A scheduled GitHub Action runs this weekly. Mission descriptions and operational status still need editorial review.
 
+### Deploy
+
+The site runs on Cloudflare Workers at [stargazer-app.com](https://stargazer-app.com).
+
+```sh
+npm run build && npx wrangler deploy                # the site
+npx wrangler deploy -c workers/wrangler.jsonc       # www redirect and launch schedule cron
+```
+
+Launch Library rate-limits Cloudflare's shared outbound IPs, so a cron in `workers/edge.js` refreshes the launch schedule into KV every 10 minutes and `/api/launches` serves it from there.
+
 ## Project structure
 
 | Path                         | Contents                                                        |
@@ -138,6 +149,7 @@ Each record and its epoch update together, failed objects keep their previous el
 | `src/routes/api`             | Validated proxies for upstream data                             |
 | `scripts`                    | Ephemeris refresh and the unit test suite                       |
 | `e2e`                        | Playwright end-to-end tests across desktop and phones           |
+| `workers`                    | Companion Cloudflare Worker: www redirect and launch cron       |
 
 Built with SvelteKit, Svelte 5, Threlte and three.js, satellite.js, and Inter. The design system is [Mizu](https://mizu-ui.com); motion takes cues from [bencho.dev](https://bencho.dev).
 

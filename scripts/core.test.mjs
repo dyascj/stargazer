@@ -333,6 +333,19 @@ test('Launch schedule fails cleanly, normalizes records, and caches successful r
   await endpoint.GET({ fetch: fetcher, setHeaders });
   assert.equal(requests, 1);
   assert.match(headers['cache-control'], /s-maxage=900/);
+
+  // Production serves what the edge cron stored in KV, without calling the provider.
+  const stored = { fetchedAt: Date.now(), launches: body.launches.slice(0, 1) };
+  const LAUNCHES = {
+    get: async (key, type) => (key === 'schedule' && type === 'json' ? stored : null)
+  };
+  const fromKv = await endpoint.GET({
+    fetch: fetcher,
+    platform: { env: { LAUNCHES } },
+    setHeaders
+  });
+  assert.deepEqual((await fromKv.json()).launches, stored.launches);
+  assert.equal(requests, 1);
 });
 
 test('Explorer search ranks names, aliases, catalog numbers, and near-miss typos', async () => {

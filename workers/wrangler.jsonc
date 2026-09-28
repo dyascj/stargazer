@@ -1,0 +1,10 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "stargazer-edge",
+  "main": "edge.js",
+  "compatibility_date": "2026-09-28",
+  "routes": [{ "pattern": "www.stargazer-app.com", "custom_domain": true }],
+  "triggers": { "crons": ["*/10 * * * *"] },
+  "kv_namespaces": [{ "binding": "LAUNCHES", "id": "c12957b6f3ba4e41806befa7780a4edc" }],
+  "observability": { "enabled": true }
+}
