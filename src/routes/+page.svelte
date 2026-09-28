@@ -16,12 +16,12 @@
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'Stargazer',
-    url: 'https://stargazer-lab.vercel.app/',
+    url: 'https://stargazer-app.com/',
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires WebGL',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    image: 'https://stargazer-lab.vercel.app/og-image.jpg'
+    image: 'https://stargazer-app.com/og-image.jpg'
   };
 
   const title = 'Stargazer · A clearer view of space';
@@ -33,8 +33,8 @@
 <svelte:head>
   <title>{title}</title>
   <meta name="description" content={description} />
-  <link rel="canonical" href="https://stargazer-lab.vercel.app/" />
-  <meta property="og:url" content="https://stargazer-lab.vercel.app/" />
+  <link rel="canonical" href="https://stargazer-app.com/" />
+  <meta property="og:url" content="https://stargazer-app.com/" />
   {@html `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>`}
 </svelte:head>
 

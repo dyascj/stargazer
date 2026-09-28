@@ -82,7 +82,7 @@
     name="description"
     content="Explore planets, moons, spacecraft and live satellites in an interactive 3D solar system."
   />
-  <link rel="canonical" href="https://stargazer-lab.vercel.app/app" />
+  <link rel="canonical" href="https://stargazer-app.com/app" />
 </svelte:head>
 
 <main

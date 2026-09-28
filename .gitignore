@@ -21,7 +21,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Vercel
+# Hosting
+.wrangler
 .vercel
 
 # Internal docs (specs, plans)
