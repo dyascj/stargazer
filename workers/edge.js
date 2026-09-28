@@ -1,6 +1,6 @@
 // Companion to the main Stargazer worker, deployed with `npx wrangler deploy -c workers/wrangler.jsonc`.
 // It lives apart because the SvelteKit adapter owns the main worker's entry file.
-import { KEY, fetchSchedule } from '../src/lib/server/launches.ts';
+import { KEY, fetchSchedule } from '../src/lib/launches.ts';
 
 export default {
   /** www.stargazer-app.com redirects to the apex, keeping path and query. */

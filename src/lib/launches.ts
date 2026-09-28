@@ -1,4 +1,4 @@
-// No SvelteKit imports: the stargazer-edge worker bundles this too.
+// Shared by the browser, /api/launches and the stargazer-edge worker, so no SvelteKit imports.
 
 export interface Launch {
   id: string;
@@ -15,6 +15,7 @@ export const KEY = 'schedule';
 const text = (value: unknown, fallback: string) =>
   typeof value === 'string' && value.trim() ? value : fallback;
 
+/** Launch Library's upcoming launches, normalized. Callers filter with `upcoming` when serving. */
 export async function fetchSchedule(fetcher: typeof fetch = fetch): Promise<Schedule> {
   const response = await fetcher(
     'https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=8&mode=normal',
@@ -50,4 +51,25 @@ export async function fetchSchedule(fetcher: typeof fetch = fetch): Promise<Sche
       })
     );
   return { fetchedAt: Date.now(), launches };
+}
+
+export const upcoming = (launches: Launch[]) =>
+  launches.filter((launch) => Date.parse(launch.date) >= Date.now());
+
+/**
+ * The site's copy of the schedule, or Launch Library directly when that copy is missing
+ * or stale. The edge cron is often throttled; a visitor's own IP has its own allowance.
+ */
+export async function loadSchedule(): Promise<Schedule & { stale: boolean }> {
+  const cached: (Schedule & { stale: boolean }) | null = await fetch('/api/launches')
+    .then((response) => (response.ok ? response.json() : null))
+    .catch(() => null);
+  if (cached && !cached.stale) return cached;
+  try {
+    const live = await fetchSchedule();
+    return { ...live, launches: upcoming(live.launches), stale: false };
+  } catch (error) {
+    if (cached) return cached;
+    throw error;
+  }
 }

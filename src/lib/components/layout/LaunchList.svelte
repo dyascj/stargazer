@@ -1,31 +1,25 @@
 <script lang="ts" module>
-  import type { Launch } from '../../../routes/api/launches/+server';
-  type Schedule = { launches: Launch[]; stale: boolean; fetchedAt: number };
-  // One request per session; the endpoint already caches upstream for 15 minutes.
-  let request: Promise<Schedule> | null = null;
-  function loadSchedule(): Promise<Schedule> {
-    request ??= fetch('/api/launches')
-      .then((response) => {
-        if (!response.ok) throw new Error('Launch schedule unavailable');
-        return response.json();
-      })
-      .catch((error) => {
-        request = null; // Let the next visit retry.
-        throw error;
-      });
+  import { loadSchedule } from '$lib/launches';
+  // One schedule per session.
+  let request: ReturnType<typeof loadSchedule> | null = null;
+  function schedule() {
+    request ??= loadSchedule().catch((error) => {
+      request = null; // Let the next visit retry.
+      throw error;
+    });
     return request;
   }
 </script>
 
 <script lang="ts">
   import Icon from '$components/ui/Icon.svelte';
-  const schedule = loadSchedule();
+  const current = schedule();
   const day = (date: string) =>
     new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const time = (date: string) => new Date(date).toISOString().slice(11, 16);
 </script>
 
-{#await schedule}
+{#await current}
   <p class="state" role="status">Checking the launch schedule</p>
 {:then { launches, stale, fetchedAt }}
   {#if launches.length}
