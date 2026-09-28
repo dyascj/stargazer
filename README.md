@@ -134,7 +134,7 @@ npm run build && npx wrangler deploy                # the site
 npx wrangler deploy -c workers/wrangler.jsonc       # www redirect and launch schedule cron
 ```
 
-Launch Library rate-limits Cloudflare's shared outbound IPs, so a cron in `workers/edge.js` refreshes the launch schedule into KV every 10 minutes and `/api/launches` serves it from there.
+Launch Library rate-limits Cloudflare's shared outbound IPs, so a cron in `workers/edge.js` tries to refresh the launch schedule into KV every 10 minutes and `/api/launches` serves that copy. When it is missing or stale, the browser fetches the schedule from Launch Library directly.
 
 ## Project structure
 
