@@ -263,25 +263,56 @@ test('Ephemeris refresh updates only the requested body and fails atomically', (
   });
 });
 
-test('Satellite endpoint validates input, rejects bad upstream data, and deduplicates requests', async () => {
-  const { fetchTle } = await load('server/tle');
-  const unusedFetch = async () => {
-    throw new Error('Should not fetch');
-  };
-  await assert.rejects(fetchTle(unusedFetch, '123456'), (error) => error.status === 400);
-  await assert.rejects(fetchTle(unusedFetch, '0'), (error) => error.status === 400);
-  await assert.rejects(
-    fetchTle(async () => new Response('<html>Unavailable</html>'), '6'),
-    (error) => error.status === 502
-  );
+test('Satellite elements validate ids, fetch only what the store lacks, and never lose a copy', async () => {
+  const { getTles, parseIds, refreshTles } = await load('server/tle');
+  for (const bad of [
+    null,
+    '',
+    '0',
+    '123456',
+    '1.5',
+    'abc',
+    Array.from({ length: 33 }, (_, i) => i + 1).join()
+  ])
+    assert.equal(parseIds(bad), null);
+  assert.deepEqual(parseIds('5,00005,6'), [5, 6]);
+
   let calls = 0;
-  const fetcher = async () => {
+  const vanguard = async () => {
     calls++;
     return new Response(`VANGUARD 1\n${line1}\n${line2}`);
   };
-  const results = await Promise.all([fetchTle(fetcher, '5'), fetchTle(fetcher, '00005')]);
+  const failing = async () => {
+    calls++;
+    return new Response('<html>Unavailable</html>', { status: 503 });
+  };
+  const store = {};
+  const kv = {
+    get: async () => structuredClone(store.tle ?? null),
+    put: async (_key, value) => (store.tle = JSON.parse(value))
+  };
+
+  // A satellite the store lacks is fetched once, concurrent requests share it, then it is served.
+  const [first, second] = await Promise.all([
+    getTles(vanguard, [5], kv),
+    getTles(vanguard, [5], kv)
+  ]);
+  assert.equal(first[5].line1, line1);
+  assert.deepEqual(first, second);
+  await getTles(vanguard, [5], kv);
   assert.equal(calls, 1);
-  assert.deepEqual(results[0], results[1]);
+
+  // A failure is omitted and not retried per request.
+  assert.deepEqual(await getTles(failing, [6], kv), {});
+  assert.deepEqual(await getTles(failing, [6], kv), {});
+  assert.equal(calls, 2);
+
+  // The cron refreshes stored satellites; a failed refresh keeps the copy and reports it.
+  store.tle[5].fetchedAt = 0;
+  await refreshTles(vanguard, kv);
+  assert.ok(store.tle[5].fetchedAt > 0);
+  await assert.rejects(refreshTles(failing, kv));
+  assert.equal(store.tle[5].line1, line1);
 });
 
 test('NASA proxy rejects unlisted paths before fetching', async () => {
@@ -330,7 +361,7 @@ test('Launch schedule normalizes records and the endpoint serves the KV copy', a
   const kv = (value) => ({
     platform: {
       env: {
-        LAUNCHES: {
+        FEEDS: {
           get: async (key, type) => (key === 'schedule' && type === 'json' ? value : null)
         }
       }
