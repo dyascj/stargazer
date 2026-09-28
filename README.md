@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://stargazer-lab.vercel.app"><img src=".github/assets/banner.jpg" alt="Stargazer. A clearer view of space." width="100%" /></a>
+  <a href="https://stargazer-app.com"><img src=".github/assets/banner.jpg" alt="Stargazer. A clearer view of space." width="100%" /></a>
 </p>
 
 <p align="center">
@@ -8,9 +8,9 @@
 </p>
 
 <p align="center">
-  <a href="https://stargazer-lab.vercel.app/app"><strong>Launch explorer</strong></a>
+  <a href="https://stargazer-app.com/app"><strong>Launch explorer</strong></a>
   &nbsp;&middot;&nbsp;
-  <a href="https://stargazer-lab.vercel.app">Website</a>
+  <a href="https://stargazer-app.com">Website</a>
   &nbsp;&middot;&nbsp;
   <a href="#data-and-accuracy">Data and accuracy</a>
   &nbsp;&middot;&nbsp;
@@ -96,7 +96,7 @@ The landing page (`/`) is prerendered and loads a small three.js hero after firs
 npm run check      # svelte-check and TypeScript
 npm test           # accuracy and regression tests
 npm run lint       # Prettier
-npm run build      # production build (Vercel adapter)
+npm run build      # production build (Cloudflare adapter)
 ```
 
 ### End-to-end tests
@@ -125,6 +125,17 @@ npm test
 
 Each record and its epoch update together, failed objects keep their previous elements, and files are replaced atomically. A scheduled GitHub Action runs this weekly. Mission descriptions and operational status still need editorial review.
 
+### Deploy
+
+The site runs on Cloudflare Workers at [stargazer-app.com](https://stargazer-app.com).
+
+```sh
+npm run build && npx wrangler deploy                # the site
+npx wrangler deploy -c workers/wrangler.jsonc       # www redirect and launch schedule cron
+```
+
+Launch Library rate-limits Cloudflare's shared outbound IPs, so a cron in `workers/edge.js` tries to refresh the launch schedule into KV every 10 minutes and `/api/launches` serves that copy. When it is missing or stale, the browser fetches the schedule from Launch Library directly.
+
 ## Project structure
 
 | Path                         | Contents                                                        |
@@ -138,6 +149,7 @@ Each record and its epoch update together, failed objects keep their previous el
 | `src/routes/api`             | Validated proxies for upstream data                             |
 | `scripts`                    | Ephemeris refresh and the unit test suite                       |
 | `e2e`                        | Playwright end-to-end tests across desktop and phones           |
+| `workers`                    | Companion Cloudflare Worker: www redirect and launch cron       |
 
 Built with SvelteKit, Svelte 5, Threlte and three.js, satellite.js, and Inter. The design system is [Mizu](https://mizu-ui.com); motion takes cues from [bencho.dev](https://bencho.dev).
 

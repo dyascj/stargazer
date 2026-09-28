@@ -1,0 +1,9 @@
+{
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "",
+  "outputDirectory": "static",
+  "redirects": [
+    { "source": "/(.*)", "destination": "https://stargazer-app.com/$1", "permanent": true }
+  ]
+}

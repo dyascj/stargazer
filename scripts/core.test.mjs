@@ -292,18 +292,12 @@ test('NASA proxy rejects unlisted paths before fetching', async () => {
   );
 });
 
-test('Launch schedule fails cleanly, normalizes records, and caches successful responses', async () => {
-  const endpoint = await server.ssrLoadModule('/src/routes/api/launches/+server.ts');
-  const headers = {};
-  const setHeaders = (values) => Object.assign(headers, values);
-  await assert.rejects(
-    endpoint.GET({ fetch: async () => new Response('{}'), setHeaders }),
-    (error) => error.status === 503
-  );
-  let requests = 0;
-  const fetcher = async () => {
-    requests++;
-    return Response.json({
+test('Launch schedule normalizes records and the endpoint serves the KV copy', async () => {
+  const { fetchSchedule, upcoming } = await load('launches');
+  await assert.rejects(fetchSchedule(async () => new Response('{}')));
+  await assert.rejects(fetchSchedule(async () => new Response('', { status: 429 })));
+  const fetched = await fetchSchedule(async () =>
+    Response.json({
       results: [
         {
           id: 'example',
@@ -323,15 +317,34 @@ test('Launch schedule fails cleanly, normalizes records, and caches successful r
         { id: 12, name: 'bad', net: 'invalid' },
         null
       ]
-    });
-  };
-  const body = await (await endpoint.GET({ fetch: fetcher, setHeaders })).json();
-  assert.equal(body.launches.length, 2);
-  assert.equal(body.launches[0].provider, 'SpaceX');
-  assert.equal(body.launches[1].status, 'Schedule provisional');
+    })
+  );
+  const launches = upcoming(fetched.launches);
+  assert.equal(launches.length, 2);
+  assert.equal(launches[0].provider, 'SpaceX');
+  assert.equal(launches[1].status, 'Schedule provisional');
+
+  const endpoint = await server.ssrLoadModule('/src/routes/api/launches/+server.ts');
+  const headers = {};
+  const setHeaders = (values) => Object.assign(headers, values);
+  const kv = (value) => ({
+    platform: {
+      env: {
+        LAUNCHES: {
+          get: async (key, type) => (key === 'schedule' && type === 'json' ? value : null)
+        }
+      }
+    },
+    setHeaders
+  });
+  await assert.rejects(endpoint.GET(kv(null)), (error) => error.status === 503);
+  await assert.rejects(
+    endpoint.GET(kv({ ...fetched, fetchedAt: Date.now() - 2 * 86400000 })),
+    (error) => error.status === 503
+  );
+  const body = await (await endpoint.GET(kv(fetched))).json();
+  assert.deepEqual(body.launches, launches);
   assert.equal(body.stale, false);
-  await endpoint.GET({ fetch: fetcher, setHeaders });
-  assert.equal(requests, 1);
   assert.match(headers['cache-control'], /s-maxage=900/);
 });
 

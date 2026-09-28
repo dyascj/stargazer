@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://stargazer-lab.vercel.app/sitemap.xml
+Sitemap: https://stargazer-app.com/sitemap.xml

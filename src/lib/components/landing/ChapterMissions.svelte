@@ -2,6 +2,7 @@
   import type { OrbitalElementsWithRates } from '$utils/helio';
   import { formatLightTime } from './orbits';
   import { inView, reveal, tilt } from './motion';
+  import { loadSchedule, type Launch } from '$lib/launches';
 
   type Craft = { id: string; name: string; subtitle: string; au: number };
   let {
@@ -50,19 +51,15 @@
     })
   );
 
-  // Next launch from the explorer's Launch Library proxy, fetched once on view.
-  type Launch = { name: string; date: string; provider: string };
+  // Next launch, fetched once on view.
   let launch = $state<Launch | null>(null);
   let now = $state(Date.now());
   let requested = false;
   function onView(visible: boolean) {
     if (!visible || requested) return;
     requested = true;
-    fetch('/api/launches')
-      .then((response) => (response.ok ? response.json() : null))
-      .then((body: { launches?: Launch[] } | null) => {
-        launch = body?.launches?.[0] ?? null;
-      })
+    loadSchedule()
+      .then((schedule) => (launch = schedule.launches[0] ?? null))
       .catch(() => {});
   }
   $effect(() => {
