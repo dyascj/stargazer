@@ -23,7 +23,6 @@ pnpm-debug.log*
 
 # Hosting
 .wrangler
-.vercel
 
 # Internal docs (specs, plans)
 docs
