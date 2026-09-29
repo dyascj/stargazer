@@ -61,6 +61,34 @@ export function ecfKmToEarthLocal(
 }
 
 /**
+ * A point on Earth's surface as a unit vector in the Earth mesh's local frame
+ * (see ecfKmToEarthLocal): +Y is north, 0° longitude is +X, east is -Z.
+ */
+export function geographicToEarthLocal(
+  latitudeDeg: number,
+  longitudeDeg: number,
+  target: Vector3
+): Vector3 {
+  const lat = latitudeDeg * DEG_TO_RAD;
+  const lon = longitudeDeg * DEG_TO_RAD;
+  return target.set(Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon));
+}
+
+/** The outward direction, in scene coordinates, of a surface point at `date`. */
+export function geographicToInertialDirection(
+  latitudeDeg: number,
+  longitudeDeg: number,
+  target: Vector3,
+  date: Date
+): Vector3 {
+  return earthLocalToInertialOffset(
+    geographicToEarthLocal(latitudeDeg, longitudeDeg, _local),
+    target,
+    date
+  );
+}
+
+/**
  * Earth-fixed satellite position (from SGP4's TEME output rotated by GMST) as
  * an inertial scene offset. Going through the Earth-fixed frame keeps the
  * satellite above the correct point of the rendered, GMST-rotated globe.

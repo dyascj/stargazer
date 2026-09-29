@@ -7,6 +7,15 @@ export interface Launch {
   status: string;
   provider: string;
   pad: string;
+  /** Absent from schedules cached before these were kept, and wherever the provider has no value. */
+  site?: { latitude: number; longitude: number; location?: string };
+  rocket?: string;
+  orbit?: string;
+  mission?: string;
+  /** How far `date` can be trusted: Second, Minute, Hour, Day, Month, and so on. */
+  precision?: string;
+  windowStart?: string;
+  windowEnd?: string;
 }
 export type Schedule = { fetchedAt: number; launches: Launch[] };
 /** KV key the stargazer-edge cron writes and /api/launches reads. */
@@ -14,6 +23,12 @@ export const KEY = 'schedule';
 
 const text = (value: unknown, fallback: string) =>
   typeof value === 'string' && value.trim() ? value : fallback;
+const optional = (value: unknown) =>
+  typeof value === 'string' && value.trim() ? value.trim() : undefined;
+const date = (value: unknown) =>
+  typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : undefined;
+const inRange = (value: unknown, limit: number): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= limit;
 
 /** Launch Library's upcoming launches, normalized. Callers filter with `upcoming` when serving. */
 export async function fetchSchedule(fetcher: typeof fetch = fetch): Promise<Schedule> {
@@ -39,15 +54,41 @@ export async function fetchSchedule(fetcher: typeof fetch = fetch): Promise<Sche
         name: string;
         net: string;
         status?: { name?: unknown };
+        net_precision?: { name?: unknown };
+        window_start?: unknown;
+        window_end?: unknown;
         launch_service_provider?: { name?: unknown };
-        pad?: { name?: unknown };
+        rocket?: { configuration?: { full_name?: unknown; name?: unknown } };
+        mission?: { description?: unknown; orbit?: { name?: unknown } };
+        pad?: {
+          name?: unknown;
+          latitude?: unknown;
+          longitude?: unknown;
+          location?: { name?: unknown };
+        };
       }) => ({
         id: item.id,
         name: item.name,
         date: item.net,
         status: text(item.status?.name, 'Schedule provisional'),
         provider: text(item.launch_service_provider?.name, 'Unknown provider'),
-        pad: text(item.pad?.name, 'Launch site to be confirmed')
+        pad: text(item.pad?.name, 'Launch site to be confirmed'),
+        site:
+          inRange(item.pad?.latitude, 90) && inRange(item.pad?.longitude, 180)
+            ? {
+                latitude: item.pad.latitude,
+                longitude: item.pad.longitude,
+                location: optional(item.pad.location?.name)
+              }
+            : undefined,
+        rocket:
+          optional(item.rocket?.configuration?.full_name) ??
+          optional(item.rocket?.configuration?.name),
+        orbit: optional(item.mission?.orbit?.name),
+        mission: optional(item.mission?.description),
+        precision: optional(item.net_precision?.name),
+        windowStart: date(item.window_start),
+        windowEnd: date(item.window_end)
       })
     );
   return { fetchedAt: Date.now(), launches };

@@ -165,7 +165,7 @@
     </div>
   {/if}
 
-  <!-- Focusable so keyboards can scroll the launch list, which has no options to move through. -->
+  <!-- Focusable so keyboards can scroll the launch list, which is buttons, not listbox options. -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div class="scroll" bind:this={list} tabindex="0" role="region" aria-label="Search results">
     {#if results}
@@ -219,7 +219,7 @@
         {/each}
       </div>
     {:else}
-      <LaunchList />
+      <LaunchList onselect={() => (open = false)} />
     {/if}
   </div>
 

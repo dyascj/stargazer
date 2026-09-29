@@ -89,6 +89,24 @@ test.describe('explorer', () => {
     await expect(dialog.getByText('Falcon 9 | Test Mission')).toBeVisible();
   });
 
+  test('choosing a launch flies to Earth and opens its card', async ({ page }) => {
+    const noErrors = watchErrors(page);
+    await openExplorer(page, '?body=mars');
+    await searchButton(page).click();
+    const dialog = page.getByRole('dialog', { name: 'Search' });
+    await dialog.getByRole('radio', { name: 'Launches' }).click();
+    await dialog.getByRole('button', { name: /Test Mission/ }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveTitle('Earth · Stargazer');
+    const card = details(page, 'Test Mission', 'launch');
+    await expect(card.getByRole('heading', { name: 'Test Mission' })).toBeVisible();
+    await expect(card).toContainText('Falcon 9 Block 5 · SpaceX');
+    await expect(card).toContainText('Cape Canaveral SFS, FL, USA');
+    await card.getByRole('button', { name: 'Close launch' }).click();
+    await expect(card).toBeHidden();
+    noErrors();
+  });
+
   test('breadcrumbs walk back up the hierarchy', async ({ page }) => {
     await openExplorer(page, '?body=moon');
     const crumbs = page.getByRole('navigation', { name: 'Location' });

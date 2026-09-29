@@ -6,12 +6,13 @@
   import { AU_TO_SCENE } from '$lib/scene-config';
   import { isPlanetBody } from '$lib/registry/types';
   import { overviewDistance, selection, SOLAR_SYSTEM_VIEW } from '$stores/selection';
-  import { cameraCommand, selectBody } from '$stores/ui';
+  import { activeLaunch, cameraCommand, selectBody } from '$stores/ui';
   import { hoveredBody } from '$stores/sceneHover';
   import { prefersReducedMotion } from 'svelte/motion';
   import { introComplete, sceneReady, viewInset } from '$stores/scene';
   import { simTime } from '$stores/simTime';
   import { framingDistance, minimumDistance } from '$utils/bodyMetrics';
+  import { geographicToInertialDirection } from '$utils/earth';
   import { easeInOutCubic, easeOutCubic } from '$utils/easing';
   import { flightDuration, flightLogDistance, framingDirection } from '$utils/flight';
   import { pickBody } from '$utils/screenSpace';
@@ -32,6 +33,8 @@
    */
 
   const FOV = 45;
+  /** Camera distance over a launch pad, in Earth radii from the center: the region, with the limb in view. */
+  const LAUNCH_FRAMING = 2.2;
   const MAX_DISTANCE = 400 * AU_TO_SCENE;
   const ORIGIN = new Vector3();
   const UP = new Vector3(0, 1, 0);
@@ -152,9 +155,12 @@
     const inset = get(viewInset);
     const aspect = (width + inset.right) / Math.max(height + inset.bottom, 1);
     const date = get(simTime);
-    const toDistance = body
-      ? framingDistance(body, date, MathUtils.degToRad(FOV), aspect)
-      : get(overviewDistance) * Math.max(1, 1.4 / aspect);
+    const site = body?.id === 'earth' ? get(activeLaunch)?.site : undefined;
+    const toDistance = site
+      ? RADII[focus] * LAUNCH_FRAMING
+      : body
+        ? framingDistance(body, date, MathUtils.degToRad(FOV), aspect)
+        : get(overviewDistance) * Math.max(1, 1.4 / aspect);
     const target = resolveAnchor(toDistance, destination);
     const parent = focus >= 0 ? parentOf(focus) : -1;
     const ringed = body && isPlanetBody(body) && body.metadata.hasRings && body.metadata.poleVec;
@@ -170,6 +176,8 @@
     // Live satellites may not have a position yet; frame them again once they do.
     awaitingPosition = !!body && !valid[focus];
     if (!body) direction.set(0.45, 0.72, 0.9).normalize();
+    // Straight above a launch pad, so its marker sits in the middle of the open view.
+    if (site) geographicToInertialDirection(site.latitude, site.longitude, direction, date);
     panGoal.set(0, 0, 0);
     azimuthVelocity = polarVelocity = 0;
     const fromDistance = cam.position.distanceTo(center);

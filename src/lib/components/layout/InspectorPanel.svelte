@@ -2,11 +2,13 @@
   import { scale } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import { selection } from '$stores/selection';
-  import { closeInfoPanel } from '$stores/ui';
+  import { activeLaunch, closeInfoPanel } from '$stores/ui';
   import { getById } from '$lib/registry/registry';
   import BottomSheet from '$components/ui/BottomSheet.svelte';
   import { morphFromOrigin } from '$components/ui/morph';
   import Inspector from './Inspector.svelte';
+  import LaunchCard from './LaunchCard.svelte';
+  import { launchTitle } from './launch';
 
   let {
     compact,
@@ -15,17 +17,26 @@
   }: { compact: boolean; sheetOffset?: number; sheetExpanded?: boolean } = $props();
 
   let card: HTMLElement | undefined = $state();
-  const label = $derived(`${getById($selection)?.name ?? 'Body'} details`);
+  const label = $derived(
+    $activeLaunch
+      ? `${launchTitle($activeLaunch).title} launch`
+      : `${getById($selection)?.name ?? 'Body'} details`
+  );
+  const key = $derived($activeLaunch?.id ?? $selection);
 
   // Each new selection may arrive from a search result that wants to morph into this card.
   $effect(() => {
-    void $selection;
+    void key;
     if (card) {
       card.scrollTop = 0;
       morphFromOrigin(card);
     }
   });
 </script>
+
+{#snippet content()}
+  {#if $activeLaunch}<LaunchCard launch={$activeLaunch} />{:else}<Inspector />{/if}
+{/snippet}
 
 {#if compact}
   <BottomSheet
@@ -34,7 +45,7 @@
     bind:offset={sheetOffset}
     bind:expanded={sheetExpanded}
   >
-    {#key $selection}<Inspector />{/key}
+    {#key key}{@render content()}{/key}
   </BottomSheet>
 {:else}
   <aside
@@ -43,7 +54,7 @@
     bind:this={card}
     out:scale|global={{ start: 0.96, opacity: 0, duration: 300, easing: quintOut }}
   >
-    {#key $selection}<Inspector />{/key}
+    {#key key}{@render content()}{/key}
   </aside>
 {/if}
 

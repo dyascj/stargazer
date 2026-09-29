@@ -12,8 +12,19 @@
 </script>
 
 <script lang="ts">
+  import type { Launch } from '$lib/launches';
+  import { activeLaunch, showLaunch } from '$stores/ui';
   import Icon from '$components/ui/Icon.svelte';
+  import { setMorphOrigin } from '$components/ui/morph';
+
+  /** Called after a launch is chosen, so the dialog around the list can close. */
+  let { onselect }: { onselect?: () => void } = $props();
   const current = schedule();
+  function choose(launch: Launch, event: MouseEvent) {
+    setMorphOrigin(event.currentTarget as Element);
+    showLaunch(launch);
+    onselect?.();
+  }
   const day = (date: string) =>
     new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const time = (date: string) => new Date(date).toISOString().slice(11, 16);
@@ -26,17 +37,23 @@
     <ol class="launches">
       {#each launches as launch, index (launch.id)}
         <li class="rise" style:--i={index}>
-          <div class="when tabular">
-            <time datetime={launch.date}>{day(launch.date)}</time>
-            <span>{time(launch.date)} UTC</span>
-          </div>
-          <div class="what">
-            <strong>{launch.name}</strong>
-            <span>{launch.provider} · {launch.pad}</span>
-          </div>
-          <span class="status" class:go={launch.status.toLowerCase().startsWith('go')}
-            >{launch.status}</span
+          <button
+            type="button"
+            aria-current={$activeLaunch?.id === launch.id ? 'true' : undefined}
+            onclick={(event) => choose(launch, event)}
           >
+            <div class="when tabular">
+              <time datetime={launch.date}>{day(launch.date)}</time>
+              <span>{time(launch.date)} UTC</span>
+            </div>
+            <div class="what">
+              <strong>{launch.name}</strong>
+              <span>{launch.provider} · {launch.pad}</span>
+            </div>
+            <span class="status" class:go={launch.status.toLowerCase().startsWith('go')}
+              >{launch.status}</span
+            >
+          </button>
         </li>
       {/each}
     </ol>
@@ -66,16 +83,20 @@
     gap: 2px;
     padding: 0 8px;
   }
-  li {
+  li button {
     display: grid;
     grid-template-columns: 64px 1fr auto;
     gap: 14px;
     align-items: center;
+    width: 100%;
     padding: 10px 12px;
     border-radius: var(--radius-md);
+    text-align: left;
+    transition: background-color var(--dur-fast) ease;
   }
-  li:hover {
-    background: rgb(245 245 245 / 0.05);
+  li button:hover,
+  li button[aria-current] {
+    background: rgb(245 245 245 / 0.07);
   }
   .when {
     display: grid;
