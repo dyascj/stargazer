@@ -96,10 +96,40 @@ test.describe('phone bottom sheet', () => {
     if (browserName === 'chromium') {
       // A real finger swipe scrolls the row and leaves the sheet where it was.
       const top = (await sheet.boundingBox())!.y;
+      await page.evaluate(() => {
+        const moves: boolean[] = [];
+        (window as unknown as { moves: boolean[] }).moves = moves;
+        document.addEventListener('touchmove', (event) => moves.push(event.defaultPrevented));
+      });
       await swipe(page, row, -220, 4);
       await expect.poll(() => row.evaluate((element) => element.scrollLeft)).toBeGreaterThan(60);
       expect((await sheet.boundingBox())!.y).toBeCloseTo(top, 0);
+      // The sheet leaves sideways moves to the row.
+      const moves = await page.evaluate(() => (window as unknown as { moves: boolean[] }).moves);
+      expect(moves.some(Boolean)).toBe(false);
     }
+  });
+
+  test('a drag from the middle of the sheet moves the sheet, not the page', async ({
+    page,
+    browserName
+  }) => {
+    test.skip(browserName !== 'chromium', 'needs synthesized touch');
+    await openExplorer(page, '?body=venus');
+    const sheet = details(page, 'Venus');
+    const top = (await sheet.boundingBox())!.y;
+    // iOS scrolls the page with any touchmove the sheet leaves uncancelled.
+    await page.evaluate(() => {
+      const moves: boolean[] = [];
+      (window as unknown as { moves: boolean[] }).moves = moves;
+      document.addEventListener('touchmove', (event) => moves.push(event.defaultPrevented));
+    });
+    await swipe(page, sheet.locator('.stats'), 0, 60);
+    const moves = await page.evaluate(() => (window as unknown as { moves: boolean[] }).moves);
+    expect(moves.length).toBeGreaterThan(0);
+    expect(moves.every(Boolean)).toBe(true);
+    // A short pull snaps back to the peek height.
+    await expect.poll(async () => (await sheet.boundingBox())!.y).toBeCloseTo(top, 0);
   });
 
   test('swiping the sheet down dismisses it', async ({ page, browserName }) => {
