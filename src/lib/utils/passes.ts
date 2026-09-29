@@ -83,6 +83,7 @@ export function computePasses(
   let currentStart: Date | null = null;
   let currentMaxEl = 0;
   let currentMaxElTime: Date | null = null;
+  let currentVisible = false;
 
   for (let t = start.getTime(); t <= end.getTime(); t += stepMs) {
     const date = new Date(t);
@@ -90,10 +91,8 @@ export function computePasses(
     if (!result?.position || typeof result.position === 'boolean') continue;
 
     const gmst = satellite.gstime(date);
-    const positionEcf = satellite.eciToEcf(
-      result.position as satellite.EciVec3<satellite.Kilometer>,
-      gmst
-    );
+    const positionEci = result.position as satellite.EciVec3<satellite.Kilometer>;
+    const positionEcf = satellite.eciToEcf(positionEci, gmst);
     const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
     const elDeg = (lookAngles.elevation * 180) / Math.PI;
 
@@ -106,47 +105,28 @@ export function computePasses(
         currentMaxEl = elDeg;
         currentMaxElTime = date;
       }
-    } else if (currentStart) {
-      // Pass just ended at this step
-      const endTime = date;
-      const midTime = new Date((currentStart.getTime() + endTime.getTime()) / 2);
-
-      // Visible = observer in civil twilight or darker (sun < -6°) AND satellite sunlit.
-      // Satellite is sunlit when sun > -dipDeg at its sub-point, where
-      // dipDeg = arccos(R/(R+h)) is the geometric horizon depression angle.
-      const sunAtObserver = getSunElevationAt(observer.latitude, observer.longitude, midTime);
-
-      // Sub-satellite point and altitude at midTime
-      const midResult = satellite.propagate(satrec, midTime);
-      let sunAtSatNadir = 90;
-      let satIsSunlit = false;
-      if (midResult?.position && typeof midResult.position !== 'boolean') {
-        const midGeo = satellite.eciToGeodetic(
-          midResult.position as satellite.EciVec3<satellite.Kilometer>,
-          satellite.gstime(midTime)
-        );
-        const satLat = (midGeo.latitude * 180) / Math.PI;
-        const satLon = (midGeo.longitude * 180) / Math.PI;
-        const satAltKm = midGeo.height;
-        sunAtSatNadir = getSunElevationAt(satLat, satLon, midTime);
-        const dipDeg = Math.acos(EARTH_RADIUS_KM / (EARTH_RADIUS_KM + satAltKm)) * (180 / Math.PI);
-        satIsSunlit = sunAtSatNadir > -dipDeg;
+      // Visible when, at any step above the mask, the observer is in civil twilight or darker
+      // (Sun below -6°) while the satellite is still sunlit: the Sun is above -dip at its
+      // sub-point, where dip = arccos(R/(R+h)) is the horizon depression at its altitude.
+      if (!currentVisible && getSunElevationAt(observer.latitude, observer.longitude, date) < -6) {
+        const geo = satellite.eciToGeodetic(positionEci, gmst);
+        const dipDeg =
+          Math.acos(EARTH_RADIUS_KM / (EARTH_RADIUS_KM + geo.height)) * (180 / Math.PI);
+        currentVisible = getSunElevationAt(geo.latitude / DEG, geo.longitude / DEG, date) > -dipDeg;
       }
-
-      const visible = sunAtObserver < -6 && satIsSunlit;
-
+    } else if (currentStart) {
       passes.push({
         startUtc: currentStart,
-        endUtc: endTime,
-        durationSec: (endTime.getTime() - currentStart.getTime()) / 1000,
+        endUtc: date,
+        durationSec: (date.getTime() - currentStart.getTime()) / 1000,
         maxElevationDeg: currentMaxEl,
         maxElevationTime: currentMaxElTime!,
-        visible
+        visible: currentVisible
       });
-
       currentStart = null;
       currentMaxEl = 0;
       currentMaxElTime = null;
+      currentVisible = false;
     }
   }
 

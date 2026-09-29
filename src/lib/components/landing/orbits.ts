@@ -34,9 +34,9 @@ export function orbitPath(elements: OrbitalElementsWithRates, date: Date, steps 
 
 /** "4 h 10 min", "23 h 14 min", "8 min 19 s" */
 export function formatLightTime(au: number): string {
-  const seconds = au * LIGHT_SECONDS_PER_AU;
+  const seconds = Math.round(au * LIGHT_SECONDS_PER_AU);
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   if (h) return `${h} h ${m} min`;
-  return `${m} min ${Math.round(seconds % 60)} s`;
+  return `${m} min ${seconds % 60} s`;
 }

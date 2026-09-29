@@ -18,7 +18,7 @@
   const SPEEDUP = 460; // ISS laps in about 12 s
   const labelled: Record<string, string> = {
     iss: 'ISS',
-    'gps-navstar-66': 'GPS',
+    'gps-biif-1': 'GPS',
     'goes-18': 'Geostationary'
   };
 

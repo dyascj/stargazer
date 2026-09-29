@@ -21,7 +21,7 @@
     {
       title: `Sunlight takes ${formatLightTime(neptune)} to reach Neptune.`,
       body: voyagerAU
-        ? `Neptune orbits ${neptune.toFixed(0)} AU out. Voyager 1 is ${(voyagerAU / neptune).toFixed(1)} times farther still.`
+        ? `Neptune orbits ${neptune.toFixed(0)} AU out. Voyager 1 is ${(voyagerAU / neptune).toFixed(1)} times as far.`
         : `Neptune orbits ${neptune.toFixed(0)} AU out, at the edge of the planets.`
     }
   ]);

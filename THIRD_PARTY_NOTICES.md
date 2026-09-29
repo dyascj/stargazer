@@ -50,4 +50,4 @@ CelesTrak and The Space Devs are set as plain type, not logo files. SpaceX launc
 
 NASA, JPL, ESA, JAXA, SpaceX, and other organization names identify missions and data sources. No affiliation or endorsement is implied, and no rights to their trademarks are granted.
 
-Orbital reference data and source links are documented in the [README](README.md#sources-and-credits). Software dependencies retain the licenses distributed with their packages.
+Orbital reference data and source links are documented in the [README](README.md#sources). Software dependencies retain the licenses distributed with their packages.

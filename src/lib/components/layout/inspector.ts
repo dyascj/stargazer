@@ -178,5 +178,5 @@ export function accuracyNote(
     return `${tracking.source}.`;
   if (tracking.epoch)
     return 'Approximate motion from published orbital elements. Accuracy degrades away from the element date.';
-  return 'Approximate orbit from published orbital elements, valid from 1800 through 2050.';
+  return 'Approximate orbit from published orbital elements, valid from 1800 through 2049.';
 }

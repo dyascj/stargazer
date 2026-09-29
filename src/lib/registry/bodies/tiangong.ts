@@ -30,7 +30,7 @@ export const TIANGONG: TrackedObject = {
       { label: 'Orbit type', value: 'LEO, 41.5° inclination' }
     ],
     sources: [
-      { name: 'CMSA', url: 'http://www.cmsa.gov.cn/' },
+      { name: 'China Manned Space', url: 'https://www.cmse.gov.cn/' },
       { name: 'Celestrak TLE', url: 'https://celestrak.org/NORAD/elements/gp.php?CATNR=48274' }
     ]
   }

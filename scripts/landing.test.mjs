@@ -25,4 +25,6 @@ test('Landing orbit diagram matches the explorer ephemeris in the ecliptic plane
     }
   }
   assert.equal(orbits.formatLightTime(1), '8 min 19 s');
+  // Rounds the total before splitting, so it never reads "8 min 60 s".
+  assert.equal(orbits.formatLightTime(1.0821), '9 min 0 s');
 });

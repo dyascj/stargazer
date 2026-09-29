@@ -47,7 +47,7 @@ export const URANUS: TrackedObject = {
     ],
     tracking: {
       mode: 'Approximate orbit',
-      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+      source: 'JPL planetary element fit, 1800–2050'
     }
   }
 };

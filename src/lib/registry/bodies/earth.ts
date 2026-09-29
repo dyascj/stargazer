@@ -23,7 +23,7 @@ export const EARTH: TrackedObject = {
     obliquityRad: EARTH_OBLIQUITY_RAD,
     rotationModel: 'gmst',
     atmosphere: { color: [0.26, 0.5, 1.0], heightKm: 110, density: 0.5 },
-    dayLength: '23h 56m 04s',
+    dayLength: '24h',
     yearLength: '365.25 days',
     description:
       'Third planet from the Sun. The only known world with liquid surface water, a nitrogen-oxygen atmosphere, and confirmed life. Orbits at 1 AU, the baseline distance used to measure the rest of the solar system.',
@@ -33,7 +33,7 @@ export const EARTH: TrackedObject = {
       { label: 'Surface gravity', value: '9.81 m/s²' },
       { label: 'Atmosphere', value: '78% N₂, 21% O₂' },
       { label: 'Axial tilt', value: '23.44°' },
-      { label: 'Day length', value: '23h 56m 04s (sidereal)' },
+      { label: 'Rotation', value: '23h 56m 04s (sidereal)' },
       { label: 'Year length', value: '365.25 days' },
       { label: 'Distance from Sun', value: '1 AU (149.6M km)' }
     ],

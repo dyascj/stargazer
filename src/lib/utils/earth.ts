@@ -4,7 +4,7 @@ import { getMoonInertialOffset } from './moon';
 import { EARTH_OBLIQUITY_RAD, KM_TO_SCENE } from '../scene-config';
 
 /**
- * Earth's orientation is R_x(-obliquity) · R_y(GMST): GMST spins Earth about
+ * Earth's orientation is R_x(-obliquity) · R_y(rotation): the rotation spins Earth about
  * its geographic axis and the obliquity tilts that axis from ecliptic north.
  * PlanetBody applies the same composition to the Earth mesh, so bodies placed
  * with these helpers stay attached to the rendered surface.
@@ -22,6 +22,19 @@ export function getGmstRadians(date: Date): number {
   let hours = (18.697374558 + 24.06570982441908 * d) % 24;
   if (hours < 0) hours += 24;
   return hours * DEG_PER_HOUR * DEG_TO_RAD;
+}
+
+const MS_PER_JULIAN_CENTURY = 36525 * 86400000;
+
+/**
+ * Earth's rotation angle from the J2000 equinox, the scene's fixed x-axis. GMST counts
+ * from the equinox of date, which precesses about 46″ of right ascension a year
+ * (IAU 1976 ζ + z), so without this the globe drifts against the Sun and stars.
+ */
+export function getEarthRotationRadians(date: Date): number {
+  const T = (date.getTime() - J2000_MS) / MS_PER_JULIAN_CENTURY;
+  const precessionArcsec = 4612.4362 * T + 1.39656 * T * T;
+  return getGmstRadians(date) - (precessionArcsec / 3600) * DEG_TO_RAD;
 }
 
 /**
@@ -44,7 +57,7 @@ function earthLocalToInertialOffset(
   date: Date
 ): Vector3 {
   _earthRot.makeRotationX(-EARTH_OBLIQUITY_RAD);
-  _gmstRot.makeRotationY(getGmstRadians(date));
+  _gmstRot.makeRotationY(getEarthRotationRadians(date));
   _earthRot.multiply(_gmstRot);
   return target.set(local.x, local.y, local.z).applyMatrix4(_earthRot);
 }
@@ -91,7 +104,7 @@ export function geographicToInertialDirection(
 /**
  * Earth-fixed satellite position (from SGP4's TEME output rotated by GMST) as
  * an inertial scene offset. Going through the Earth-fixed frame keeps the
- * satellite above the correct point of the rendered, GMST-rotated globe.
+ * satellite above the correct point of the rendered, rotating globe.
  */
 export function ecfKmToInertialOffset(
   ecf: { x: number; y: number; z: number },

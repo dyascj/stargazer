@@ -141,11 +141,11 @@ const MAVEN = spacecraftPointMarker({
   externalId: '-202',
   tracking: {
     epoch: '2026-03-01T00:00:00 TDB',
-    mode: 'Historical orbit',
-    source: 'Archived JPL elements; current trajectory unavailable'
+    mode: 'Predicted orbit',
+    source: 'Last JPL elements after loss of contact; not a current position'
   },
   description:
-    'MAVEN revealed how Mars lost much of its atmosphere to space and relayed rover communications. Contact was lost on December 6, 2025; NASA announced the mission’s end on June 3, 2026. The archived orbit shown here is not a current position.',
+    'MAVEN revealed how Mars lost much of its atmosphere to space and relayed rover communications. Contact was lost on December 6, 2025; NASA announced the mission’s end on June 3, 2026. The orbit shown is the last prediction, not a current position.',
   facts: [
     { label: 'Launch date', value: 'Nov 18, 2013' },
     { label: 'Agency', value: 'NASA/GSFC' },
@@ -285,7 +285,7 @@ const PERSEVERANCE = spacecraftPointMarker({
     source: 'Landing coordinates; current rover traverse not modeled'
   },
   description:
-    'Perseverance searches for signs of ancient microbial life in Jezero crater, an ancient lake bed. It is collecting rock samples for future return to Earth and deployed the Ingenuity helicopter.',
+    'Perseverance searches for signs of ancient microbial life in Jezero crater, an ancient lake bed. It has sealed rock samples for a possible future return to Earth and deployed the Ingenuity helicopter.',
   facts: [
     { label: 'Launch date', value: 'Jul 30, 2020' },
     { label: 'Agency', value: 'NASA/JPL' },
@@ -360,7 +360,7 @@ const JWST = spacecraftPointMarker({
   offsetFn: l2Offset()
 });
 
-// ── Heliocentric snapshots from JPL HORIZONS at JD 2461138.5 ────────────
+// ── Heliocentric snapshots from JPL HORIZONS, refreshed weekly ─────────
 // Each call to helioAuToScene takes the raw ECLIPTIC J2000 Cartesian
 // (X, Y, Z in AU) returned by HORIZONS and maps it to scene-frame
 // Cartesian via (x, z, -y) × AU_TO_SCENE.
@@ -560,10 +560,8 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
 });
 
 // ── Interstellar / outer solar system ───────────────────────────────────
-// Real heliocentric positions from JPL HORIZONS. Distances:
-//   Voyager 1   ~170 AU (-31.95, -135.44, +97.99 AU ecliptic)
-//   Voyager 2   ~141 AU (+39.46, -104.51, -88.55 AU ecliptic)
-//   New Horizons ~64 AU (+20.31, -61.01, +2.24 AU ecliptic)
+// Real heliocentric positions from JPL HORIZONS. In late 2026 Voyager 1 is ~172 AU out,
+// Voyager 2 ~144 AU, and New Horizons ~66 AU.
 
 const VOYAGER_1 = spacecraftPointMarker({
   id: 'voyager-1',

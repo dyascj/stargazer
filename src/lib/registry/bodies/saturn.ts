@@ -28,8 +28,8 @@ export const SATURN: TrackedObject = {
     rotationModel: 'iau-w',
     rotationW0Deg: 38.9,
     rotationRateDegPerDay: 810.7939024,
-    // Stylized main ring disc: ~74,500 km inner edge to ~140,180 km
-    // outer edge of the A ring. In Earth radii (= scene units): 11.69 to
+    // Stylized ring disc: ~74,500 km inner edge (C ring) to ~140,180 km
+    // (the F ring; the A ring ends near 136,800 km). In Earth radii (= scene units): 11.69 to
     // 22.00, which puts the inner edge ~28% beyond Saturn's 9.14-radius
     // surface and the outer edge ~2.4 Saturn radii.
     hasRings: {
@@ -37,7 +37,7 @@ export const SATURN: TrackedObject = {
       outerRadius: 22.0,
       textureUrl: '/textures/2k_saturn_ring_alpha.png'
     },
-    dayLength: '10h 39m',
+    dayLength: '10h 34m',
     yearLength: '29.46 Earth years',
     description:
       'Saturn is best known for its extensive ring system, made primarily of ice particles with some rocky debris and dust. It is the least dense planet in the solar system and would float in water if a basin large enough existed.',
@@ -59,7 +59,7 @@ export const SATURN: TrackedObject = {
     ],
     tracking: {
       mode: 'Approximate orbit',
-      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+      source: 'JPL planetary element fit, 1800–2050'
     }
   }
 };

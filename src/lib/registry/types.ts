@@ -61,16 +61,16 @@ export interface PlanetBodyMetadata extends BaseObjectMetadata {
    *  - 'none': static (default).
    */
   rotationModel?: 'gmst' | 'tidal-lock' | 'iau-w' | 'none';
-  /** IAU 2018 prime-meridian angle at J2000 (degrees). Required for 'iau-w'. */
+  /** IAU (WGCCRE) prime-meridian angle at J2000 (degrees). Required for 'iau-w'. */
   rotationW0Deg?: number;
-  /** IAU 2018 sidereal rotation rate (degrees/day). Negative = retrograde. Required for 'iau-w'. */
+  /** IAU (WGCCRE) sidereal rotation rate (degrees/day). Negative = retrograde. Required for 'iau-w'. */
   rotationRateDegPerDay?: number;
   /**
    * Visible atmosphere: scattering color (linear RGB), the height (km) of the
    * rendered shell above the surface, and a relative optical density.
    */
   atmosphere?: { color: readonly [number, number, number]; heightKm: number; density: number };
-  /** Length-of-day string for the info panel (e.g. "23h 56m 04s"). */
+  /** Solar day, sunrise to sunrise, for the info panel (e.g. "24h"). Sidereal rotation goes in facts. */
   dayLength?: string;
   /** Year length string for the info panel (e.g. "365.25 days"). */
   yearLength?: string;

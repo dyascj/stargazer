@@ -69,7 +69,7 @@
     <h2 id="sources-title">Built on public data.</h2>
     <p class="body">
       Positions, orbits and schedules come from the agencies and catalogs that publish them. Every
-      object in the explorer cites its source and the date of its data.
+      object in the explorer cites its source, and tracked objects show the date of their data.
     </p>
   </div>
 

@@ -39,7 +39,7 @@ export const MARS: TrackedObject = {
       { label: 'Surface gravity', value: '3.72 m/s²' },
       { label: 'Atmosphere', value: '95% CO₂' },
       { label: 'Axial tilt', value: '25.19°' },
-      { label: 'Day length', value: '24h 39m 35s (solar day)' },
+      { label: 'Rotation', value: '24h 37m 23s (sidereal)' },
       { label: 'Year length', value: '687 Earth days' },
       { label: 'Moons', value: '2 (Phobos, Deimos)' }
     ],

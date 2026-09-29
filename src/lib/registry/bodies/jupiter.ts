@@ -31,7 +31,7 @@ export const JUPITER: TrackedObject = {
     dayLength: '9h 55m',
     yearLength: '11.86 Earth years',
     description:
-      'Jupiter is the largest planet in the solar system, containing more mass than all other planets combined. Its Great Red Spot is a persistent anticyclonic storm larger than Earth that has been observed for over 350 years.',
+      'Jupiter is the largest planet in the solar system, containing more mass than all other planets combined. Its Great Red Spot is a persistent anticyclonic storm larger than Earth that has been tracked continuously since 1831.',
     facts: [
       { label: 'Mass', value: '1.898 × 10²⁷ kg' },
       { label: 'Surface gravity', value: '24.79 m/s²' },
@@ -47,7 +47,7 @@ export const JUPITER: TrackedObject = {
     ],
     tracking: {
       mode: 'Approximate orbit',
-      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+      source: 'JPL planetary element fit, 1800–2050'
     }
   }
 };

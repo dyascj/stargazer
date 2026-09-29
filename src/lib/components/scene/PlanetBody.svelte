@@ -22,7 +22,7 @@
   import { isPlanetBody, type PlanetBodyMetadata, type TrackedObject } from '$lib/registry/types';
   import { brightLighting } from '$stores/ui';
   import { simTime } from '$stores/simTime';
-  import { getGmstRadians } from '$utils/earth';
+  import { getEarthRotationRadians } from '$utils/earth';
   import { poleQuaternion } from '$utils/pole';
   import { iauRotationRad, tidalLockQuaternion } from '$utils/rotation';
   import { indexOf, positions, valid } from './bodyState';
@@ -41,7 +41,7 @@
    * Any resolved world: planet, dwarf planet, or moon, at true size.
    *
    *   position group  (world position + pole orientation; rings live here)
-   *     spin group    (daily rotation: GMST for Earth, IAU W elsewhere)
+   *     spin group    (daily rotation: GMST less precession for Earth, IAU W elsewhere)
    *       surface, and children in the body-fixed frame (Earth's satellites)
    *     atmosphere shell
    */
@@ -181,7 +181,7 @@
         group.quaternion.copy(tidalLockQuaternion(offset, parentPole, tidal));
       } else if (meta.rotationModel === 'gmst' && meta.obliquityRad !== undefined) {
         group.rotation.set(-meta.obliquityRad, 0, 0);
-        spin.rotation.set(0, getGmstRadians(date), 0);
+        spin.rotation.set(0, getEarthRotationRadians(date), 0);
       } else if (poleQuat) {
         group.quaternion.copy(poleQuat);
         spin.rotation.set(0, iauRotationRad(meta, date) ?? 0, 0);

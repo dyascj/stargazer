@@ -26,16 +26,17 @@ export const MERCURY: TrackedObject = {
     textureUrl: '/textures/2k_mercury.jpg',
     poleVec: equatorialToScene(281.0103, 61.4155),
     rotationModel: 'iau-w',
-    rotationW0Deg: 329.5469,
-    rotationRateDegPerDay: 6.1385025,
-    dayLength: '58.65 Earth days',
+    rotationW0Deg: 329.5988,
+    rotationRateDegPerDay: 6.1385108,
+    dayLength: '175.94 Earth days',
     yearLength: '87.97 Earth days',
     description:
       'Mercury is the smallest and innermost planet in the solar system, with virtually no atmosphere and extreme temperature swings between day and night. Its surface is heavily cratered and resembles the Moon.',
     facts: [
       { label: 'Mass', value: '3.301 × 10²³ kg' },
       { label: 'Surface gravity', value: '3.7 m/s²' },
-      { label: 'Mean temperature', value: '440 K (day) / 100 K (night)' },
+      { label: 'Temperature', value: '~700 K (day) / ~100 K (night)' },
+      { label: 'Rotation', value: '58.65 Earth days (sidereal)' },
       { label: 'Atmosphere', value: 'Trace exosphere (O₂, Na, H₂, He, K)' },
       { label: 'Known moons', value: '0' },
       { label: 'Magnetic field', value: "Yes, weak (~1% of Earth's)" }
@@ -48,7 +49,7 @@ export const MERCURY: TrackedObject = {
     ],
     tracking: {
       mode: 'Approximate orbit',
-      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+      source: 'JPL planetary element fit, 1800–2050'
     }
   }
 };

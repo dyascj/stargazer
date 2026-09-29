@@ -2,7 +2,8 @@ import { getGmstRadians } from './earth';
 
 /**
  * Subsolar point (lat/lon where the sun is directly overhead) using
- * NOAA's low-precision solar position algorithm. Accurate to ~0.01°.
+ * the Astronomical Almanac's low-precision solar coordinates: about 0.01° from
+ * 1950 to 2050, degrading slowly toward 1800.
  */
 function getSubsolarPoint(date: Date): { lat: number; lon: number } {
   // Days since J2000.0 (2000-01-01 12:00 UTC)
