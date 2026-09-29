@@ -6,5 +6,9 @@
   "assets": { "binding": "ASSETS", "directory": ".svelte-kit/cloudflare" },
   "routes": [{ "pattern": "stargazer-app.com", "custom_domain": true }],
   "kv_namespaces": [{ "binding": "FEEDS", "id": "c12957b6f3ba4e41806befa7780a4edc" }],
+  // PR preview builds get their own empty store, never production data.
+  "previews": {
+    "kv_namespaces": [{ "binding": "FEEDS", "id": "7ec365c97db1423baafc1b4d7f33fe25" }]
+  },
   "observability": { "enabled": true }
 }
