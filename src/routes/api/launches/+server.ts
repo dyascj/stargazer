@@ -5,7 +5,7 @@ import type { RequestHandler } from './$types';
 // Launch Library throttles Cloudflare's shared egress IPs, so the stargazer-edge cron
 // (workers/edge.js) keeps the schedule in KV. When this fails, browsers fetch it directly.
 export const GET: RequestHandler = async ({ platform, setHeaders }) => {
-  const schedule = await platform?.env.LAUNCHES?.get<Schedule>(KEY, 'json');
+  const schedule = await platform?.env.FEEDS?.get<Schedule>(KEY, 'json');
   if (!schedule || Date.now() - schedule.fetchedAt > 24 * 60 * 60_000)
     error(503, 'Launch schedule is temporarily unavailable.');
 

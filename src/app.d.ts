@@ -1,9 +1,10 @@
+/// <reference types="@sveltejs/adapter-cloudflare" />
 import type { KVNamespace } from '@cloudflare/workers-types';
 
 declare global {
   namespace App {
     interface Platform {
-      env: { LAUNCHES?: KVNamespace };
+      env: { FEEDS?: KVNamespace };
     }
   }
 }

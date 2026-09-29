@@ -30,21 +30,34 @@ export interface SatelliteStore {
   stop: () => void;
 }
 
-/** Fetch only while a consumer is subscribed; tear down requests and timers together. */
+// Stores that start or refresh within the same moment share one request.
+let queued = new Set<number>();
+let batch: Promise<Record<string, TleData>> | null = null;
+function requestTle(catalogId: number): Promise<TleData | undefined> {
+  queued.add(catalogId);
+  batch ??= new Promise((resolve) => setTimeout(resolve, 50)).then(async () => {
+    const ids = [...queued];
+    queued = new Set();
+    batch = null;
+    const response = await fetch(`/api/satellites/tle?ids=${ids}`, {
+      signal: AbortSignal.timeout(12_000)
+    });
+    if (!response.ok) throw new Error('Orbital data unavailable');
+    return response.json();
+  });
+  return batch.then((tles) => tles[catalogId]);
+}
+
+/** Fetch only while a consumer is subscribed; tear down timers on the way out. */
 export function createTleStore(catalogId: number): Readable<TleData | null> {
   return readable<TleData | null>(null, (set) => {
     if (!browser) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
-    let controller: AbortController;
     async function refresh() {
-      controller = new AbortController();
       try {
-        const res = await fetch(`/api/satellite/${catalogId}/tle`, {
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)])
-        });
-        if (!res.ok) throw new Error('Orbital data unavailable');
-        const raw = await res.json();
+        const raw = await requestTle(catalogId);
+        if (!raw) throw new Error('Orbital data unavailable');
         const tle = parseTle(`${raw.name}\n${raw.line1}\n${raw.line2}`, catalogId, raw.fetchedAt);
         if (!stopped) set(tle);
       } catch {
@@ -57,7 +70,6 @@ export function createTleStore(catalogId: number): Readable<TleData | null> {
     return () => {
       stopped = true;
       clearTimeout(timer);
-      controller?.abort();
     };
   });
 }
