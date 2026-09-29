@@ -27,7 +27,12 @@ export default defineConfig({
   projects: [
     { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] } },
     { name: 'iphone-safari', use: { ...devices['iPhone 13'] } },
-    { name: 'android-chrome', use: { ...devices['Pixel 7'] } },
+    {
+      name: 'android-chrome',
+      // At 2x the canvas has 1.5x desktop's pixels, and software WebGL on CI runners draws it
+      // slowly enough to time out clicks. Layout, touch and mobile emulation are unchanged at 1x.
+      use: { ...devices['Pixel 7'], deviceScaleFactor: 1 }
+    },
     { name: 'iphone-landscape', use: { ...devices['iPhone 13 landscape'] } }
   ]
 });

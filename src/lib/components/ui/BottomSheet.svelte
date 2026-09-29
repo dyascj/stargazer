@@ -135,6 +135,33 @@
     if (next !== 'full') body.scrollTop = 0;
   }
 
+  // iOS Safari gives a vertical drag to the page, rubber-banding the whole app and cancelling
+  // the pointer stream, unless touchmove is cancelled; touch-action alone does not stop it.
+  // Vertical moves belong to the sheet, except inside the scrolling content at full height.
+  // Sideways moves stay native so rows of chips still scroll.
+  $effect(() => {
+    let start: { x: number; y: number } | null = null;
+    let vertical: boolean | null = null;
+    const touchstart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      start = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+      vertical = null;
+    };
+    const touchmove = (event: TouchEvent) => {
+      if (!start || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      vertical ??= Math.abs(touch.clientY - start.y) >= Math.abs(touch.clientX - start.x);
+      const scrolling = snap === 'full' && !(event.target as Element).closest('[data-sheet-grip]');
+      if (vertical && !scrolling && event.cancelable) event.preventDefault();
+    };
+    sheet.addEventListener('touchstart', touchstart, { passive: true });
+    sheet.addEventListener('touchmove', touchmove, { passive: false });
+    return () => {
+      sheet.removeEventListener('touchstart', touchstart);
+      sheet.removeEventListener('touchmove', touchmove);
+    };
+  });
+
   function cycle() {
     snap = snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek';
     if (snap === 'peek') body.scrollTop = 0;

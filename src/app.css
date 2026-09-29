@@ -209,6 +209,11 @@ html,
 body {
   height: 100%;
 }
+/* The explorer is a fixed, full-screen app: the page itself never bounces or pulls to refresh. */
+html:has(.explorer),
+html:has(.explorer) body {
+  overscroll-behavior: none;
+}
 
 body {
   margin: 0;
