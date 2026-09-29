@@ -6,12 +6,13 @@
   import { iss } from '$stores/iss';
   import { tiangong } from '$stores/tiangong';
   import { advanceSimTime, simTime } from '$stores/simTime';
-  import { showGrid, showOrbits, showStarLabels, showStars } from '$stores/ui';
+  import { activeLaunch, showGrid, showOrbits, showStarLabels, showStars } from '$stores/ui';
   import BodyMarkers from './BodyMarkers.svelte';
   import CameraRig from './CameraRig.svelte';
   import CometTail from './CometTail.svelte';
   import EclipticGrid from './EclipticGrid.svelte';
   import IssModel from './IssModel.svelte';
+  import LaunchSite from './LaunchSite.svelte';
   import OrbitLines from './OrbitLines.svelte';
   import PlanetBody from './PlanetBody.svelte';
   import SatelliteFootprint from './SatelliteFootprint.svelte';
@@ -42,6 +43,10 @@
   <IssModel />
   {#if $showOrbits && $selection === 'iss'}<SatelliteFootprint store={iss} />{/if}
   {#if $showOrbits && $selection === 'tiangong'}<SatelliteFootprint store={tiangong} />{/if}
+  {#if $activeLaunch?.site}
+    {@const { latitude, longitude } = $activeLaunch.site}
+    <LaunchSite {latitude} {longitude} />
+  {/if}
 </PlanetBody>
 {#each worlds as body (body.id)}<PlanetBody object={body} />{/each}
 {#each comets as comet (comet.id)}<CometTail object={comet} />{/each}

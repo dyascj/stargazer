@@ -336,13 +336,24 @@ test('Launch schedule normalizes records and the endpoint serves the KV copy', a
           net: new Date(Date.now() + 86400000).toISOString(),
           status: { name: 'Go' },
           launch_service_provider: { name: 'SpaceX' },
-          pad: { name: 'Test pad' }
+          net_precision: { name: 'Minute' },
+          window_start: '2030-01-01T12:00:00Z',
+          window_end: 'soon',
+          rocket: { configuration: { name: 'Falcon 9', full_name: 'Falcon 9 Block 5' } },
+          mission: { description: ' Test payload. ', orbit: { name: 'Low Earth Orbit' } },
+          pad: {
+            name: 'Test pad',
+            latitude: 28.56,
+            longitude: -80.58,
+            location: { name: 'Cape Canaveral SFS, FL, USA' }
+          }
         },
         {
           id: 'odd',
           name: 'Malformed fields',
           net: new Date(Date.now() + 2 * 86400000).toISOString(),
-          status: { name: 7 }
+          status: { name: 7 },
+          pad: { latitude: '28.5', longitude: 200 }
         },
         { id: 'past', name: 'Completed launch', net: '2000-01-01T00:00:00Z' },
         { id: 12, name: 'bad', net: 'invalid' },
@@ -354,6 +365,18 @@ test('Launch schedule normalizes records and the endpoint serves the KV copy', a
   assert.equal(launches.length, 2);
   assert.equal(launches[0].provider, 'SpaceX');
   assert.equal(launches[1].status, 'Schedule provisional');
+  assert.deepEqual(launches[0].site, {
+    latitude: 28.56,
+    longitude: -80.58,
+    location: 'Cape Canaveral SFS, FL, USA'
+  });
+  assert.equal(launches[0].rocket, 'Falcon 9 Block 5');
+  assert.equal(launches[0].orbit, 'Low Earth Orbit');
+  assert.equal(launches[0].mission, 'Test payload.');
+  assert.equal(launches[0].precision, 'Minute');
+  assert.equal(launches[0].windowStart, '2030-01-01T12:00:00Z');
+  assert.equal(launches[0].windowEnd, undefined);
+  assert.equal(launches[1].site, undefined);
 
   const endpoint = await server.ssrLoadModule('/src/routes/api/launches/+server.ts');
   const headers = {};
@@ -362,7 +385,9 @@ test('Launch schedule normalizes records and the endpoint serves the KV copy', a
     platform: {
       env: {
         FEEDS: {
-          get: async (key, type) => (key === 'schedule' && type === 'json' ? value : null)
+          // KV stores JSON, so undefined fields come back missing.
+          get: async (key, type) =>
+            key === 'schedule' && type === 'json' ? JSON.parse(JSON.stringify(value)) : null
         }
       }
     },
@@ -374,7 +399,7 @@ test('Launch schedule normalizes records and the endpoint serves the KV copy', a
     (error) => error.status === 503
   );
   const body = await (await endpoint.GET(kv(fetched))).json();
-  assert.deepEqual(body.launches, launches);
+  assert.deepEqual(body.launches, JSON.parse(JSON.stringify(launches)));
   assert.equal(body.stale, false);
   assert.match(headers['cache-control'], /s-maxage=900/);
 });

@@ -39,7 +39,12 @@ export async function mockLaunches(page: Page) {
             provider: 'SpaceX',
             pad: 'SLC-40, Cape Canaveral',
             date: '2026-10-01T12:00:00Z',
-            status: 'Go for Launch'
+            status: 'Go for Launch',
+            site: { latitude: 28.56, longitude: -80.58, location: 'Cape Canaveral SFS, FL, USA' },
+            rocket: 'Falcon 9 Block 5',
+            orbit: 'Low Earth Orbit',
+            mission: 'A fixture payload for the end-to-end tests.',
+            precision: 'Minute'
           }
         ]
       }
@@ -58,9 +63,9 @@ export async function openExplorer(page: Page, search = '') {
 export const searchButton = (page: Page) =>
   page.getByRole('button', { name: 'Search planets, moons, spacecraft' });
 
-/** The details panel: a bottom sheet on phones, a card elsewhere. */
-export const details = (page: Page, name: string) =>
-  page.getByLabel(`${name} details`, { exact: true });
+/** The details panel: a bottom sheet on phones, a card elsewhere. Launches label theirs "launch". */
+export const details = (page: Page, name: string, kind: 'details' | 'launch' = 'details') =>
+  page.getByLabel(`${name} ${kind}`, { exact: true });
 
 export async function searchFor(page: Page, query: string, option: string) {
   await searchButton(page).click();
