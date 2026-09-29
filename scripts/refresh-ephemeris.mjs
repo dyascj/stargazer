@@ -19,27 +19,30 @@ const SNAPSHOT_SPACECRAFT = [
   { id: 'europa-clipper', command: '-159' }
 ];
 
+// Moons keep their published mean sidereal periods. Horizons' osculating mean motion is an
+// instant's value, skewed by the planet's oblateness, and would drift close-in moons by
+// degrees a day (Mimas about 2°). Source: JPL SSD planetary satellite physical parameters.
 const ELEMENT_MOONS = [
-  { id: 'phobos', command: '401', center: '@499' },
-  { id: 'deimos', command: '402', center: '@499' },
-  { id: 'io', command: '501', center: '@599' },
-  { id: 'europa', command: '502', center: '@599' },
-  { id: 'ganymede', command: '503', center: '@599' },
-  { id: 'callisto', command: '504', center: '@599' },
-  { id: 'mimas', command: '601', center: '@699' },
-  { id: 'enceladus', command: '602', center: '@699' },
-  { id: 'tethys', command: '603', center: '@699' },
-  { id: 'dione', command: '604', center: '@699' },
-  { id: 'rhea', command: '605', center: '@699' },
-  { id: 'titan', command: '606', center: '@699' },
-  { id: 'iapetus', command: '608', center: '@699' },
-  { id: 'miranda', command: '705', center: '@799' },
-  { id: 'ariel', command: '701', center: '@799' },
-  { id: 'umbriel', command: '702', center: '@799' },
-  { id: 'titania', command: '703', center: '@799' },
-  { id: 'oberon', command: '704', center: '@799' },
-  { id: 'triton', command: '801', center: '@899' },
-  { id: 'charon', command: '901', center: '@999' }
+  { id: 'phobos', command: '401', center: '@499', period_days: 0.31891023 },
+  { id: 'deimos', command: '402', center: '@499', period_days: 1.26244 },
+  { id: 'io', command: '501', center: '@599', period_days: 1.769137786 },
+  { id: 'europa', command: '502', center: '@599', period_days: 3.551181041 },
+  { id: 'ganymede', command: '503', center: '@599', period_days: 7.15455296 },
+  { id: 'callisto', command: '504', center: '@599', period_days: 16.6890184 },
+  { id: 'mimas', command: '601', center: '@699', period_days: 0.942421959 },
+  { id: 'enceladus', command: '602', center: '@699', period_days: 1.370218 },
+  { id: 'tethys', command: '603', center: '@699', period_days: 1.887802 },
+  { id: 'dione', command: '604', center: '@699', period_days: 2.736915 },
+  { id: 'rhea', command: '605', center: '@699', period_days: 4.518212 },
+  { id: 'titan', command: '606', center: '@699', period_days: 15.945421 },
+  { id: 'iapetus', command: '608', center: '@699', period_days: 79.3215 },
+  { id: 'miranda', command: '705', center: '@799', period_days: 1.413479 },
+  { id: 'ariel', command: '701', center: '@799', period_days: 2.520379 },
+  { id: 'umbriel', command: '702', center: '@799', period_days: 4.144177 },
+  { id: 'titania', command: '703', center: '@799', period_days: 8.705872 },
+  { id: 'oberon', command: '704', center: '@799', period_days: 13.463239 },
+  { id: 'triton', command: '801', center: '@899', period_days: 5.876854 },
+  { id: 'charon', command: '901', center: '@999', period_days: 6.3872304 }
 ];
 
 const MARS_ORBITERS = [
@@ -181,7 +184,8 @@ export async function refresh({ dryRun = false } = {}) {
               )
               .replace(/epoch:\s*'[^']*'/, `epoch: '${epoch}'`);
           }
-          for (const [field, value] of Object.entries({ ...values, epoch_jd: jd }))
+          const fixed = body.period_days ? { period_days: body.period_days } : {};
+          for (const [field, value] of Object.entries({ ...values, ...fixed, epoch_jd: jd }))
             block = replaceNumber(block, field, value);
           if (group.file === 'spacecraft') {
             if (/epoch:\s*'[^']*'/.test(block))

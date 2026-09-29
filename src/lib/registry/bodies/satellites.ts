@@ -91,7 +91,7 @@ const HUBBLE = curatedSatellite({
   facts: [
     { label: 'Launch date', value: 'April 24, 1990' },
     { label: 'Operator', value: 'NASA / ESA' },
-    { label: 'Orbit type', value: 'LEO (540 km)' },
+    { label: 'Orbit type', value: 'LEO (~470 km, slowly decaying)' },
     { label: 'Key instrument', value: '2.4 m primary mirror, UV/optical/NIR imaging' }
   ],
   sources: [{ name: 'NASA Space Science', url: 'https://science.nasa.gov/' }]
@@ -105,11 +105,11 @@ const CHANDRA = curatedSatellite({
   labelTier: 4,
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
-    "Chandra is NASA's flagship X-ray telescope, capable of detecting X-ray sources 100 times fainter than any previous X-ray observatory. Its highly elliptical orbit takes it a third of the way to the Moon, allowing long uninterrupted observations.",
+    "Chandra is NASA's flagship X-ray telescope, able to detect X-ray sources more than 20 times fainter than any earlier X-ray telescope. Its highly elliptical orbit takes it a third of the way to the Moon, allowing long uninterrupted observations.",
   facts: [
     { label: 'Launch date', value: 'July 23, 1999' },
     { label: 'Operator', value: 'NASA / SAO' },
-    { label: 'Orbit type', value: 'HEO (16,000 x 133,000 km)' },
+    { label: 'Orbit type', value: 'HEO (~12,000 x 137,000 km)' },
     { label: 'Key instrument', value: 'Grazing-incidence X-ray mirrors, 0.5 arcsec resolution' }
   ],
   sources: [{ name: 'NASA Space Science', url: 'https://science.nasa.gov/' }]
@@ -174,15 +174,15 @@ const SENTINEL_1A = curatedSatellite({
   id: 'sentinel-1a',
   noradId: 39634,
   name: 'Sentinel-1A',
-  subtitle: 'ESA · C-band synthetic aperture radar, since 2014',
+  subtitle: 'ESA · C-band radar satellite, retired 2026',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
-    "Sentinel-1A is part of ESA's Copernicus Earth observation program, providing all-weather, day-and-night radar imagery. Its C-band SAR can detect ground deformation at millimeter scale, making it essential for monitoring earthquakes, volcanoes, and ice sheets.",
+    "Sentinel-1A opened ESA's Copernicus radar era, imaging Earth day and night through cloud. Its C-band SAR measured ground deformation at millimeter scale for monitoring earthquakes, volcanoes, and ice sheets. It ended operations on June 30, 2026, after 12 years, handing over to Sentinel-1D.",
   facts: [
     { label: 'Launch date', value: 'April 3, 2014' },
     { label: 'Operator', value: 'ESA / Copernicus' },
     { label: 'Orbit type', value: 'SSO (693 km)' },
-    { label: 'Key instrument', value: 'C-band SAR, 12.5 m resolution in IW mode' }
+    { label: 'Key instrument', value: 'C-band SAR, 5 x 20 m resolution in IW mode' }
   ],
   sources: [{ name: 'Celestrak', url: 'https://celestrak.org/' }]
 });
@@ -208,31 +208,31 @@ const AQUA = curatedSatellite({
   id: 'aqua',
   noradId: 27424,
   name: 'Aqua',
-  subtitle: 'NASA · EOS Earth observing satellite, since 2002',
+  subtitle: 'NASA · EOS Earth observing satellite, 2002 to present',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
-    "Aqua is a key satellite in NASA's Earth Observing System, focused on the water cycle including evaporation, clouds, precipitation, soil moisture, sea ice, and snow cover. Its MODIS instrument produces some of the most widely used Earth science data products.",
+    "Aqua is a key satellite in NASA's Earth Observing System, focused on the water cycle including evaporation, clouds, precipitation, soil moisture, sea ice, and snow cover. Its MODIS instrument produces some of the most widely used Earth science data products. Out of fuel for orbit maintenance since 2021, it is drifting lower and nearing the end of its mission.",
   facts: [
     { label: 'Launch date', value: 'May 4, 2002' },
     { label: 'Operator', value: 'NASA' },
-    { label: 'Orbit type', value: 'SSO (705 km)' },
-    { label: 'Key instrument', value: 'MODIS, AIRS, AMSR-E (water cycle suite)' }
+    { label: 'Orbit type', value: 'Drifting SSO (~686 km)' },
+    { label: 'Key instrument', value: 'MODIS, AIRS, CERES (water and energy cycle)' }
   ],
   sources: [{ name: 'NASA Space Science', url: 'https://science.nasa.gov/' }]
 });
 
 // ── Navigation ──────────────────────────────────────────────────────────
 
-const GPS_NAVSTAR_66 = curatedSatellite({
-  id: 'gps-navstar-66',
-  noradId: 37753,
-  name: 'GPS BIIF-2 (NAVSTAR 66)',
+const GPS_BIIF_1 = curatedSatellite({
+  id: 'gps-biif-1',
+  noradId: 36585,
+  name: 'GPS BIIF-1 (PRN 25)',
   subtitle: 'U.S. Space Force · GPS Block IIF navigation satellite',
   tracking: { mode: 'TLE prediction', source: 'NORAD TLE via Celestrak + SGP4 propagation' },
   description:
-    'NAVSTAR 66 is a GPS Block IIF navigation satellite, broadcasting L1, L2, and L5 navigation signals. The GPS constellation provides positioning accuracy within a few meters for billions of receivers worldwide.',
+    'GPS BIIF-1 (NAVSTAR 65) was the first GPS Block IIF satellite and the first to broadcast the L5 safety-of-life signal alongside L1 and L2. The GPS constellation provides positioning accuracy within a few meters for billions of receivers worldwide.',
   facts: [
-    { label: 'Launch date', value: 'July 16, 2011' },
+    { label: 'Launch date', value: 'May 28, 2010' },
     { label: 'Operator', value: 'U.S. Space Force' },
     { label: 'Orbit type', value: 'MEO (20,200 km)' },
     { label: 'Key instrument', value: 'L-band navigation payload, atomic clocks' }
@@ -310,7 +310,7 @@ export const CURATED_SATELLITES: TrackedObject[] = [
   LANDSAT_9,
   AQUA,
   // Navigation
-  GPS_NAVSTAR_66,
+  GPS_BIIF_1,
   // Communication
   IRIDIUM_158,
   // Internet constellations

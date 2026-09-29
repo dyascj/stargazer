@@ -78,7 +78,7 @@ const PHOBOS = moon({
   radiusKm: 11.2,
   color: '#7a6e63',
   labelTier: 5,
-  subtitle: 'Mars I · Captured asteroid',
+  subtitle: 'Mars I · Doomed inner moon',
   description:
     "Phobos is the larger and closer of Mars's two moons, orbiting so near the surface that it completes three orbits per Martian day. It is slowly spiraling inward and will either crash into Mars or break apart into a ring in roughly 50 million years.",
   facts: [
@@ -103,7 +103,7 @@ const PHOBOS = moon({
     Omega_deg: 82.31204241572479,
     omega_deg: 276.8498871876311,
     M_deg: 121.2204580253225,
-    period_days: 0.31915815068407943
+    period_days: 0.31891023
   }
 });
 
@@ -142,7 +142,7 @@ const DEIMOS = moon({
     Omega_deg: 81.51616245944041,
     omega_deg: 30.11799826660484,
     M_deg: 262.4889693563825,
-    period_days: 1.2626250446450238
+    period_days: 1.26244
   }
 });
 
@@ -164,7 +164,7 @@ const IO = moon({
     { label: 'Discovery', value: '1610, Galileo Galilei' },
     {
       label: 'Notable feature',
-      value: 'Over 400 active volcanoes, most volcanically active world known'
+      value: 'About 400 active volcanoes, most volcanically active world known'
     }
   ],
   sources: [
@@ -183,7 +183,7 @@ const IO = moon({
     Omega_deg: 338.4133580863925,
     omega_deg: 48.00923761947212,
     M_deg: 166.6686879069993,
-    period_days: 1.7712855769627889
+    period_days: 1.769137786
   }
 });
 
@@ -222,7 +222,7 @@ const EUROPA = moon({
     Omega_deg: 326.1903299988488,
     omega_deg: 240.4816543629724,
     M_deg: 82.20704237426038,
-    period_days: 3.5531689995085434
+    period_days: 3.551181041
   }
 });
 
@@ -258,7 +258,7 @@ const GANYMEDE = moon({
     Omega_deg: 339.0715021194428,
     omega_deg: 6.610721751955112,
     M_deg: 261.2467431885268,
-    period_days: 7.158888127220968
+    period_days: 7.15455296
   }
 });
 
@@ -294,7 +294,7 @@ const CALLISTO = moon({
     Omega_deg: 336.7440893707893,
     omega_deg: 34.18535529861217,
     M_deg: 142.14418170663,
-    period_days: 16.698755417713414
+    period_days: 16.6890184
   }
 });
 
@@ -334,7 +334,7 @@ const MIMAS = moon({
     Omega_deg: 172.8755583060512,
     omega_deg: 156.1126065624316,
     M_deg: 348.1428196587116,
-    period_days: 0.947476990651035
+    period_days: 0.942421959
   }
 });
 
@@ -369,7 +369,7 @@ const ENCELADUS = moon({
     Omega_deg: 169.5288970209286,
     omega_deg: 181.2984588823076,
     M_deg: 211.7048390281775,
-    period_days: 1.374500583375224
+    period_days: 1.370218
   }
 });
 
@@ -404,7 +404,7 @@ const TETHYS = moon({
     Omega_deg: 171.838860416343,
     omega_deg: 328.6774873705682,
     M_deg: 350.9032716774074,
-    period_days: 1.8916960530398126
+    period_days: 1.887802
   }
 });
 
@@ -416,7 +416,7 @@ const DIONE = moon({
   color: '#d4cec0',
   subtitle: 'Saturn IV · Wispy ice cliffs of the trailing hemisphere',
   description:
-    'Dione is an icy Saturnian moon known for bright wispy features on its trailing hemisphere, which Cassini revealed to be networks of ice cliffs created by tectonic fractures. Evidence from Cassini gravity data hints at a thin subsurface ocean.',
+    'Dione is an icy Saturnian moon known for bright wispy features on its trailing hemisphere, which Cassini revealed to be networks of ice cliffs created by tectonic fractures. Cassini gravity data suggest it may hide an ocean beneath roughly 100 km of ice.',
   facts: [
     { label: 'Diameter', value: '1,122.8 km' },
     { label: 'Orbital period', value: '2.737 days' },
@@ -439,7 +439,7 @@ const DIONE = moon({
     Omega_deg: 169.5486913786816,
     omega_deg: 277.6675538621681,
     M_deg: 15.19721981306249,
-    period_days: 2.7403473604200848
+    period_days: 2.736915
   }
 });
 
@@ -474,7 +474,7 @@ const RHEA = moon({
     Omega_deg: 169.971109496123,
     omega_deg: 182.7492324278999,
     M_deg: 161.9016752681866,
-    period_days: 4.520523851609626
+    period_days: 4.518212
   }
 });
 
@@ -514,7 +514,7 @@ const TITAN = moon({
     Omega_deg: 169.0806172053271,
     omega_deg: 178.3460896984261,
     M_deg: 327.685652872853,
-    period_days: 15.946967935897096
+    period_days: 15.945421
   }
 });
 
@@ -549,7 +549,7 @@ const IAPETUS = moon({
     Omega_deg: 138.8580152141804,
     omega_deg: 231.0324299348277,
     M_deg: 247.4088163942278,
-    period_days: 79.4250723852643
+    period_days: 79.3215
   }
 });
 
@@ -589,7 +589,7 @@ const MIRANDA = moon({
     Omega_deg: 163.1913291904702,
     omega_deg: 71.2419584905108,
     M_deg: 88.28198725373066,
-    period_days: 1.4140051031154277
+    period_days: 1.413479
   }
 });
 
@@ -627,7 +627,7 @@ const ARIEL = moon({
     Omega_deg: 167.6658198541007,
     omega_deg: 248.1752223790396,
     M_deg: 314.2429026972135,
-    period_days: 2.5207711598603533
+    period_days: 2.520379
   }
 });
 
@@ -662,7 +662,7 @@ const UMBRIEL = moon({
     Omega_deg: 167.7252404067563,
     omega_deg: 59.46345078002463,
     M_deg: 71.61166330816145,
-    period_days: 4.14491872695837
+    period_days: 4.144177
   }
 });
 
@@ -697,7 +697,7 @@ const TITANIA = moon({
     Omega_deg: 167.643649292692,
     omega_deg: 276.2868307840185,
     M_deg: 298.7792448333789,
-    period_days: 8.706328890559615
+    period_days: 8.705872
   }
 });
 
@@ -732,7 +732,7 @@ const OBERON = moon({
     Omega_deg: 167.7083142517463,
     omega_deg: 173.7108003464355,
     M_deg: 324.9671994518985,
-    period_days: 13.470321199543477
+    period_days: 13.463239
   }
 });
 
@@ -770,7 +770,7 @@ const TRITON = moon({
     Omega_deg: 222.8567592501579,
     omega_deg: 99.64670253982638,
     M_deg: 289.6142092202101,
-    period_days: 5.877117019901184
+    period_days: 5.876854
   }
 });
 
@@ -811,7 +811,7 @@ const CHARON = moon({
     Omega_deg: 227.3930728888496,
     omega_deg: 172.6706973980328,
     M_deg: 173.2351813221505,
-    period_days: 6.3872197303395515
+    period_days: 6.3872304
   }
 });
 

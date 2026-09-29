@@ -80,8 +80,8 @@
     <p class="eyebrow-lg">04 · Missions</p>
     <h2 id="missions-title">{total} spacecraft, wherever they are.</h2>
     <p class="body">
-      From Parker Solar Probe grazing the Sun to Voyager 1 in interstellar space. Each position
-      comes from JPL Horizons and carries its epoch.
+      From Parker Solar Probe grazing the Sun to Voyager 1 in interstellar space. Tracked positions
+      come from JPL Horizons and carry their epoch; anything else is labeled for what it is.
     </p>
   </div>
 

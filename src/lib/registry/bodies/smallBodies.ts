@@ -3,7 +3,7 @@ import type { ObjectType, TrackedObject } from '../types';
 
 /**
  * Small bodies: asteroids, NEOs, KBO dwarf planets, and comets.
- * Real Keplerian elements from JPL HORIZONS at epoch 2026-04-09.
+ * Real Keplerian elements from JPL HORIZONS, refreshed weekly (see epoch_jd).
  * All render as point-markers (labeled dots) regardless of true size.
  */
 
@@ -15,7 +15,7 @@ function smallBody(opts: {
   type: ObjectType;
   subtitle?: string;
   externalId?: string;
-  /** True body radius in km (for the info panel). */
+  /** True body radius in km, for sizing the rendered body. */
   radiusKm: number;
   labelTier?: number;
   /** Full Keplerian elements (heliocentric ecliptic J2000, km, deg). */
@@ -201,7 +201,7 @@ const PSYCHE_16 = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    "16 Psyche is one of the most massive metallic asteroids, thought to be the exposed iron-nickel core of a protoplanet stripped by ancient collisions. NASA's Psyche spacecraft launched in 2023 and is en route to arrive in 2029.",
+    "16 Psyche is one of the most massive metallic asteroids, which may be part of the metal-rich core of a protoplanet stripped by ancient collisions. NASA's Psyche spacecraft launched in 2023 and is en route to arrive in 2029.",
   facts: [
     { label: 'Diameter', value: '226 km' },
     { label: 'Type', value: 'M-type (metallic)' },
@@ -263,7 +263,7 @@ const ITOKAWA = smallBody({
   id: 'itokawa',
   name: '25143 Itokawa',
   type: 'asteroid',
-  subtitle: '25143 Itokawa · Hayabusa first sample return (2010)',
+  subtitle: '25143 Itokawa · First asteroid sample return (2010)',
   externalId: '25143',
   radiusKm: 0.165,
   tracking: {
@@ -271,7 +271,7 @@ const ITOKAWA = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    "Itokawa is a tiny rubble-pile asteroid and the first body from which a spacecraft collected and returned surface samples. JAXA's Hayabusa touched down in 2005 and delivered its sample capsule to Earth in 2010.",
+    "Itokawa is a tiny rubble-pile asteroid and the first asteroid from which a spacecraft collected and returned surface samples. JAXA's Hayabusa touched down in 2005 and delivered its sample capsule to Earth in 2010.",
   facts: [
     { label: 'Diameter', value: '330 m' },
     { label: 'Type', value: 'S-type (siliceous)' },
@@ -279,7 +279,11 @@ const ITOKAWA = smallBody({
     { label: 'Discovery', value: '1998' }
   ],
   sources: [
-    { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
+    { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' },
+    {
+      name: 'JAXA Hayabusa',
+      url: 'https://www.isas.jaxa.jp/en/missions/spacecraft/past/hayabusa.html'
+    }
   ],
   elements: {
     epoch_jd: 2461311.5,
@@ -334,7 +338,7 @@ const RYUGU = smallBody({
   type: 'asteroid',
   subtitle: '162173 Ryugu · Hayabusa2 sample returned 2020',
   externalId: '162173',
-  radiusKm: 0.435,
+  radiusKm: 0.448,
   tracking: {
     mode: 'Approximate orbit',
     source: 'Keplerian propagation from JPL HORIZONS elements'
@@ -342,13 +346,14 @@ const RYUGU = smallBody({
   description:
     "Ryugu is a diamond-shaped rubble-pile asteroid visited by JAXA's Hayabusa2 mission. The spacecraft collected subsurface samples from two sites and returned them to Earth in December 2020, revealing pristine material from the early solar system.",
   facts: [
-    { label: 'Diameter', value: '870 m' },
+    { label: 'Diameter', value: '~900 m' },
     { label: 'Type', value: 'Cb-type (carbonaceous)' },
     { label: 'Orbital period', value: '1.30 years' },
     { label: 'Discovery', value: '1999' }
   ],
   sources: [
-    { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
+    { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' },
+    { name: 'JAXA Hayabusa2', url: 'https://www.hayabusa2.jaxa.jp/en/' }
   ],
   elements: {
     epoch_jd: 2461311.5,
@@ -375,7 +380,7 @@ const APOPHIS = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    'Apophis is a near-Earth asteroid that will pass within 31,000 km of Earth on April 13, 2029, close enough to be visible to the naked eye. It briefly held the highest impact probability ever recorded before further observations ruled out a collision.',
+    "Apophis is a near-Earth asteroid that will pass about 32,000 km above Earth's surface on April 13, 2029, close enough to be visible to the naked eye. It briefly held the highest impact probability ever recorded before further observations ruled out a collision.",
   facts: [
     { label: 'Diameter', value: '370 m' },
     { label: 'Type', value: 'Sq-type (siliceous)' },
@@ -401,7 +406,7 @@ const DIDYMOS = smallBody({
   id: 'didymos',
   name: '65803 Didymos',
   type: 'asteroid',
-  subtitle: '65803 Didymos · DART planetary-defense test target (2022)',
+  subtitle: '65803 Didymos · DART and Hera binary asteroid',
   externalId: '65803',
   radiusKm: 0.39,
   tracking: {
@@ -409,7 +414,7 @@ const DIDYMOS = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    "Didymos is a binary near-Earth asteroid whose moonlet Dimorphos was the target of NASA's DART mission, the first planetary-defense test. The 2022 impact successfully shortened Dimorphos's orbit by about 33 minutes.",
+    "Didymos is a binary near-Earth asteroid whose moonlet Dimorphos was the target of NASA's DART mission, the first planetary-defense test. The 2022 impact shortened Dimorphos's orbit by about 33 minutes, and ESA's Hera is due to arrive in late 2026 to survey the aftermath.",
   facts: [
     { label: 'Diameter', value: '780 m' },
     { label: 'Type', value: 'S-type (siliceous)' },
@@ -484,7 +489,7 @@ const HAUMEA = smallBody({
   description:
     'Haumea is one of the fastest-rotating large objects in the solar system, completing a full turn in under 4 hours, which stretches it into an elongated ellipsoid. In 2017 it became the first trans-Neptunian object confirmed to have a ring system.',
   facts: [
-    { label: 'Diameter', value: '~1,560 km (long axis)' },
+    { label: 'Diameter', value: '~1,600 km mean; over 2,100 km long axis' },
     { label: 'Type', value: 'Kuiper belt object' },
     { label: 'Orbital period', value: '283 years' },
     { label: 'Discovery', value: '2004' }
@@ -588,7 +593,7 @@ const QUAOAR = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    'Quaoar is a large Kuiper belt object with a surprisingly distant ring system discovered in 2023. Its ring orbits well beyond the Roche limit, challenging existing theories of how planetary rings form and persist.',
+    'Quaoar is a large Kuiper belt object with a surprisingly distant ring system reported in 2023. Both of its known rings orbit well beyond the Roche limit, challenging existing theories of how planetary rings form and persist.',
   facts: [
     { label: 'Diameter', value: '1,110 km' },
     { label: 'Type', value: 'Kuiper belt object' },
@@ -631,7 +636,7 @@ const HALLEY = smallBody({
     { label: 'Orbital period', value: '75.3 years' },
     { label: 'Nucleus diameter', value: '11 km' },
     { label: 'Last perihelion', value: 'February 9, 1986' },
-    { label: 'Visited by', value: 'Giotto, Vega 1 & 2 (1986)' }
+    { label: 'Visited by', value: 'Giotto, Vega 1 & 2, Suisei, Sakigake (1986)' }
   ],
   sources: [
     { name: 'JPL Small-Body Database', url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html' }
@@ -660,7 +665,7 @@ const COMET_67P = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    '67P is a Jupiter-family comet with a distinctive two-lobed "rubber duck" shape. ESA\'s Rosetta orbiter studied it for over two years and deployed the Philae lander to its surface in November 2014, the first controlled landing on a comet.',
+    '67P is a Jupiter-family comet with a distinctive two-lobed "rubber duck" shape. ESA\'s Rosetta orbiter studied it for over two years and deployed the Philae lander to its surface in November 2014, the first soft landing on a comet.',
   facts: [
     { label: 'Orbital period', value: '6.44 years' },
     { label: 'Nucleus diameter', value: '4.1 km' },
@@ -694,11 +699,11 @@ const TEMPEL_1 = smallBody({
     source: 'Keplerian propagation from JPL HORIZONS elements'
   },
   description:
-    "Tempel 1 is the only comet visited by two separate missions. NASA's Deep Impact deliberately crashed an impactor into it in 2005 to study its interior composition, and Stardust-NExT flew by in 2011 to photograph the resulting crater.",
+    "Tempel 1 was the first comet revisited by a second spacecraft. NASA's Deep Impact deliberately crashed an impactor into it in 2005 to study its interior composition, and Stardust-NExT flew by in 2011 to photograph the resulting crater.",
   facts: [
-    { label: 'Orbital period', value: '5.58 years' },
+    { label: 'Orbital period', value: '~6.0 years' },
     { label: 'Nucleus diameter', value: '6 km' },
-    { label: 'Last perihelion', value: 'November 18, 2022' },
+    { label: 'Last perihelion', value: 'March 4, 2022' },
     { label: 'Visited by', value: 'Deep Impact (2005), Stardust-NExT (2011)' }
   ],
   sources: [

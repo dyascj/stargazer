@@ -26,7 +26,7 @@
 Stargazer is a quieter, more beautiful take on [NASA's Eyes on the Solar System](https://eyes.nasa.gov/apps/solar-system/). Open it and you get the sky, one search field, and a clock. Everything else appears when you ask for it.
 
 - **True scale.** Every distance and radius is physical, from the ISS at 400 km to Voyager 1 past 170 AU. Constant-size markers keep small worlds findable.
-- **Sourced and dated.** Every object says where its position comes from and how old that data is.
+- **Sourced and dated.** Every object says where its position comes from, and tracked objects say how old that data is.
 - **Search first.** Type a name, a nickname (Webb, 67P) or a NORAD number and fly there.
 - **Live satellites.** CelesTrak elements propagated with SGP4 at the time you are looking at, with pass predictions for your location.
 - **Time travel.** Scrub planets between 1800 and 2050, pause, reverse, or jump back to now.
@@ -159,7 +159,7 @@ Built with SvelteKit, Svelte 5, Threlte and three.js, satellite.js, and Inter. T
 - [CelesTrak](https://celestrak.org/) and the [SGP4 verification data](https://celestrak.org/publications/AIAA/2006-6753/)
 - [The Space Devs Launch Library 2](https://thespacedevs.com/llapi)
 - [NASA planetary fact sheets](https://nssdc.gsfc.nasa.gov/planetary/factsheet/)
-- [Solar System Scope textures](https://www.solarsystemscope.com/textures/) (CC BY 4.0) and NASA Earth imagery
+- [Solar System Scope textures](https://www.solarsystemscope.com/textures/) (CC BY 4.0), based on NASA imagery
 
 Stargazer is not affiliated with NASA, JPL, ESA, JAXA or SpaceX. Agency logos in `static/logos` are trademarks of their owners, used only to credit data sources.
 

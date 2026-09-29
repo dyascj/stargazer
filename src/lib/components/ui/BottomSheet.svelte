@@ -14,7 +14,7 @@
     label: string;
     onclose: () => void;
     children: Snippet;
-    /** Visible height, capped at the peek height, so docked controls can sit above it. */
+    /** The peek height, so the scene and docked controls can sit above the open sheet. */
     offset?: number;
     /** True when the sheet is above its peek height. */
     expanded?: boolean;
@@ -34,8 +34,10 @@
   });
   const height = $derived(dragHeight ?? heights[snap]);
 
+  // The resting height, not the dragged one: a pull toward dismissal moves only the sheet,
+  // not the scene and time control above it.
   $effect(() => {
-    offset = Math.min(height, peek);
+    offset = peek;
     expanded = height > peek + 8;
   });
 

@@ -29,7 +29,7 @@ export const VENUS: TrackedObject = {
     rotationW0Deg: 160.2,
     rotationRateDegPerDay: -1.4813688,
     atmosphere: { color: [1.0, 0.86, 0.6], heightKm: 250, density: 1.1 },
-    dayLength: '243 Earth days (retrograde)',
+    dayLength: '116.75 Earth days (retrograde)',
     yearLength: '224.7 Earth days',
     description:
       'Venus is the hottest planet in the solar system due to a runaway greenhouse effect, with surface temperatures high enough to melt lead. It rotates backward compared to most planets, and its thick clouds of sulfuric acid completely obscure the surface.',
@@ -37,6 +37,7 @@ export const VENUS: TrackedObject = {
       { label: 'Mass', value: '4.867 × 10²⁴ kg' },
       { label: 'Surface gravity', value: '8.87 m/s²' },
       { label: 'Mean temperature', value: '737 K (464 °C)' },
+      { label: 'Rotation', value: '243 Earth days (sidereal, retrograde)' },
       { label: 'Atmosphere', value: '96.5% CO₂, 3.5% N₂' },
       { label: 'Known moons', value: '0' },
       {
@@ -52,7 +53,7 @@ export const VENUS: TrackedObject = {
     ],
     tracking: {
       mode: 'Approximate orbit',
-      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+      source: 'JPL planetary element fit, 1800–2050'
     }
   }
 };

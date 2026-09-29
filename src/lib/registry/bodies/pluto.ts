@@ -31,12 +31,15 @@ export const PLUTO: TrackedObject = {
     dayLength: '6.39 Earth days (retrograde)',
     yearLength: '248.0 Earth years',
     description:
-      "Pluto is a dwarf planet in the Kuiper Belt, reclassified from full planet status in 2006. NASA's New Horizons flyby in 2015 revealed a complex surface with nitrogen ice glaciers, mountains of water ice, and a thin atmosphere.",
+      "Pluto is a dwarf planet in the Kuiper Belt, reclassified from full planet status in 2006. NASA's New Horizons flyby in 2015 revealed a complex surface with nitrogen ice glaciers, mountains of water ice, and layered hazes in its thin atmosphere.",
     facts: [
       { label: 'Mass', value: '1.303 × 10²² kg' },
       { label: 'Surface gravity', value: '0.62 m/s²' },
       { label: 'Mean temperature', value: '44 K (-229 °C)' },
-      { label: 'Atmosphere', value: 'Thin; N₂, CH₄, CO (collapses when farther from Sun)' },
+      {
+        label: 'Atmosphere',
+        value: 'Thin; N₂, CH₄, CO (expected to partly freeze out far from the Sun)'
+      },
       { label: 'Known moons', value: '5 (Charon, Nix, Hydra, Kerberos, Styx)' },
       { label: 'Magnetic field', value: 'No confirmed field' }
     ],
@@ -48,7 +51,7 @@ export const PLUTO: TrackedObject = {
     ],
     tracking: {
       mode: 'Approximate orbit',
-      source: 'JPL planetary ephemeris (NASA JPL Approximate Positions)'
+      source: 'JPL planetary element fit, 1800–2050'
     }
   }
 };

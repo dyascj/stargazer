@@ -485,7 +485,7 @@ test('True-scale placements: Moon, Webb at L2, Mars landers, and physical radii'
 test('IAU rotation elements match the WGCCRE reports', () => {
   // [RA, Dec, W0, W rate] for the J2000 epoch (Archinal et al. 2011 and 2018).
   const iau = {
-    mercury: [281.0103, 61.4155, 329.5469, 6.1385025],
+    mercury: [281.0103, 61.4155, 329.5988, 6.1385108],
     venus: [272.76, 67.16, 160.2, -1.4813688],
     mars: [317.68143, 52.8865, 176.63, 350.89198226],
     jupiter: [268.056595, 64.495303, 284.95, 870.536],
@@ -581,4 +581,25 @@ test('Fly-to paths pull back on long hops and frame lit, open-ringed worlds', as
   const up = station.clone().sub(earth).normalize();
   assert.ok(horizon.dot(up) > 0.15 && horizon.dot(up) < 0.35);
   assert.ok(Math.abs(horizon.dot(earth.clone().negate().normalize())) < 0.1);
+});
+
+test('Moons advance at their mean sidereal rate, not an instantaneous osculating one', () => {
+  // JPL mean sidereal periods. An osculating period drifts Mimas about 2° a day.
+  const mean = { mimas: 0.942421959, io: 1.769137786, phobos: 0.31891023, titan: 15.945421 };
+  for (const [id, period] of Object.entries(mean))
+    assert.equal(registry.getById(id).metadata.orbitalPeriodDays, period, id);
+});
+
+test('Earth turns from the J2000 equinox: GMST less accumulated precession', () => {
+  const j2000 = new Date(Date.UTC(2000, 0, 1, 12));
+  assert.ok(
+    Math.abs(earthFrame.getEarthRotationRadians(j2000) - earthFrame.getGmstRadians(j2000)) < 1e-12
+  );
+  // About 46″ of right ascension a year: 0.34° by late 2026.
+  const now = new Date(Date.UTC(2026, 8, 28));
+  const lag = earthFrame.getGmstRadians(now) - earthFrame.getEarthRotationRadians(now);
+  assert.ok(
+    Math.abs((lag * 180) / Math.PI - 0.3417) < 0.002,
+    `precession ${(lag * 180) / Math.PI}°`
+  );
 });
