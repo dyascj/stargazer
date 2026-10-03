@@ -15,6 +15,9 @@ updates:
     ignore:
       # Tied to the CI container image tag; bump both together by hand.
       - dependency-name: '@playwright/test'
+      # SvelteKit and svelte-check cap TypeScript at 6.
+      - dependency-name: typescript
+        versions: ['>=7']
   - package-ecosystem: github-actions
     directory: /
     schedule:
