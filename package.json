@@ -41,7 +41,7 @@
     "three": "^0.186.1"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.13.0"
   },
   "overrides": {
     "cookie": "^0.7.2"
