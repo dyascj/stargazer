@@ -102,7 +102,7 @@ const MRO = spacecraftPointMarker({
   subtitle: 'NASA · In orbit since 2006',
   externalId: '-74',
   tracking: {
-    epoch: '2026-09-28T00:00:00.000 TDB',
+    epoch: '2026-10-05T00:00:00.000 TDB',
     mode: 'Approximate orbit',
     source: 'Two-body model; maneuvers and perturbations omitted'
   },
@@ -121,14 +121,14 @@ const MRO = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    a_km: 3650.704170518863,
-    e: 0.01138354194152707,
-    i_deg: 71.85119773825843,
-    Omega_deg: 303.3833578891596,
-    omega_deg: 261.5187911523078,
-    M_deg: 191.6380083091273,
-    period_days: 0.07751134825731427,
-    epoch_jd: 2461311.5
+    a_km: 3655.391715616494,
+    e: 0.009846790982008902,
+    i_deg: 72.89705682485028,
+    Omega_deg: 307.0796174012779,
+    omega_deg: 241.0352801295015,
+    M_deg: 152.6313634053325,
+    period_days: 0.07766068432966139,
+    epoch_jd: 2461318.5
   })
 });
 
@@ -178,7 +178,7 @@ const MARS_EXPRESS = spacecraftPointMarker({
   subtitle: 'ESA · In orbit since 2003',
   externalId: '-41',
   tracking: {
-    epoch: '2026-09-28T00:00:00.000 TDB',
+    epoch: '2026-10-05T00:00:00.000 TDB',
     mode: 'Approximate orbit',
     source: 'Two-body model; maneuvers and perturbations omitted'
   },
@@ -197,14 +197,14 @@ const MARS_EXPRESS = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    a_km: 8815.993015292175,
-    e: 0.5684019052586781,
-    i_deg: 113.7658292245649,
-    Omega_deg: 89.10775667959591,
-    omega_deg: 94.22209720253284,
-    M_deg: 226.2928400545382,
-    period_days: 0.2908755278569743,
-    epoch_jd: 2461311.5
+    a_km: 8818.028940921506,
+    e: 0.5684481033388724,
+    i_deg: 113.7572362748776,
+    Omega_deg: 88.69394073999406,
+    omega_deg: 89.88315636145917,
+    M_deg: 246.3598168252162,
+    period_days: 0.2909762938960045,
+    epoch_jd: 2461318.5
   })
 });
 
@@ -216,7 +216,7 @@ const TGO = spacecraftPointMarker({
   subtitle: 'ESA / Roscosmos · Trace Gas Orbiter',
   externalId: '-143',
   tracking: {
-    epoch: '2026-09-28T00:00:00.000 TDB',
+    epoch: '2026-10-05T00:00:00.000 TDB',
     mode: 'Approximate orbit',
     source: 'Two-body model; maneuvers and perturbations omitted'
   },
@@ -235,14 +235,14 @@ const TGO = spacecraftPointMarker({
     }
   ],
   offsetFn: orbiterOffset({
-    a_km: 3775.553714337802,
-    e: 0.005266078895341655,
-    i_deg: 101.942874484221,
-    Omega_deg: 96.3880228997139,
-    omega_deg: 265.2122730828029,
-    M_deg: 32.02265029656931,
-    period_days: 0.08152133971766247,
-    epoch_jd: 2461311.5
+    a_km: 3775.496990856557,
+    e: 0.009668827094457424,
+    i_deg: 102.5229375143768,
+    Omega_deg: 79.02744980674079,
+    omega_deg: 276.1607393040961,
+    M_deg: 189.883555930273,
+    period_days: 0.08151950257382898,
+    epoch_jd: 2461318.5
   })
 });
 
@@ -308,7 +308,7 @@ const JUNO = spacecraftPointMarker({
   subtitle: 'NASA · Highly elliptical polar orbit since 2016',
   externalId: '-61',
   tracking: {
-    epoch: '2026-09-28T00:00:00.000 TDB',
+    epoch: '2026-10-05T00:00:00.000 TDB',
     mode: 'Approximate orbit',
     source: 'Two-body model; maneuvers and perturbations omitted'
   },
@@ -322,14 +322,14 @@ const JUNO = spacecraftPointMarker({
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/juno/' }],
   offsetFn: orbiterOffset({
-    a_km: 2948004.304171887,
-    e: 0.9729218825180916,
-    i_deg: 100.2683335450813,
-    Omega_deg: 293.0068564168724,
-    omega_deg: 104.0323686871533,
-    M_deg: 206.2692868710772,
-    period_days: 32.70341248648557,
-    epoch_jd: 2461311.5
+    a_km: 2948166.053437445,
+    e: 0.9729092546560608,
+    i_deg: 100.2525646178957,
+    Omega_deg: 293.0441976178369,
+    omega_deg: 104.0277482625694,
+    M_deg: 283.361004279892,
+    period_days: 32.706104049130936,
+    epoch_jd: 2461318.5
   })
 });
 
@@ -375,7 +375,7 @@ const PARKER = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     'Parker Solar Probe flies closer to the Sun than any previous spacecraft, diving through the solar corona to study the solar wind and magnetic fields. It has broken speed records, becoming the fastest human-made object.',
@@ -389,7 +389,7 @@ const PARKER = spacecraftPointMarker({
     { name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/parker-solar-probe/' }
   ],
   offsetFn: staticOffset(
-    helioAuToScene(0.4183052496115103, -0.4564654344156831, -0.03042231812834187)
+    helioAuToScene(0.5012262316247094, -0.4632770063065504, -0.03529432450163502)
   )
 });
 
@@ -403,7 +403,7 @@ const SOLAR_ORBITER = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     "Solar Orbiter uses gravity assists from Venus to tilt its orbit and obtain the first direct images of the Sun's polar regions. It carries ten instruments studying the heliosphere and solar wind.",
@@ -419,7 +419,7 @@ const SOLAR_ORBITER = spacecraftPointMarker({
       url: 'https://www.esa.int/Science_Exploration/Space_Science/Solar_Orbiter'
     }
   ],
-  offsetFn: staticOffset(helioAuToScene(0.4779808407497301, 0.5027429683342834, 0.1544630449989751))
+  offsetFn: staticOffset(helioAuToScene(0.4286192507850383, 0.6135466838471766, 0.1673504874659806))
 });
 
 const BEPI = spacecraftPointMarker({
@@ -432,7 +432,7 @@ const BEPI = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     'BepiColombo is a joint ESA/JAXA mission carrying two orbiters to Mercury. It uses nine gravity assists (Earth, Venus, and Mercury flybys) to slow down enough to enter Mercury orbit in November 2026.',
@@ -449,7 +449,7 @@ const BEPI = spacecraftPointMarker({
     }
   ],
   offsetFn: staticOffset(
-    helioAuToScene(-0.08783447338247823, -0.4610265301444963, -0.02946197875731247)
+    helioAuToScene(0.06922912912418176, -0.45351070536732, -0.04320507025830925)
   )
 });
 
@@ -463,7 +463,7 @@ const LUCY = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     "Lucy is the first mission to explore the Jupiter Trojan asteroids, primitive bodies trapped in Jupiter's orbit that are thought to be remnants of the early solar system. Its planned encounters include eleven asteroids over its twelve-year primary mission.",
@@ -475,7 +475,7 @@ const LUCY = spacecraftPointMarker({
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/lucy/' }],
   offsetFn: staticOffset(
-    helioAuToScene(-3.711290817432596, -3.443980564669014, -0.2429512862516529)
+    helioAuToScene(-3.706302274091988, -3.480865841678267, -0.2421354954020901)
   )
 });
 
@@ -489,7 +489,7 @@ const PSYCHE = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     'The Psyche mission is traveling to asteroid 16 Psyche, a metal-rich body that may be the exposed core of an early planetesimal. It will be the first mission to explore a world made largely of metal.',
@@ -501,7 +501,7 @@ const PSYCHE = spacecraftPointMarker({
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/psyche/' }],
   offsetFn: staticOffset(
-    helioAuToScene(-0.06511551191863217, 1.660257337139512, -0.07050799730595604)
+    helioAuToScene(-0.1644962223563203, 1.681440909286356, -0.06985601153679397)
   )
 });
 
@@ -515,7 +515,7 @@ const JUICE = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     "JUICE (Jupiter Icy Moons Explorer) will study Jupiter's three large ocean-bearing moons: Ganymede, Callisto, and Europa. It will ultimately enter orbit around Ganymede, the first spacecraft to orbit a moon other than our own.",
@@ -529,7 +529,7 @@ const JUICE = spacecraftPointMarker({
     { name: 'ESA Mission Page', url: 'https://www.esa.int/Science_Exploration/Space_Science/Juice' }
   ],
   offsetFn: staticOffset(
-    helioAuToScene(1.002196761785336, 0.07926968245840608, -0.00003515704715183137)
+    helioAuToScene(0.9403933815644822, 0.2077619544244755, -0.00001936013815743597)
   )
 });
 
@@ -543,7 +543,7 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     "Europa Clipper will perform nearly 50 close flybys of Jupiter's moon Europa to investigate whether its subsurface ocean has conditions suitable for life. It is the largest spacecraft NASA has ever built for a planetary mission.",
@@ -555,7 +555,7 @@ const EUROPA_CLIPPER = spacecraftPointMarker({
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/europa-clipper/' }],
   offsetFn: staticOffset(
-    helioAuToScene(0.8209543689838044, -0.3682013803865812, -0.03199857704109046)
+    helioAuToScene(0.84441663857629, -0.2162165449877876, -0.03106400574463414)
   )
 });
 
@@ -574,7 +574,7 @@ const VOYAGER_1 = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     'Voyager 1 is the farthest human-made object from Earth, now traveling through interstellar space beyond the heliopause. Launched in 1977, it flew by Jupiter and Saturn before heading out of the solar system.',
@@ -585,7 +585,7 @@ const VOYAGER_1 = spacecraftPointMarker({
     { label: 'Objective', value: 'Fly by outer planets and explore interstellar space' }
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/voyager/' }],
-  offsetFn: staticOffset(helioAuToScene(-32.15943616939285, -136.8010147936237, 98.97819713714722))
+  offsetFn: staticOffset(helioAuToScene(-32.16780449531664, -136.8560430630365, 99.01794612868916))
 });
 
 const VOYAGER_2 = spacecraftPointMarker({
@@ -599,7 +599,7 @@ const VOYAGER_2 = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     'Voyager 2 is the only spacecraft to have visited all four giant planets: Jupiter, Saturn, Uranus, and Neptune. It crossed the heliopause in 2018 and continues to return data from interstellar space.',
@@ -610,7 +610,7 @@ const VOYAGER_2 = spacecraftPointMarker({
     { label: 'Objective', value: 'Grand tour of outer planets, now interstellar exploration' }
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/voyager/' }],
-  offsetFn: staticOffset(helioAuToScene(39.88298923972805, -105.4481649803141, -89.6837046734128))
+  offsetFn: staticOffset(helioAuToScene(39.89998295244366, -105.4859263645706, -89.72945658434482))
 });
 
 const NEW_HORIZONS = spacecraftPointMarker({
@@ -624,7 +624,7 @@ const NEW_HORIZONS = spacecraftPointMarker({
   tracking: {
     mode: 'Snapshot',
     source: 'JPL HORIZONS heliocentric ecliptic Cartesian',
-    epoch: '2026-09-28T00:00:00.000 TDB'
+    epoch: '2026-10-05T00:00:00.000 TDB'
   },
   description:
     'New Horizons performed the first flyby of Pluto in 2015, revealing a geologically active world with nitrogen glaciers and a thin atmosphere. It later flew by Kuiper Belt object Arrokoth, the most distant object ever visited.',
@@ -635,7 +635,7 @@ const NEW_HORIZONS = spacecraftPointMarker({
     { label: 'Objective', value: 'Explore Pluto and Kuiper Belt objects' }
   ],
   sources: [{ name: 'NASA Mission Page', url: 'https://science.nasa.gov/mission/new-horizons/' }],
-  offsetFn: staticOffset(helioAuToScene(20.83797484758422, -62.25421004213319, 2.289668153333562))
+  offsetFn: staticOffset(helioAuToScene(20.85943320450945, -62.30470240979132, 2.291655262363012))
 });
 
 // ── Aggregate export ────────────────────────────────────────────────────
