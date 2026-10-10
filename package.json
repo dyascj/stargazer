@@ -21,7 +21,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@cloudflare/workers-types": "^5.20261003.1",
     "@playwright/test": "^1.63.0",
-    "@sveltejs/adapter-cloudflare": "^7.2.9",
+    "@sveltejs/adapter-cloudflare": "^8.0.0",
     "@sveltejs/kit": "^2.70.3",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/three": "^0.186.0",
